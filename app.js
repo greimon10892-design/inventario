@@ -1240,13 +1240,20 @@ try {
 applySettings();
 
 async function initApp() {
+  if (typeof initFirebase === 'function') {
+    // Muestra pantalla de carga mientras Firebase verifica sesión
+    document.body.style.visibility = 'hidden';
+    const ok = await initFirebase();
+    if (ok) {
+      // Firebase mostrará login o app según el estado de sesión
+      // onAuthStateChanged en firebase.js maneja todo
+      return;
+    }
+  }
+  // Sin Firebase → modo local
+  document.body.style.visibility = 'visible';
   await seedLocalIfEmpty();
   renderAll();
-  if (typeof initFirebase === 'function') {
-    const ok = await initFirebase();
-    if (ok) return; // Firebase maneja navigate() después del login
-  }
-  // Sin Firebase → modo local, entra directo
   loadSettingsUI();
   navigate('panel');
 }

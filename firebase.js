@@ -29,6 +29,8 @@ async function initFirebase() {
     showSyncStatus('connecting');
 
     _fa.onAuthStateChanged(fbAuth, user => {
+      // Siempre muestra el body cuando Firebase responde
+      document.body.style.visibility = 'visible';
       if (user) { onUserSignedIn(user); }
       else      { stopListeners(); showLoginScreen(); }
     });
