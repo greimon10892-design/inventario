@@ -771,16 +771,22 @@ function applySettings(s) {
     document.documentElement.style.setProperty('--muted',    '#7a7570');
   }
 
-  // Brand
-  const brandEl = document.querySelector('.brand-title');
-  const subEl   = document.querySelector('.brand-sub');
+  // Brand — sidebar y header móvil
+  const brandEl  = document.querySelector('.brand-title');
+  const subEl    = document.querySelector('.brand-sub');
+  const mTitle   = document.getElementById('mobile-brand-title');
+  const mSub     = document.getElementById('mobile-brand-sub');
   if (brandEl) brandEl.textContent = s.storeName;
   if (subEl)   subEl.textContent   = s.subtitle;
+  if (mTitle)  mTitle.textContent  = s.storeName;
+  if (mSub)    mSub.textContent    = s.subtitle;
   document.title = s.storeName + ' — Inventario';
 
-  // Logo
+  // Logo — sidebar y header móvil
   let logoImg = document.getElementById('sidebar-logo');
+  const mLogo = document.getElementById('mobile-logo');
   if (s.logo) {
+    // Sidebar logo
     if (!logoImg) {
       logoImg = document.createElement('img');
       logoImg.id = 'sidebar-logo';
@@ -788,8 +794,11 @@ function applySettings(s) {
       document.querySelector('.sidebar-brand').prepend(logoImg);
     }
     logoImg.src = s.logo;
-  } else if (logoImg) {
-    logoImg.remove();
+    // Mobile header logo
+    if (mLogo) { mLogo.src = s.logo; mLogo.classList.remove('hidden'); }
+  } else {
+    if (logoImg) logoImg.remove();
+    if (mLogo)   mLogo.classList.add('hidden');
   }
 
   // Background
@@ -1125,14 +1134,20 @@ document.getElementById('bulk-overlay').addEventListener('click', e => {
 });
 
 // ── Logout ─────────────────────────────────────────────────────────────────
-document.getElementById('btn-logout').addEventListener('click', async () => {
+async function doLogout() {
   if (!confirm('¿Cerrar sesión?')) return;
   if (typeof fbSignOut === 'function' && db) {
     await fbSignOut();
   } else {
     location.reload();
   }
-});
+}
+
+document.getElementById('btn-logout').addEventListener('click', doLogout);
+
+// Logout desde bottom nav móvil
+const bnavLogout = document.getElementById('bnav-logout-btn');
+if (bnavLogout) bnavLogout.addEventListener('click', doLogout);
 
 // ── Privilege helpers ──────────────────────────────────────────────────────
 function canWrite() {
@@ -1210,10 +1225,12 @@ function applyPrivileges() {
     btn.style.display = (role === 'Admin') ? '' : 'none';
   });
 
-  // ── Info del usuario en sidebar ────────────────────────────────────────
+  // ── Info del usuario en sidebar y bottom nav ──────────────────────────────
   const me   = users.find(u => u.id === activeUserId);
   const info = document.getElementById('sidebar-user-info');
   if (info && me) info.textContent = me.name + ' · ' + me.role;
+  const bnavInfo = document.getElementById('bnav-user-info');
+  if (bnavInfo && me) bnavInfo.textContent = '👤 ' + me.name + ' · ' + me.role;
 }
 
 // ── Cross-tab / Cross-device sync ─────────────────────────────────────────

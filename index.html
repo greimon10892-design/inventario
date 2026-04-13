@@ -71,6 +71,15 @@
   <!-- ── Content ─────────────────────────────────────────────────────── -->
   <main class="content">
 
+    <!-- Header móvil (solo visible en pantallas pequeñas) -->
+    <div class="mobile-header">
+      <img id="mobile-logo" src="" alt="" class="mobile-logo hidden" />
+      <div>
+        <span class="mobile-brand-title" id="mobile-brand-title">Inventario</span>
+        <span class="mobile-brand-sub" id="mobile-brand-sub">Dulces &amp; Pulseras</span>
+      </div>
+    </div>
+
     <!-- Panel -->
     <section class="view" id="view-panel">
       <div class="page-header">
@@ -616,6 +625,7 @@
     </div>
     <!-- Menú "Más" desplegable -->
     <div class="bnav-more-menu hidden" id="bnav-more-menu">
+      <div class="bnav-user-info" id="bnav-user-info"></div>
       <button class="bnav-more-item" data-view="agregar">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         Nuevo Producto
@@ -627,6 +637,10 @@
       <button class="bnav-more-item" data-view="ajustes">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
         Ajustes
+      </button>
+      <button class="bnav-more-item" id="bnav-logout-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión
       </button>
     </div>
   </nav>

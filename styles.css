@@ -905,6 +905,45 @@ tbody tr:hover { background: var(--surface2); }
   min-height: 20px;
 }
 
+/* ── Mobile header ────────────────────────────────────────────────────── */
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  margin: -20px -14px 20px;
+}
+
+.mobile-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.mobile-logo.hidden { display: none; }
+
+.mobile-brand-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.mobile-brand-sub {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .mobile-header { display: flex; }
+}
+
 /* ── Login screen ─────────────────────────────────────────────────────── */
 #login-screen {
   position: fixed;
@@ -1332,6 +1371,14 @@ tbody tr:hover { background: var(--surface2); }
   border-bottom: 1px solid var(--border);
   -webkit-tap-highlight-color: transparent;
   text-align: left;
+}
+
+.bnav-user-info {
+  padding: 12px 20px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
 }
 
 .bnav-more-item:last-child { border-bottom: none; }
