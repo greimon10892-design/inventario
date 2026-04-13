@@ -1,7 +1,17 @@
-// SW — Network First con versión automática por timestamp de build
-const BUILD = '__BUILD_TIME__'; // reemplazado en build, o usa Date si no hay build
-const CACHE = 'inv-' + BUILD;
-const ASSETS = ['/index.html', '/styles.css', '/app.js'];
+// SW — Network First, compatible con GitHub Pages y Netlify
+const BUILD = '20260413';
+const CACHE  = 'inv-' + BUILD;
+
+// Detecta la base del sitio automáticamente
+const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
+
+const ASSETS = [
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/styles.css',
+  BASE + '/app.js',
+  BASE + '/firebase.js',
+];
 
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
@@ -9,7 +19,8 @@ self.addEventListener('message', e => {
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS).catch(() => {})) // ignora errores de assets opcionales
   );
   self.skipWaiting();
 });

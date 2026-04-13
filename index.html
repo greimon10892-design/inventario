@@ -674,12 +674,9 @@
   <script src="app.js?v=10"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      // Registra el SW
-      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
         .then(reg => {
-          // Verifica actualizaciones cada vez que se abre la app
           reg.update();
-
           reg.addEventListener('updatefound', () => {
             const sw = reg.installing;
             sw.addEventListener('statechange', () => {
@@ -689,8 +686,6 @@
             });
           });
         });
-
-      // Cuando el SW nuevo toma control → recarga para mostrar cambios
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) { refreshing = true; window.location.reload(); }
