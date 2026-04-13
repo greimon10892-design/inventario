@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#e07b39" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Inventario" />
+  <meta name="application-name" content="Inventario" />
+
+  <title>Inventario — Dulces & Pulseras</title>
+  <link rel="stylesheet" href="styles.css?v=10" />
+</head>
+<body>
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-title">Inventario</span>
+      <span class="brand-sub">Dulces &amp; Pulseras</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" data-view="panel">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Panel
+      </a>
+      <a href="#" class="nav-item" data-view="productos">
+        <svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        Productos
+      </a>
+      <a href="#" class="nav-item active" data-view="movimientos">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Movimientos
+      </a>
+      <a href="#" class="nav-item" data-view="agregar">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Nuevo Producto
+      </a>
+      <a href="#" class="nav-item" data-view="usuarios">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Usuarios
+      </a>
+      <a href="#" class="nav-item" data-view="ventas">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Ventas
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item" data-view="ajustes" style="width:100%;margin:0">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Ajustes
+      </a>
+      <button class="sidebar-logout" id="btn-logout">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión
+      </button>
+      <div class="sidebar-copy" id="sidebar-user-info">© 2026 Gestor de Inventario</div>
+    </div>
+  </aside>
+
+  <!-- ── Content ─────────────────────────────────────────────────────── -->
+  <main class="content">
+
+    <!-- Panel -->
+    <section class="view" id="view-panel">
+      <div class="page-header">
+        <h1>Panel</h1>
+        <p>Resumen general del inventario</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Productos</span>
+          <span class="stat-value" id="total-products">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Inversión Total</span>
+          <span class="stat-value" id="total-inversion">$0.00</span>
+        </div>
+        <div class="stat-card accent">
+          <span class="stat-label">Ganancia Potencial</span>
+          <span class="stat-value" id="total-ganancia">$0.00</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Total Vendido</span>
+          <span class="stat-value" id="total-vendido">$0.00</span>
+        </div>
+      </div>
+
+      <!-- Quick inventory preview -->
+      <div class="section-box">
+        <div class="section-box-header">
+          <span>Productos con bajo stock</span>
+        </div>
+        <div id="low-stock-list"></div>
+      </div>
+    </section>
+
+    <!-- Productos -->
+    <section class="view hidden" id="view-productos">
+      <div class="page-header">
+        <h1>Productos</h1>
+        <p>Gestiona tu catálogo de dulces y pulseras</p>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="search" placeholder="Buscar producto…" />
+        <select id="filter-category">
+          <option value="">Todas las categorías</option>
+          <option value="dulce">Dulces Típicos</option>
+          <option value="pulsera">Pulseras Artesanales</option>
+        </select>
+        <label class="btn-upload" for="bulk-file" title="Carga masiva CSV">⬆ Carga masiva</label>
+        <input type="file" id="bulk-file" accept=".csv,.txt" style="display:none" />
+      </div>
+
+      <div class="section-box">
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+              <th>P. Compra</th>
+              <th>P. Venta</th>
+              <th>Ganancia/u</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="inventory-body"></tbody>
+        </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Movimientos -->
+    <section class="view hidden" id="view-movimientos">
+      <div class="page-header">
+        <h1>Movimientos</h1>
+        <p>Historial de entradas y salidas</p>
+      </div>
+
+      <div class="toolbar">
+        <select id="filter-mov-type">
+          <option value="">Todos los movimientos</option>
+          <option value="entrada">Entradas</option>
+          <option value="salida">Salidas</option>
+        </select>
+      </div>
+
+      <div class="section-box">
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Producto</th>
+              <th>Tipo</th>
+              <th>Cantidad</th>
+              <th>Precio Unit.</th>
+              <th>Total</th>
+              <th>Ganancia</th>
+            </tr>
+          </thead>
+          <tbody id="mov-body"></tbody>
+        </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nuevo Producto -->
+    <section class="view hidden" id="view-agregar">
+      <div class="page-header">
+        <h1 id="form-title">Nuevo Producto</h1>
+        <p>Agrega o edita un producto del inventario</p>
+      </div>
+
+      <div class="section-box" style="max-width:620px">
+        <form id="product-form">
+          <input type="hidden" id="edit-id" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="f-name" placeholder="Ej: Mazapán de rosa" required />
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="f-category" required>
+                <option value="dulce">Dulce Típico</option>
+                <option value="pulsera">Pulsera Artesanal</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Stock inicial</label>
+              <input type="number" id="f-stock" min="0" value="0" required />
+            </div>
+            <div class="form-group">
+              <label>Precio de Compra ($)</label>
+              <input type="number" id="f-buy" min="0" step="0.01" value="0" required />
+            </div>
+            <div class="form-group">
+              <label>Precio de Venta ($)</label>
+              <input type="number" id="f-sell" min="0" step="0.01" value="0" required />
+            </div>
+            <div class="form-group">
+              <label>Descripción</label>
+              <input type="text" id="f-desc" placeholder="Notas opcionales" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Guardar Producto</button>
+            <button type="button" class="btn-ghost" id="cancel-edit" style="display:none">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Usuarios -->
+    <section class="view hidden" id="view-usuarios">
+      <div class="page-header">
+        <h1>Usuarios</h1>
+        <p>Gestiona quién tiene acceso a la aplicación</p>
+      </div>
+
+      <!-- Agregar usuario -->
+      <div class="section-box" style="max-width:620px;margin-bottom:20px">
+        <div class="section-box-header">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:middle;margin-right:6px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Agregar Usuario
+        </div>
+        <form id="user-form" style="padding:20px">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="u-name" placeholder="Nombre completo" required />
+            </div>
+            <div class="form-group">
+              <label>Correo electrónico</label>
+              <input type="email" id="u-email" placeholder="ejemplo@correo.com" required />
+            </div>
+            <div class="form-group">
+              <label>Rol</label>
+              <select id="u-role">
+                <option value="Admin">Admin</option>
+                <option value="Usuario">Usuario</option>
+                <option value="Solo lectura">Solo lectura</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px">
+            <button type="submit" class="btn-primary">Agregar Usuario</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de usuarios -->
+      <div class="section-box" style="max-width:620px">
+        <div class="section-box-header">
+          <span id="user-count-label">0 usuarios con acceso</span>
+        </div>
+        <div id="user-list"></div>
+      </div>
+    </section>
+
+    <!-- Ajustes -->
+    <section class="view hidden" id="view-ajustes">
+      <div class="page-header">
+        <h1>Ajustes</h1>
+        <p>Personaliza la apariencia y configuración de la aplicación</p>
+      </div>
+
+      <!-- Sesión activa -->
+      <div class="settings-group" style="max-width:720px">
+        <div class="settings-group-title">Sesión activa</div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Usuario</span>
+            <span class="settings-desc">Los ajustes se guardan por separado para cada usuario</span>
+          </div>
+          <div class="settings-control">
+            <select id="s-active-user" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:0.875rem;min-width:180px"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Identidad -->
+      <div class="settings-group">
+        <div class="settings-group-title">Identidad</div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Nombre de la tienda</span>
+            <span class="settings-desc">Aparece en el sidebar y título de la página</span>
+          </div>
+          <div class="settings-control">
+            <input type="text" id="s-storename" placeholder="Mi Tienda" />
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Subtítulo</span>
+            <span class="settings-desc">Texto debajo del nombre</span>
+          </div>
+          <div class="settings-control">
+            <input type="text" id="s-subtitle" placeholder="Dulces & Pulseras" />
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Logotipo</span>
+            <span class="settings-desc">Imagen que aparece en el sidebar (PNG, JPG, SVG)</span>
+          </div>
+          <div class="settings-control">
+            <div class="logo-preview-wrap">
+              <img id="logo-preview" src="" alt="" class="logo-preview hidden" />
+              <label class="btn-upload" for="s-logo">Subir imagen</label>
+              <input type="file" id="s-logo" accept="image/*" style="display:none" />
+              <button class="btn-ghost-sm" id="remove-logo" style="display:none">Quitar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Apariencia -->
+      <div class="settings-group">
+        <div class="settings-group-title">Apariencia</div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Tema</span>
+            <span class="settings-desc">Modo oscuro o claro</span>
+          </div>
+          <div class="settings-control">
+            <div class="theme-toggle">
+              <button class="theme-btn active" data-theme="dark">Oscuro</button>
+              <button class="theme-btn" data-theme="light">Claro</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Color de acento</span>
+            <span class="settings-desc">Color principal de botones y elementos activos</span>
+          </div>
+          <div class="settings-control">
+            <div class="color-swatches" id="color-swatches">
+              <button class="swatch active" data-color="#e07b39" style="background:#e07b39" title="Naranja"></button>
+              <button class="swatch" data-color="#6366f1" style="background:#6366f1" title="Índigo"></button>
+              <button class="swatch" data-color="#10b981" style="background:#10b981" title="Verde"></button>
+              <button class="swatch" data-color="#ef4444" style="background:#ef4444" title="Rojo"></button>
+              <button class="swatch" data-color="#f59e0b" style="background:#f59e0b" title="Ámbar"></button>
+              <button class="swatch" data-color="#ec4899" style="background:#ec4899" title="Rosa"></button>
+              <button class="swatch" data-color="#06b6d4" style="background:#06b6d4" title="Cian"></button>
+              <label class="swatch swatch-custom" title="Color personalizado">
+                <input type="color" id="s-custom-color" value="#e07b39" />
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Imagen de fondo</span>
+            <span class="settings-desc">Fondo del área de contenido (PNG, JPG)</span>
+          </div>
+          <div class="settings-control">
+            <div class="logo-preview-wrap">
+              <img id="bg-preview" src="" alt="" class="logo-preview hidden" style="width:80px;height:50px;object-fit:cover;border-radius:6px" />
+              <label class="btn-upload" for="s-bg">Subir imagen</label>
+              <input type="file" id="s-bg" accept="image/*" style="display:none" />
+              <button class="btn-ghost-sm" id="remove-bg" style="display:none">Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Opacidad del fondo</span>
+            <span class="settings-desc">Transparencia de la imagen de fondo</span>
+          </div>
+          <div class="settings-control" style="gap:10px;display:flex;align-items:center">
+            <input type="range" id="s-bg-opacity" min="5" max="40" value="15" style="flex:1;accent-color:var(--orange)" />
+            <span id="s-bg-opacity-val" style="color:var(--muted);font-size:0.82rem;min-width:32px">15%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privilegios -->
+      <div class="settings-group">
+        <div class="settings-group-title">Privilegios por Rol</div>
+        <div class="priv-table">
+          <div class="priv-header">
+            <span>Permiso</span><span>Admin</span><span>Usuario</span><span>Solo lectura</span>
+          </div>
+          <div class="priv-row">
+            <span>Ver inventario</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+          </div>
+          <div class="priv-row">
+            <span>Agregar productos</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Registrar movimientos</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Eliminar productos</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Gestionar usuarios</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Cambiar ajustes</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos -->
+      <div class="settings-group">
+        <div class="settings-group-title">Datos</div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Exportar datos</span>
+            <span class="settings-desc">Descarga todos los datos en formato JSON</span>
+          </div>
+          <div class="settings-control">
+            <button class="btn-ghost-sm" id="btn-export">Exportar JSON</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Restablecer</span>
+            <span class="settings-desc">Borra todos los datos y restaura los valores iniciales</span>
+          </div>
+          <div class="settings-control">
+            <button class="btn-ghost-sm danger" id="btn-reset">Restablecer todo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guardar -->
+      <div class="settings-save-bar">
+        <div class="settings-save-info" id="settings-save-info"></div>
+        <button class="btn-primary" id="btn-save-settings">Guardar cambios</button>
+      </div>
+
+    </section>
+
+    <!-- Ventas -->
+    <section class="view hidden" id="view-ventas">
+      <div class="page-header">
+        <h1>Ventas</h1>
+        <p>Registra ventas y consulta reportes</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="report-tabs">
+        <button class="rtab active" data-rtab="vender">Vender</button>
+        <button class="rtab" data-rtab="diario">Reporte Diario</button>
+        <button class="rtab" data-rtab="mensual">Reporte Mensual</button>
+      </div>
+
+      <!-- ── Vender ── -->
+      <div class="rtab-content active" id="rtab-vender">
+        <div class="sale-layout">
+
+          <!-- Lista de productos -->
+          <div class="sale-product-panel">
+            <div class="sale-search-bar">
+              <input type="text" id="sale-search" placeholder="Buscar producto…" />
+              <div class="sale-cat-filter">
+                <button class="scat-btn active" data-cat="">Todos</button>
+                <button class="scat-btn" data-cat="dulce">🍬 Dulces</button>
+                <button class="scat-btn" data-cat="pulsera">📿 Pulseras</button>
+              </div>
+            </div>
+            <div id="sale-product-list"></div>
+          </div>
+
+          <!-- Carrito / resumen -->
+          <div class="sale-cart-panel">
+            <div class="sale-cart-header">
+              <span>Venta actual</span>
+              <button class="btn-ghost-sm" id="cart-clear">Limpiar</button>
+            </div>
+            <div id="cart-items">
+              <div class="empty-state" style="padding:32px">Sin productos agregados</div>
+            </div>
+            <div class="cart-footer">
+              <div class="cart-total-row">
+                <span>Total</span>
+                <span id="cart-total">$0.00</span>
+              </div>
+              <div class="cart-total-row" style="color:var(--success)">
+                <span>Ganancia</span>
+                <span id="cart-gain">$0.00</span>
+              </div>
+              <button class="btn-primary" id="btn-confirm-sale" style="width:100%;margin-top:12px" disabled>
+                Confirmar venta
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Diario ── -->
+      <div class="rtab-content hidden" id="rtab-diario">
+        <div class="toolbar">
+          <input type="date" id="r-date" />
+          <button class="btn-primary" id="btn-gen-daily">Generar reporte</button>
+        </div>
+        <div id="report-daily-out"></div>
+      </div>
+
+      <!-- ── Mensual ── -->
+      <div class="rtab-content hidden" id="rtab-mensual">
+        <div class="toolbar">
+          <select id="r-month"></select>
+          <select id="r-year"></select>
+          <button class="btn-primary" id="btn-gen-monthly">Generar reporte</button>
+        </div>
+        <div id="report-monthly-out"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Modal ───────────────────────────────────────────────────────── -->
+  <div id="modal-overlay" class="hidden">
+    <div class="modal">
+      <h3 id="modal-title">Registrar movimiento</h3>
+      <form id="mov-form">
+        <input type="hidden" id="m-product-id" />
+        <div class="form-group">
+          <label>Producto</label>
+          <input type="text" id="m-product-name" readonly />
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="m-type">
+            <option value="entrada">Entrada (compra / restock)</option>
+            <option value="salida">Salida (venta)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" id="m-qty" min="1" value="1" required />
+        </div>
+        <div class="form-group">
+          <label id="m-price-label">Precio Unitario ($)</label>
+          <input type="number" id="m-price" min="0" step="0.01" required />
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Registrar</button>
+          <button type="button" class="btn-ghost" id="close-modal">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Bottom nav (mobile) ────────────────────────────────────────── -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="bnav-item" data-view="panel">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Panel
+      </button>
+      <button class="bnav-item" data-view="productos">
+        <svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        Productos
+      </button>
+      <button class="bnav-item" data-view="ventas">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Ventas
+      </button>
+      <button class="bnav-item" data-view="movimientos">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Historial
+      </button>
+      <button class="bnav-item bnav-more" id="bnav-more-btn">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+        Más
+      </button>
+    </div>
+    <!-- Menú "Más" desplegable -->
+    <div class="bnav-more-menu hidden" id="bnav-more-menu">
+      <button class="bnav-more-item" data-view="agregar">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Nuevo Producto
+      </button>
+      <button class="bnav-more-item" data-view="usuarios">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Usuarios
+      </button>
+      <button class="bnav-more-item" data-view="ajustes">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Ajustes
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── Modal Carga Masiva ──────────────────────────────────────────── -->
+  <div id="bulk-overlay" class="hidden">
+    <div class="modal bulk-modal">
+      <div class="bulk-header">
+        <h3>Carga masiva de productos</h3>
+        <button class="btn-icon" id="bulk-close">✕</button>
+      </div>
+
+      <div class="bulk-instructions">
+        <p>El archivo CSV debe tener estas columnas en orden:</p>
+        <code>nombre, categoría (dulce/pulsera), stock, precio_compra, precio_venta, descripción</code>
+        <button class="btn-ghost-sm" id="bulk-download-template">⬇ Descargar plantilla</button>
+      </div>
+
+      <div id="bulk-preview-wrap" class="hidden">
+        <div class="bulk-preview-info">
+          <span id="bulk-count"></span>
+          <span id="bulk-errors" class="bulk-error-count"></span>
+        </div>
+        <div class="table-scroll" style="max-height:280px;overflow-y:auto">
+          <table id="bulk-preview-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Nombre</th><th>Categoría</th>
+                <th>Stock</th><th>P.Compra</th><th>P.Venta</th>
+                <th>Descripción</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="bulk-preview-body"></tbody>
+          </table>
+        </div>
+        <div class="form-actions" style="margin-top:16px">
+          <button class="btn-primary" id="bulk-confirm">Importar válidos</button>
+          <button class="btn-ghost" id="bulk-cancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="firebase.js?v=10"></script>
+  <script src="app.js?v=10"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      // Registra el SW
+      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+        .then(reg => {
+          // Verifica actualizaciones cada vez que se abre la app
+          reg.update();
+
+          reg.addEventListener('updatefound', () => {
+            const sw = reg.installing;
+            sw.addEventListener('statechange', () => {
+              if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+                sw.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        });
+
+      // Cuando el SW nuevo toma control → recarga para mostrar cambios
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+      });
+    }
+  </script>
+</body>
+</html>
