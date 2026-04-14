@@ -1,9 +1,6 @@
-// SW — Network First, compatible con GitHub Pages y Netlify
-const BUILD = '20260413';
-const CACHE  = 'inv-' + BUILD;
-
-// Detecta la base del sitio automáticamente
-const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
+// Service Worker — PWA para GitHub Pages
+const CACHE = 'inv-2026-04';
+const BASE  = '/inventario';
 
 const ASSETS = [
   BASE + '/',
@@ -11,6 +8,8 @@ const ASSETS = [
   BASE + '/styles.css',
   BASE + '/app.js',
   BASE + '/firebase.js',
+  BASE + '/icono-192.png',
+  BASE + '/icono-512.png',
 ];
 
 self.addEventListener('message', e => {
@@ -18,11 +17,12 @@ self.addEventListener('message', e => {
 });
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(ASSETS).catch(() => {})) // ignora errores de assets opcionales
-  );
   self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE).then(c =>
+      Promise.allSettled(ASSETS.map(a => c.add(a)))
+    )
+  );
 });
 
 self.addEventListener('activate', e => {
@@ -37,7 +37,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request, { cache: 'no-store' })
+    fetch(e.request)
       .then(res => {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
