@@ -198,6 +198,23 @@
       <div class="section-box" style="max-width:620px">
         <form id="product-form">
           <input type="hidden" id="edit-id" />
+
+          <!-- Imagen del producto -->
+          <div class="product-img-upload">
+            <div class="product-img-preview-wrap">
+              <img id="f-img-preview" src="" alt="" class="product-img-preview hidden" />
+              <div id="f-img-placeholder" class="product-img-placeholder">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Foto del producto</span>
+              </div>
+            </div>
+            <div class="product-img-actions">
+              <label class="btn-upload" for="f-img">📷 Subir foto</label>
+              <input type="file" id="f-img" accept="image/*" style="display:none" />
+              <button type="button" class="btn-ghost-sm" id="f-img-remove" style="display:none">Quitar</button>
+            </div>
+          </div>
+
           <div class="form-grid">
             <div class="form-group">
               <label>Nombre</label>

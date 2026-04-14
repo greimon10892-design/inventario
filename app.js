@@ -11,6 +11,9 @@ function fmtDate(iso) {
 }
 function getProduct(id) { return products.find(p => p.id === id); }
 
+// Imagen temporal del formulario de producto
+let _productImgData = '';
+
 // ── State ──────────────────────────────────────────────────────────────────
 let products  = JSON.parse(localStorage.getItem('inv_products')  || '[]');
 let movements = JSON.parse(localStorage.getItem('inv_movements') || '[]');
@@ -130,10 +133,19 @@ function renderInventory() {
     const catBadge = p.category === 'dulce'
       ? '<span class="badge badge-dulce">Dulce</span>'
       : '<span class="badge badge-pulsera">Pulsera</span>';
+    const thumb = p.img
+      ? `<img src="${p.img}" class="prod-thumb" alt="${p.name}" />`
+      : `<div class="prod-thumb-placeholder">${p.category === 'dulce' ? '🍬' : '📿'}</div>`;
+
     return `<tr>
       <td>
-        <span class="td-name">${p.name}</span>
-        ${p.desc ? `<span class="td-sub">${p.desc}</span>` : ''}
+        <div style="display:flex;align-items:center;gap:10px">
+          ${thumb}
+          <div>
+            <span class="td-name">${p.name}</span>
+            ${p.desc ? `<span class="td-sub">${p.desc}</span>` : ''}
+          </div>
+        </div>
       </td>
       <td>${catBadge}</td>
       <td class="${p.stock <= 5 ? 'stock-low' : ''}">${p.stock}</td>
@@ -209,6 +221,7 @@ document.getElementById('product-form').addEventListener('submit', e => {
     buyPrice:  parseFloat(document.getElementById('f-buy').value),
     sellPrice: parseFloat(document.getElementById('f-sell').value),
     desc:      document.getElementById('f-desc').value.trim(),
+    img:       _productImgData,
   };
   if (data.sellPrice < data.buyPrice) {
     alert('El precio de venta no puede ser menor al precio de compra.');
@@ -231,11 +244,37 @@ function resetForm() {
   document.getElementById('form-title').textContent = 'Nuevo Producto';
   document.getElementById('product-form').reset();
   document.getElementById('cancel-edit').style.display = 'none';
+  _productImgData = '';
+  document.getElementById('f-img-preview').classList.add('hidden');
+  document.getElementById('f-img-placeholder').style.display = '';
+  document.getElementById('f-img-remove').style.display = 'none';
 }
 
 document.getElementById('cancel-edit').addEventListener('click', () => {
   resetForm();
   navigate('productos');
+});
+
+document.getElementById('f-img').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _productImgData = e.target.result;
+    document.getElementById('f-img-preview').src = e.target.result;
+    document.getElementById('f-img-preview').classList.remove('hidden');
+    document.getElementById('f-img-placeholder').style.display = 'none';
+    document.getElementById('f-img-remove').style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('f-img-remove').addEventListener('click', () => {
+  _productImgData = '';
+  document.getElementById('f-img-preview').classList.add('hidden');
+  document.getElementById('f-img-placeholder').style.display = '';
+  document.getElementById('f-img-remove').style.display = 'none';
+  document.getElementById('f-img').value = '';
 });
 
 function editProduct(id) {
@@ -250,6 +289,18 @@ function editProduct(id) {
   document.getElementById('f-desc').value     = p.desc || '';
   document.getElementById('form-title').textContent = 'Editar Producto';
   document.getElementById('cancel-edit').style.display = 'inline-block';
+  // Imagen
+  _productImgData = p.img || '';
+  if (p.img) {
+    document.getElementById('f-img-preview').src = p.img;
+    document.getElementById('f-img-preview').classList.remove('hidden');
+    document.getElementById('f-img-placeholder').style.display = 'none';
+    document.getElementById('f-img-remove').style.display = 'inline-block';
+  } else {
+    document.getElementById('f-img-preview').classList.add('hidden');
+    document.getElementById('f-img-placeholder').style.display = '';
+    document.getElementById('f-img-remove').style.display = 'none';
+  }
   navigate('agregar');
 }
 
@@ -400,7 +451,12 @@ function renderSaleProductList() {
     const catBadge = p.category === 'dulce'
       ? '<span class="badge badge-dulce" style="font-size:0.65rem">Dulce</span>'
       : '<span class="badge badge-pulsera" style="font-size:0.65rem">Pulsera</span>';
+    const saleImg = p.img
+      ? `<img src="${p.img}" class="sale-product-img" alt="${p.name}" />`
+      : `<div class="sale-product-img-placeholder">${p.category === 'dulce' ? '🍬' : '📿'}</div>`;
+
     return `<div class="sale-product-item ${inCart?'in-cart':''} ${noStock?'out-of-stock':''}" data-id="${p.id}">
+      ${saleImg}
       <div class="sale-product-info">
         <div class="sale-product-name">${p.name}</div>
         <div class="sale-product-meta">${catBadge} &nbsp;Stock: ${p.stock}</div>
