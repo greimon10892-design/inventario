@@ -151,7 +151,7 @@ function renderInventory() {
       <td class="${p.stock <= 5 ? 'stock-low' : ''}">${p.stock}</td>
       <td>${fmt(p.buyPrice)}</td>
       <td>${fmt(p.sellPrice)}</td>
-      <td class="td-gain">${fmt(gain)}</td>
+      <td class="col-gain-cell td-gain">${fmt(gain)}</td>
       <td class="td-actions">
         <button class="btn-icon btn-entrada-product" title="Entrada"  onclick="openModal('${p.id}','entrada')">↓</button>
         <button class="btn-icon btn-salida-product"  title="Salida"   onclick="openModal('${p.id}','salida')">↑</button>
@@ -191,7 +191,7 @@ function renderMovements() {
       <td>${m.qty}</td>
       <td>${fmt(m.price)}</td>
       <td>${fmt(m.price * m.qty)}</td>
-      <td>${gainCell}</td>
+      <td class="col-mov-gain-cell">${gainCell}</td>
     </tr>`;
   }).join('');
 }
@@ -1285,38 +1285,45 @@ function deleteItem(colName, id) {
 
 // Aplica restricciones visuales según rol
 function applyPrivileges() {
-  const role = window._currentUserRole || 'Admin';
+  const role    = window._currentUserRole || 'Admin';
+  const isAdmin = role === 'Admin';
 
   // ── Navegación ─────────────────────────────────────────────────────────
-  // Solo lectura: sin acceso a Nuevo Producto ni Usuarios
   document.querySelectorAll('[data-view="agregar"],[data-view="usuarios"]').forEach(el => {
     el.style.display = (role === 'Solo lectura') ? 'none' : '';
   });
 
-  // ── Botones de acción en tablas ────────────────────────────────────────
-  // Usuario y Solo lectura: sin editar ni eliminar productos
-  document.querySelectorAll('.btn-edit-product, .btn-delete-product').forEach(btn => {
-    btn.style.display = (role === 'Admin') ? '' : 'none';
+  // ── Tarjetas financieras — solo Admin ──────────────────────────────────
+  ['card-inversion','card-ganancia','card-vendido'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isAdmin ? '' : 'none';
   });
 
-  // Solo lectura: sin botones de entrada/salida
+  // ── Columnas de ganancia — solo Admin ──────────────────────────────────
+  document.querySelectorAll('.col-gain-header,.col-gain-cell,.col-mov-gain-header,.col-mov-gain-cell').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+
+  // ── Botones editar/eliminar — solo Admin ───────────────────────────────
+  document.querySelectorAll('.btn-edit-product, .btn-delete-product').forEach(btn => {
+    btn.style.display = isAdmin ? '' : 'none';
+  });
+
+  // ── Botones entrada/salida — sin Solo lectura ──────────────────────────
   document.querySelectorAll('.btn-entrada-product, .btn-salida-product').forEach(btn => {
     btn.style.display = (role === 'Solo lectura') ? 'none' : '';
   });
 
-  // ── Formularios ────────────────────────────────────────────────────────
-  // Solo lectura: oculta formulario de nuevo producto y ventas
-  const formAgregar = document.getElementById('view-agregar');
-  if (formAgregar && role === 'Solo lectura') {
-    formAgregar.innerHTML = '<div class="empty-state" style="padding:60px">No tienes permiso para agregar productos.</div>';
-  }
-
-  // ── Sección Usuarios: solo Admin puede eliminar ────────────────────────
+  // ── Eliminar usuarios — solo Admin ─────────────────────────────────────
   document.querySelectorAll('.btn-delete-user').forEach(btn => {
-    btn.style.display = (role === 'Admin') ? '' : 'none';
+    btn.style.display = isAdmin ? '' : 'none';
   });
 
-  // ── Info del usuario en sidebar y bottom nav ──────────────────────────────
+  // ── Ganancia en carrito — solo Admin ───────────────────────────────────
+  const cartGainRow = document.querySelector('.cart-gain-row');
+  if (cartGainRow) cartGainRow.style.display = isAdmin ? '' : 'none';
+
+  // ── Info del usuario ───────────────────────────────────────────────────
   const me   = users.find(u => u.id === activeUserId);
   const info = document.getElementById('sidebar-user-info');
   if (info && me) info.textContent = me.name + ' · ' + me.role;
@@ -1344,19 +1351,47 @@ try {
   };
 } catch(e) { /* BroadcastChannel no disponible */ }
 
+// ── Splash screen ──────────────────────────────────────────────────────────
+function updateSplashBranding() {
+  // Aplica nombre, subtítulo y logo al splash desde ajustes guardados
+  const s = activeSettings ? activeSettings() : {};
+  const name = s.storeName || 'Inventario';
+  const sub  = s.subtitle  || 'Dulces & Pulseras';
+  const logo = s.logoMobile || s.logo || '';
+
+  const splashName = document.getElementById('splash-name');
+  const splashSub  = document.getElementById('splash-sub');
+  const splashLogo = document.getElementById('splash-logo');
+  const splashIcon = document.getElementById('splash-icon');
+
+  if (splashName) splashName.textContent = name;
+  if (splashSub)  splashSub.textContent  = sub;
+
+  if (logo && splashLogo && splashIcon) {
+    splashLogo.src = logo;
+    splashLogo.style.display = 'block';
+    splashIcon.style.display = 'none';
+  }
+}
+
+function hideSplash() {
+  const el = document.getElementById('splash');
+  if (!el) return;
+  el.classList.add('hide');
+  setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
+}
+
+// Muestra el splash con la marca correcta al inicio
+updateSplashBranding();
+
 // ── Init ───────────────────────────────────────────────────────────────────
 applySettings();
 
 async function initApp() {
   if (typeof initFirebase === 'function') {
-    // Muestra pantalla de carga mientras Firebase verifica sesión
     document.body.style.visibility = 'hidden';
     const ok = await initFirebase();
-    if (ok) {
-      // Firebase mostrará login o app según el estado de sesión
-      // onAuthStateChanged en firebase.js maneja todo
-      return;
-    }
+    if (ok) return; // Firebase llama hideSplash después del login/auth
   }
   // Sin Firebase → modo local
   document.body.style.visibility = 'visible';
@@ -1364,6 +1399,7 @@ async function initApp() {
   renderAll();
   loadSettingsUI();
   navigate('panel');
+  hideSplash();
 }
 
 initApp();

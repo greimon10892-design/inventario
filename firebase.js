@@ -32,7 +32,7 @@ async function initFirebase() {
       // Siempre muestra el body cuando Firebase responde
       document.body.style.visibility = 'visible';
       if (user) { onUserSignedIn(user); }
-      else      { stopListeners(); showLoginScreen(); }
+      else      { stopListeners(); hideSplash(); showLoginScreen(); }
     });
 
     return true;
@@ -74,6 +74,7 @@ async function onUserSignedIn(fbUser) {
 
     hideLoginScreen();
     showSyncStatus('online');
+    if (typeof hideSplash === 'function') hideSplash();
 
   } catch (err) {
     console.error('[onUserSignedIn]', err);

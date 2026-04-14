@@ -18,8 +18,104 @@
 
   <title>Inventario — Dulces & Pulseras</title>
   <link rel="stylesheet" href="styles.css?v=10" />
+  <style>
+    /* ── Splash screen ── */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: #141414;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 20px;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #splash.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #splash-logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 22px;
+      object-fit: contain;
+      display: none;
+      animation: splashPop 0.6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    #splash-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 22px;
+      background: #e07b39;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      animation: splashPop 0.6s cubic-bezier(.34,1.56,.64,1) both;
+      letter-spacing: -2px;
+    }
+    #splash-name {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f0ece6;
+      letter-spacing: -0.03em;
+      animation: splashFade 0.5s 0.3s both;
+    }
+    #splash-sub {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.82rem;
+      color: #7a7570;
+      animation: splashFade 0.5s 0.45s both;
+      margin-top: -12px;
+    }
+    #splash-dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      animation: splashFade 0.5s 0.6s both;
+    }
+    #splash-dots span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e07b39;
+      animation: splashDot 1.2s infinite ease-in-out;
+    }
+    #splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+    #splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes splashPop {
+      0%   { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes splashFade {
+      0%   { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes splashDot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%            { transform: scale(1);   opacity: 1; }
+    }
+  </style>
 </head>
 <body>
+
+  <!-- ── Splash Screen ───────────────────────────────────────────────── -->
+  <div id="splash">
+    <img id="splash-logo" src="" alt="Logo" />
+    <div id="splash-icon">I</div>
+    <div id="splash-name">Inventario</div>
+    <div id="splash-sub">Dulces &amp; Pulseras</div>
+    <div id="splash-dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
 
   <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
   <aside class="sidebar">
@@ -92,15 +188,15 @@
           <span class="stat-label">Productos</span>
           <span class="stat-value" id="total-products">0</span>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" id="card-inversion">
           <span class="stat-label">Inversión Total</span>
           <span class="stat-value" id="total-inversion">$0.00</span>
         </div>
-        <div class="stat-card accent">
+        <div class="stat-card accent" id="card-ganancia">
           <span class="stat-label">Ganancia Potencial</span>
           <span class="stat-value" id="total-ganancia">$0.00</span>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" id="card-vendido">
           <span class="stat-label">Total Vendido</span>
           <span class="stat-value" id="total-vendido">$0.00</span>
         </div>
@@ -143,8 +239,8 @@
               <th>Stock</th>
               <th>P. Compra</th>
               <th>P. Venta</th>
-              <th>Ganancia/u</th>
-              <th></th>
+              <th class="col-gain-header">Ganancia/u</th>
+              <th id="th-acciones"></th>
             </tr>
           </thead>
           <tbody id="inventory-body"></tbody>
@@ -179,7 +275,7 @@
               <th>Cantidad</th>
               <th>Precio Unit.</th>
               <th>Total</th>
-              <th>Ganancia</th>
+              <th class="col-mov-gain-header">Ganancia</th>
             </tr>
           </thead>
           <tbody id="mov-body"></tbody>
@@ -563,7 +659,7 @@
                 <span>Total</span>
                 <span id="cart-total">$0.00</span>
               </div>
-              <div class="cart-total-row" style="color:var(--success)">
+              <div class="cart-total-row cart-gain-row" style="color:var(--success)">
                 <span>Ganancia</span>
                 <span id="cart-gain">$0.00</span>
               </div>
