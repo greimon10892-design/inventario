@@ -718,6 +718,7 @@ const DEFAULTS = {
   accent:    '#e07b39',
   theme:     'dark',
   logo:      '',
+  logoMobile: '',
   bg:        '',
   bgOpacity: 15,
 };
@@ -785,8 +786,9 @@ function applySettings(s) {
   // Logo — sidebar y header móvil
   let logoImg = document.getElementById('sidebar-logo');
   const mLogo = document.getElementById('mobile-logo');
+
+  // Logo web (sidebar)
   if (s.logo) {
-    // Sidebar logo
     if (!logoImg) {
       logoImg = document.createElement('img');
       logoImg.id = 'sidebar-logo';
@@ -794,11 +796,15 @@ function applySettings(s) {
       document.querySelector('.sidebar-brand').prepend(logoImg);
     }
     logoImg.src = s.logo;
-    // Mobile header logo
-    if (mLogo) { mLogo.src = s.logo; mLogo.classList.remove('hidden'); }
   } else {
     if (logoImg) logoImg.remove();
-    if (mLogo)   mLogo.classList.add('hidden');
+  }
+
+  // Logo móvil (header) — usa logoMobile si existe, si no usa logo web
+  const mobileSrc = s.logoMobile || s.logo;
+  if (mLogo) {
+    if (mobileSrc) { mLogo.src = mobileSrc; mLogo.classList.remove('hidden'); }
+    else           { mLogo.classList.add('hidden'); }
   }
 
   // Background
@@ -841,11 +847,19 @@ function loadSettingsUI() {
   document.querySelectorAll('.swatch:not(.swatch-custom)').forEach(sw =>
     sw.classList.toggle('active', sw.dataset.color === s.accent));
 
-  // Logo preview
+  // Logo web preview
   const lp = document.getElementById('logo-preview');
   const rl = document.getElementById('remove-logo');
   if (s.logo) { lp.src = s.logo; lp.classList.remove('hidden'); rl.style.display = 'inline-block'; }
   else        { lp.classList.add('hidden'); rl.style.display = 'none'; }
+
+  // Logo móvil preview
+  const lpm = document.getElementById('logo-mobile-preview');
+  const rlm = document.getElementById('remove-logo-mobile');
+  if (lpm && rlm) {
+    if (s.logoMobile) { lpm.src = s.logoMobile; lpm.classList.remove('hidden'); rlm.style.display = 'inline-block'; }
+    else              { lpm.classList.add('hidden'); rlm.style.display = 'none'; }
+  }
 
   // BG preview
   const bp = document.getElementById('bg-preview');
@@ -924,6 +938,27 @@ document.getElementById('remove-logo').addEventListener('click', () => {
   document.getElementById('logo-preview').classList.add('hidden');
   document.getElementById('remove-logo').style.display = 'none';
   document.getElementById('s-logo').value = '';
+});
+
+// Logo móvil
+document.getElementById('s-logo-mobile').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    setPending('logoMobile', e.target.result);
+    document.getElementById('logo-mobile-preview').src = e.target.result;
+    document.getElementById('logo-mobile-preview').classList.remove('hidden');
+    document.getElementById('remove-logo-mobile').style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('remove-logo-mobile').addEventListener('click', () => {
+  setPending('logoMobile', '');
+  document.getElementById('logo-mobile-preview').classList.add('hidden');
+  document.getElementById('remove-logo-mobile').style.display = 'none';
+  document.getElementById('s-logo-mobile').value = '';
 });
 
 document.getElementById('s-bg').addEventListener('change', function() {
