@@ -244,8 +244,136 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .wa-btn:hover{background:var(--wa-dk)}
 .wa-btn:active{transform:scale(.98)}
 
-/* ── TOAST ── */
-#toast{
+/* ── SETTINGS BTN ── */
+#settings-fab{
+  position:fixed;bottom:24px;left:20px;z-index:200;
+  width:44px;height:44px;border-radius:50%;border:none;
+  background:#fff;color:var(--text);font-size:1.1rem;
+  cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.15);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s,box-shadow .2s;
+}
+#settings-fab:hover{transform:scale(1.1);box-shadow:0 4px 20px rgba(0,0,0,.2)}
+
+/* ── SETTINGS PANEL ── */
+#settings-overlay{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+#settings-overlay.open{opacity:1;pointer-events:all}
+#settings-panel{
+  position:fixed;left:0;top:0;bottom:0;z-index:401;
+  width:min(340px,100vw);background:#fff;
+  display:flex;flex-direction:column;
+  transform:translateX(-100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
+  box-shadow:4px 0 32px rgba(0,0,0,.12);overflow-y:auto;
+}
+#settings-panel.open{transform:translateX(0)}
+.sp-header{
+  padding:16px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--green);color:#fff;position:sticky;top:0;z-index:1;
+}
+.sp-header h2{font-size:1rem;font-weight:700}
+.sp-close{
+  background:rgba(255,255,255,.18);border:none;color:#fff;
+  width:32px;height:32px;border-radius:50%;font-size:1rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.sp-close:hover{background:rgba(255,255,255,.3)}
+.sp-body{padding:16px 18px;display:flex;flex-direction:column;gap:20px}
+.sp-section{display:flex;flex-direction:column;gap:10px}
+.sp-section-title{
+  font-size:.68rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text-muted);
+  padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+.sp-row{display:flex;flex-direction:column;gap:5px}
+.sp-label{font-size:.8rem;font-weight:600;color:var(--text)}
+.sp-input{
+  padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;
+  font-family:inherit;font-size:.85rem;color:var(--text);
+  background:#fff;outline:none;transition:border-color .2s;width:100%;
+}
+.sp-input:focus{border-color:var(--green)}
+.sp-swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sp-swatch{
+  width:30px;height:30px;border-radius:50%;border:2.5px solid transparent;
+  cursor:pointer;transition:transform .15s,border-color .15s;flex-shrink:0;
+}
+.sp-swatch:hover{transform:scale(1.15)}
+.sp-swatch.active{border-color:var(--text);transform:scale(1.1)}
+.sp-swatch-custom{
+  width:30px;height:30px;border-radius:50%;
+  background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
+  border:2.5px solid transparent;cursor:pointer;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;overflow:hidden;
+}
+.sp-swatch-custom input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
+.sp-swatch-custom span{font-size:.75rem;color:#fff;font-weight:700;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.sp-img-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sp-preview{
+  width:52px;height:52px;border-radius:8px;object-fit:cover;
+  border:1.5px solid var(--border);background:var(--surface2);
+}
+.sp-preview.hidden{display:none}
+.sp-upload{
+  padding:7px 14px;background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;
+  color:var(--text);transition:border-color .2s;white-space:nowrap;
+}
+.sp-upload:hover{border-color:var(--green)}
+.sp-remove{
+  padding:7px 12px;background:none;border:1.5px solid var(--border);
+  border-radius:8px;font-size:.8rem;font-weight:500;cursor:pointer;
+  color:var(--text-muted);transition:all .2s;
+}
+.sp-remove:hover{border-color:#e03030;color:#e03030}
+.sp-themes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sp-theme{
+  border:2px solid var(--border);border-radius:10px;padding:10px 8px;
+  cursor:pointer;text-align:center;transition:all .18s;background:#fff;
+}
+.sp-theme:hover{border-color:var(--green)}
+.sp-theme.active{border-color:var(--green);background:#f0faf5}
+.sp-theme-preview{height:28px;border-radius:5px;margin-bottom:6px}
+.sp-theme-name{font-size:.72rem;font-weight:700;color:var(--text)}
+.sp-save{
+  width:100%;padding:12px;background:var(--green);color:#fff;
+  border:none;border-radius:10px;font-family:inherit;font-size:.9rem;
+  font-weight:700;cursor:pointer;transition:background .2s;margin-top:4px;
+}
+.sp-save:hover{background:var(--green-lt)}
+.sp-reset{
+  width:100%;padding:9px;background:none;color:var(--text-muted);
+  border:1.5px solid var(--border);border-radius:10px;font-family:inherit;
+  font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;
+}
+.sp-reset:hover{border-color:#e03030;color:#e03030}
+
+/* ── HERO BANNER ── */
+#hero-banner{
+  width:100%;min-height:120px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--green);
+  position:relative;overflow:hidden;
+  padding:28px 20px;text-align:center;
+}
+#hero-banner.hidden{display:none}
+#hero-banner-bg{
+  position:absolute;inset:0;object-fit:cover;width:100%;height:100%;
+  opacity:.35;pointer-events:none;
+}
+.hero-banner-content{position:relative;z-index:1}
+#hero-banner-title{
+  font-size:clamp(1.4rem,4vw,2.2rem);font-weight:800;
+  color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.25);
+  margin-bottom:4px;
+}
+#hero-banner-sub{font-size:.9rem;color:rgba(255,255,255,.8);font-weight:500}
+
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--text);color:#fff;
   padding:10px 20px;border-radius:30px;font-size:.82rem;font-weight:600;
@@ -256,6 +384,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </style>
 </head>
 <body>
+
+<!-- HERO BANNER -->
+<div id="hero-banner" class="hidden">
+  <img id="hero-banner-bg" src="" alt=""/>
+  <div class="hero-banner-content">
+    <div id="hero-banner-title">TALARA</div>
+    <div id="hero-banner-sub">Hecho a mano · Pieza única</div>
+  </div>
+</div>
 
 <!-- HEADER -->
 <header class="site-header">
@@ -311,6 +448,118 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <!-- TOAST -->
 <div id="toast"></div>
+
+<!-- SETTINGS FAB -->
+<button id="settings-fab" onclick="openSettings()" title="Personalizar tienda" aria-label="Personalizar">⚙️</button>
+
+<!-- SETTINGS OVERLAY -->
+<div id="settings-overlay" onclick="closeSettings()"></div>
+
+<!-- SETTINGS PANEL -->
+<aside id="settings-panel" aria-label="Personalización">
+  <div class="sp-header">
+    <h2>🎨 Personalizar tienda</h2>
+    <button class="sp-close" onclick="closeSettings()">✕</button>
+  </div>
+  <div class="sp-body">
+
+    <!-- Identidad -->
+    <div class="sp-section">
+      <div class="sp-section-title">Identidad</div>
+      <div class="sp-row">
+        <label class="sp-label">Nombre de la tienda</label>
+        <input class="sp-input" id="sp-name" type="text" placeholder="TALARA"/>
+      </div>
+      <div class="sp-row">
+        <label class="sp-label">Subtítulo / slogan</label>
+        <input class="sp-input" id="sp-sub" type="text" placeholder="Hecho a mano · Pieza única"/>
+      </div>
+      <div class="sp-row">
+        <label class="sp-label">Logo (encabezado)</label>
+        <div class="sp-img-row">
+          <img id="sp-logo-preview" class="sp-preview hidden" src="" alt="Logo"/>
+          <label class="sp-upload" for="sp-logo-file">📷 Subir logo</label>
+          <input type="file" id="sp-logo-file" accept="image/*" style="display:none"/>
+          <button class="sp-remove hidden" id="sp-logo-remove">Quitar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner -->
+    <div class="sp-section">
+      <div class="sp-section-title">Banner superior</div>
+      <div class="sp-row">
+        <label class="sp-label">Imagen de banner</label>
+        <div class="sp-img-row">
+          <img id="sp-banner-preview" class="sp-preview hidden" src="" alt="Banner" style="width:80px;height:44px;object-fit:cover"/>
+          <label class="sp-upload" for="sp-banner-file">🖼️ Subir imagen</label>
+          <input type="file" id="sp-banner-file" accept="image/*" style="display:none"/>
+          <button class="sp-remove hidden" id="sp-banner-remove">Quitar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colores -->
+    <div class="sp-section">
+      <div class="sp-section-title">Color principal</div>
+      <div class="sp-swatches" id="sp-swatches">
+        <button class="sp-swatch active" data-color="#1a9e5c" style="background:#1a9e5c" title="Verde"></button>
+        <button class="sp-swatch" data-color="#e07b39" style="background:#e07b39" title="Naranja"></button>
+        <button class="sp-swatch" data-color="#6366f1" style="background:#6366f1" title="Índigo"></button>
+        <button class="sp-swatch" data-color="#ec4899" style="background:#ec4899" title="Rosa"></button>
+        <button class="sp-swatch" data-color="#0ea5e9" style="background:#0ea5e9" title="Azul"></button>
+        <button class="sp-swatch" data-color="#f59e0b" style="background:#f59e0b" title="Ámbar"></button>
+        <button class="sp-swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Violeta"></button>
+        <label class="sp-swatch-custom" title="Color personalizado">
+          <input type="color" id="sp-custom-color" value="#1a9e5c"/>
+          <span>+</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Precio -->
+    <div class="sp-section">
+      <div class="sp-section-title">Color del precio</div>
+      <div class="sp-swatches" id="sp-price-swatches">
+        <button class="sp-swatch active" data-color="#ff6b00" style="background:#ff6b00" title="Naranja"></button>
+        <button class="sp-swatch" data-color="#e03030" style="background:#e03030" title="Rojo"></button>
+        <button class="sp-swatch" data-color="#1a9e5c" style="background:#1a9e5c" title="Verde"></button>
+        <button class="sp-swatch" data-color="#6366f1" style="background:#6366f1" title="Índigo"></button>
+        <button class="sp-swatch" data-color="#1a1a1a" style="background:#1a1a1a" title="Negro"></button>
+        <label class="sp-swatch-custom" title="Color personalizado">
+          <input type="color" id="sp-price-color" value="#ff6b00"/>
+          <span>+</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Tema -->
+    <div class="sp-section">
+      <div class="sp-section-title">Tema de fondo</div>
+      <div class="sp-themes">
+        <div class="sp-theme active" data-theme="light">
+          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#f5f5f5,#e8e8e8)"></div>
+          <div class="sp-theme-name">☀️ Claro</div>
+        </div>
+        <div class="sp-theme" data-theme="dark">
+          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#141414,#272727)"></div>
+          <div class="sp-theme-name">🌙 Oscuro</div>
+        </div>
+        <div class="sp-theme" data-theme="warm">
+          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#faf7f2,#f0e8d8)"></div>
+          <div class="sp-theme-name">🌿 Cálido</div>
+        </div>
+        <div class="sp-theme" data-theme="mint">
+          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#f0faf5,#d8f0e4)"></div>
+          <div class="sp-theme-name">🍃 Menta</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="sp-save" id="sp-save-btn">💾 Guardar cambios</button>
+    <button class="sp-reset" id="sp-reset-btn">Restablecer valores</button>
+  </div>
+</aside>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -592,7 +841,223 @@ $('search').addEventListener('input', e => {
   render();
 });
 
-// ── FIREBASE LISTENER ───────────────────────────────────
+// ── SETTINGS ────────────────────────────────────────────
+const THEMES = {
+  light: { bg:'#f5f5f5', surface:'#ffffff', surface2:'#f0f0f0', border:'#e8e8e8', text:'#1a1a1a', textMuted:'#888' },
+  dark:  { bg:'#141414', surface:'#1e1e1e', surface2:'#272727', border:'#333',    text:'#f0f0f0', textMuted:'#999' },
+  warm:  { bg:'#faf7f2', surface:'#ffffff', surface2:'#f3ede4', border:'#e0d5c5', text:'#1a1a1a', textMuted:'#7a6e5f' },
+  mint:  { bg:'#f0faf5', surface:'#ffffff', surface2:'#d8f0e4', border:'#b8e4cc', text:'#1a1a1a', textMuted:'#4a7a5f' },
+};
+
+const DEFAULTS_SETTINGS = {
+  name:'TALARA', sub:'Hecho a mano · Pieza única',
+  logo:'', banner:'',
+  primary:'#1a9e5c', price:'#ff6b00', theme:'light'
+};
+
+let storeSettings = { ...DEFAULTS_SETTINGS };
+
+function loadStoredSettings() {
+  try {
+    const saved = localStorage.getItem('talara_settings');
+    if (saved) storeSettings = { ...DEFAULTS_SETTINGS, ...JSON.parse(saved) };
+  } catch(e) {}
+  applyStoreSettings();
+}
+
+function applyStoreSettings() {
+  const s = storeSettings;
+  const t = THEMES[s.theme] || THEMES.light;
+  const root = document.documentElement;
+
+  // Theme colors
+  root.style.setProperty('--bg', t.bg);
+  root.style.setProperty('--surface', t.surface);
+  root.style.setProperty('--surface2', t.surface2);
+  root.style.setProperty('--border', t.border);
+  root.style.setProperty('--text', t.text);
+  root.style.setProperty('--text-muted', t.textMuted);
+
+  // Primary & price
+  root.style.setProperty('--green', s.primary);
+  // Darken slightly for hover
+  root.style.setProperty('--green-dk', s.primary);
+  root.style.setProperty('--green-lt', s.primary);
+  root.style.setProperty('--orange', s.price);
+
+  // Logo in header
+  const logoEl = document.querySelector('.logo');
+  if (s.logo) {
+    logoEl.innerHTML = `<img src="${s.logo}" alt="${s.name}" style="height:36px;object-fit:contain;border-radius:6px"/>`;
+  } else {
+    logoEl.innerHTML = s.name + '<span>.</span>';
+  }
+
+  // Banner
+  const banner = $('hero-banner');
+  const bannerBg = $('hero-banner-bg');
+  $('hero-banner-title').textContent = s.name;
+  $('hero-banner-sub').textContent = s.sub;
+  if (s.banner) {
+    bannerBg.src = s.banner;
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
+
+  // Page title
+  document.title = s.name + ' — Tienda';
+
+  // Header bg matches theme surface
+  document.querySelector('.site-header').style.background = t.surface;
+}
+
+window.openSettings = function() {
+  // Populate form
+  $('sp-name').value = storeSettings.name;
+  $('sp-sub').value  = storeSettings.sub;
+
+  // Logo preview
+  if (storeSettings.logo) {
+    $('sp-logo-preview').src = storeSettings.logo;
+    $('sp-logo-preview').classList.remove('hidden');
+    $('sp-logo-remove').classList.remove('hidden');
+  }
+  // Banner preview
+  if (storeSettings.banner) {
+    $('sp-banner-preview').src = storeSettings.banner;
+    $('sp-banner-preview').classList.remove('hidden');
+    $('sp-banner-remove').classList.remove('hidden');
+  }
+
+  // Active swatches
+  document.querySelectorAll('#sp-swatches .sp-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.color === storeSettings.primary);
+  });
+  document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.color === storeSettings.price);
+  });
+  document.querySelectorAll('.sp-theme').forEach(t => {
+    t.classList.toggle('active', t.dataset.theme === storeSettings.theme);
+  });
+
+  $('settings-panel').classList.add('open');
+  $('settings-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeSettings = function() {
+  $('settings-panel').classList.remove('open');
+  $('settings-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+// Color swatches — primary
+document.querySelectorAll('#sp-swatches .sp-swatch').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#sp-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    storeSettings.primary = btn.dataset.color;
+    applyStoreSettings();
+  });
+});
+$('sp-custom-color').addEventListener('input', e => {
+  storeSettings.primary = e.target.value;
+  document.querySelectorAll('#sp-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
+  applyStoreSettings();
+});
+
+// Color swatches — price
+document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    storeSettings.price = btn.dataset.color;
+    applyStoreSettings();
+  });
+});
+$('sp-price-color').addEventListener('input', e => {
+  storeSettings.price = e.target.value;
+  document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
+  applyStoreSettings();
+});
+
+// Theme selector
+document.querySelectorAll('.sp-theme').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sp-theme').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    storeSettings.theme = btn.dataset.theme;
+    applyStoreSettings();
+  });
+});
+
+// Logo upload
+$('sp-logo-file').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    storeSettings.logo = e.target.result;
+    $('sp-logo-preview').src = e.target.result;
+    $('sp-logo-preview').classList.remove('hidden');
+    $('sp-logo-remove').classList.remove('hidden');
+    applyStoreSettings();
+  };
+  reader.readAsDataURL(file);
+});
+$('sp-logo-remove').addEventListener('click', () => {
+  storeSettings.logo = '';
+  $('sp-logo-preview').classList.add('hidden');
+  $('sp-logo-remove').classList.add('hidden');
+  $('sp-logo-file').value = '';
+  applyStoreSettings();
+});
+
+// Banner upload
+$('sp-banner-file').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    storeSettings.banner = e.target.result;
+    $('sp-banner-preview').src = e.target.result;
+    $('sp-banner-preview').classList.remove('hidden');
+    $('sp-banner-remove').classList.remove('hidden');
+    applyStoreSettings();
+  };
+  reader.readAsDataURL(file);
+});
+$('sp-banner-remove').addEventListener('click', () => {
+  storeSettings.banner = '';
+  $('sp-banner-preview').classList.add('hidden');
+  $('sp-banner-remove').classList.add('hidden');
+  $('sp-banner-file').value = '';
+  applyStoreSettings();
+});
+
+// Live preview as user types
+$('sp-name').addEventListener('input', e => { storeSettings.name = e.target.value || 'Mi Tienda'; applyStoreSettings(); });
+$('sp-sub').addEventListener('input',  e => { storeSettings.sub  = e.target.value; applyStoreSettings(); });
+
+// Save
+$('sp-save-btn').addEventListener('click', () => {
+  localStorage.setItem('talara_settings', JSON.stringify(storeSettings));
+  closeSettings();
+  showToast('✓ Cambios guardados');
+});
+
+// Reset
+$('sp-reset-btn').addEventListener('click', () => {
+  if (!confirm('¿Restablecer todos los ajustes?')) return;
+  storeSettings = { ...DEFAULTS_SETTINGS };
+  localStorage.removeItem('talara_settings');
+  applyStoreSettings();
+  closeSettings();
+  showToast('Ajustes restablecidos');
+});
+
+loadStoredSettings();
+
+
 onSnapshot(collection(db, 'products'), snap => {
   products = snap.docs
     .map(d => ({ id: d.id, ...d.data() }))
