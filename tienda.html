@@ -1,1079 +1,292 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>TALARA — Tienda</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --green:#1a9e5c;
-  --green-dk:#14794a;
-  --green-lt:#22b868;
-  --orange:#ff6b00;
-  --orange-lt:#ff8533;
-  --bg:#f5f5f5;
-  --surface:#ffffff;
-  --surface2:#f0f0f0;
-  --border:#e8e8e8;
-  --text:#1a1a1a;
-  --text-muted:#888;
-  --wa:#25d366;
-  --wa-dk:#1da851;
-  --radius:10px;
-  --shadow:0 2px 16px rgba(0,0,0,.10);
-}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TALARA — Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── HEADER ── */
-.site-header{
-  position:sticky;top:0;z-index:100;
-  background:#fff;
-  border-bottom:1px solid var(--border);
-  box-shadow:0 2px 8px rgba(0,0,0,.07);
-  padding:0 16px;
-}
-.header-top{
-  display:flex;align-items:center;gap:12px;
-  padding:10px 0;
-  max-width:1200px;margin:0 auto;
-}
-.logo{
-  font-size:1.35rem;font-weight:800;color:var(--green);
-  letter-spacing:-.02em;white-space:nowrap;text-decoration:none;flex-shrink:0;
-}
-.logo span{color:var(--orange)}
-.search-wrap{flex:1;position:relative;max-width:560px;margin:0 auto}
-.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
-#search{
-  width:100%;padding:10px 14px 10px 38px;
-  background:var(--bg);border:1.5px solid var(--border);border-radius:24px;
-  color:var(--text);font-family:inherit;font-size:.9rem;outline:none;
-  transition:border-color .2s,box-shadow .2s;
-}
-#search:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,158,92,.12)}
-#search::placeholder{color:var(--text-muted)}
-.cart-icon-btn{
-  position:relative;background:none;border:none;cursor:pointer;
-  width:42px;height:42px;display:flex;align-items:center;justify-content:center;
-  border-radius:50%;transition:background .2s;flex-shrink:0;
-}
-.cart-icon-btn:hover{background:var(--bg)}
-.cart-icon-btn svg{color:var(--text)}
-#cart-badge{
-  position:absolute;top:2px;right:2px;
-  background:var(--orange);color:#fff;font-size:.6rem;font-weight:800;
-  min-width:18px;height:18px;border-radius:9px;padding:0 4px;
-  display:flex;align-items:center;justify-content:center;
-  border:2px solid #fff;transition:transform .2s;
-}
-#cart-badge.hidden{display:none}
-#cart-badge.pop{animation:pop .25s ease}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-/* ── CATEGORY TABS ── */
-.cat-tabs{
-  display:flex;gap:8px;align-items:center;
-  padding:8px 0 10px;overflow-x:auto;scrollbar-width:none;
-  max-width:1200px;margin:0 auto;
-}
-.cat-tabs::-webkit-scrollbar{display:none}
-.cat-btn{
-  padding:7px 18px;border-radius:24px;border:1.5px solid var(--border);
-  background:#fff;color:var(--text-muted);
-  font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;
-  white-space:nowrap;transition:all .18s;flex-shrink:0;
-}
-.cat-btn:hover{border-color:var(--green);color:var(--green)}
-.cat-btn.active{background:var(--green);border-color:var(--green);color:#fff}
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #ffffff;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #1a9e5c;
+    }
+    .nav-logo span { color: #ff6b00; }
 
-/* ── CATALOG ── */
-.catalog{padding:20px 16px 100px;max-width:1200px;margin:0 auto}
-.cat-section{margin-bottom:36px}
-.sec-header{
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:14px;padding-bottom:10px;
-  border-bottom:2px solid var(--border);
-}
-.sec-header.dulces-hdr{border-color:#ffd27a}
-.sec-header.pulseras-hdr{border-color:#a3e0c0}
-.sec-emoji{font-size:1.6rem;line-height:1}
-.sec-title{font-size:1.1rem;font-weight:800;color:var(--text)}
-.sec-count{
-  margin-left:auto;font-size:.72rem;font-weight:600;
-  color:var(--text-muted);background:var(--surface2);
-  padding:3px 10px;border-radius:20px;
-}
-.result-label{font-size:.78rem;color:var(--text-muted);font-weight:500;margin-bottom:14px}
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #f0faf5 0%, #fff8f0 100%);
+      padding: 80px 24px 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(26,158,92,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: -60px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(255,107,0,0.10) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(26,158,92,0.1);
+      color: #1a9e5c;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+    .hero-title {
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-title .green { color: #1a9e5c; }
+    .hero-title .orange { color: #ff6b00; }
+    .hero-tagline {
+      font-size: clamp(1rem, 3vw, 1.25rem);
+      color: #555;
+      font-weight: 500;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-sub {
+      font-size: 0.9rem;
+      color: #888;
+      position: relative;
+      z-index: 1;
+    }
 
-/* ── GRID ── */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-}
-@media(min-width:540px){.grid{grid-template-columns:repeat(3,1fr);gap:12px}}
-@media(min-width:860px){.grid{grid-template-columns:repeat(4,1fr);gap:14px}}
-@media(min-width:1100px){.grid{gap:16px}}
+    /* CARDS SECTION */
+    .cards-section {
+      padding: 64px 24px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .cards-section h2 {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #888;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 600px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
 
-/* ── CARD ── */
-.card{
-  background:#fff;border-radius:var(--radius);
-  overflow:hidden;display:flex;flex-direction:column;
-  box-shadow:0 1px 6px rgba(0,0,0,.07);
-  transition:box-shadow .2s,transform .2s;
-}
-.card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+    .store-card {
+      background: #ffffff;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 24px;
+      padding: 40px 32px;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    .store-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.10);
+    }
+    .store-card.dulces:hover { border-color: #ff6b00; }
+    .store-card.pulseras:hover { border-color: #8b5cf6; }
 
-.card-img-wrap{
-  position:relative;
-  width:100%;aspect-ratio:1/1;
-  background:var(--surface2);overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-  font-size:3.5rem;
-}
-.card-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
-.add-circle{
-  position:absolute;bottom:8px;right:8px;
-  width:34px;height:34px;border-radius:50%;
-  background:var(--green);border:none;color:#fff;
-  font-size:1.3rem;line-height:1;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 8px rgba(26,158,92,.4);
-  transition:background .18s,transform .15s;
-  flex-shrink:0;
-}
-.add-circle:hover{background:var(--green-lt)}
-.add-circle:active{transform:scale(.9)}
-.add-circle.in-cart{background:#e0f4ec;color:var(--green);border:2px solid var(--green)}
+    .card-emoji {
+      font-size: 4rem;
+      line-height: 1;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    }
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .store-card.dulces .card-title { color: #ff6b00; }
+    .store-card.pulseras .card-title { color: #8b5cf6; }
 
-.card-body{padding:8px 10px 10px;flex:1;display:flex;flex-direction:column;gap:4px}
-.card-name{
-  font-size:.82rem;font-weight:600;line-height:1.35;color:var(--text);
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-}
-.card-price{font-size:1.05rem;font-weight:800;color:var(--orange);margin-top:2px}
-.card-tag{font-size:.68rem;color:var(--text-muted);font-weight:500}
+    .card-desc {
+      font-size: 0.95rem;
+      color: #666;
+      line-height: 1.5;
+    }
+    .card-btn {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 100px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-decoration: none;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .card-btn:hover { opacity: 0.88; transform: scale(1.03); }
+    .store-card.dulces .card-btn { background: #ff6b00; }
+    .store-card.pulseras .card-btn { background: #8b5cf6; }
 
-/* ── EMPTY STATE ── */
-.empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
-.empty span{font-size:3rem;display:block;margin-bottom:12px}
-.empty p{font-size:.95rem}
-.hidden{display:none!important}
+    .card-tag {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+    .store-card.dulces .card-tag { background: #fff3e8; color: #ff6b00; }
+    .store-card.pulseras .card-tag { background: #f3eeff; color: #8b5cf6; }
 
-/* ── CART OVERLAY ── */
-#cart-overlay{
-  position:fixed;inset:0;z-index:300;
-  background:rgba(0,0,0,.4);backdrop-filter:blur(3px);
-  opacity:0;pointer-events:none;transition:opacity .3s;
-}
-#cart-overlay.open{opacity:1;pointer-events:all}
+    /* FEATURES */
+    .features {
+      background: #f9f9f9;
+      padding: 48px 24px;
+    }
+    .features-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      text-align: center;
+    }
+    @media (max-width: 600px) {
+      .features-inner { grid-template-columns: 1fr; }
+    }
+    .feature-item { padding: 16px; }
+    .feature-icon { font-size: 2rem; margin-bottom: 10px; }
+    .feature-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+    .feature-desc { font-size: 0.82rem; color: #888; line-height: 1.5; }
 
-/* ── CART PANEL ── */
-#cart-panel{
-  position:fixed;right:0;top:0;bottom:0;z-index:301;
-  width:min(400px,100vw);background:#fff;
-  display:flex;flex-direction:column;
-  transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
-  box-shadow:-4px 0 32px rgba(0,0,0,.12);
-}
-#cart-panel.open{transform:translateX(0)}
-
-.cart-header{
-  padding:16px 18px;
-  display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid var(--border);
-}
-.cart-header h2{font-size:1rem;font-weight:700;color:var(--text)}
-.cart-close{
-  background:var(--bg);border:none;color:var(--text);
-  width:32px;height:32px;border-radius:50%;font-size:1rem;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .15s;
-}
-.cart-close:hover{background:var(--border)}
-.cart-items{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px}
-.cart-items::-webkit-scrollbar{width:3px}
-.cart-items::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.cart-empty{text-align:center;padding:40px 0;color:var(--text-muted)}
-.cart-empty span{font-size:2.5rem;display:block;margin-bottom:8px}
-.cart-empty p{font-size:.88rem}
-
-.cart-row{
-  display:flex;align-items:center;gap:10px;
-  background:var(--bg);border-radius:8px;padding:10px 12px;
-}
-.cart-row-thumb{
-  width:46px;height:46px;border-radius:6px;flex-shrink:0;
-  background:var(--surface2);overflow:hidden;
-  display:flex;align-items:center;justify-content:center;font-size:1.4rem;
-}
-.cart-row-thumb img{width:100%;height:100%;object-fit:cover}
-.cart-row-info{flex:1;min-width:0}
-.cart-row-name{font-size:.83rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-.cart-row-price{font-size:.78rem;color:var(--orange);font-weight:700;margin-top:2px}
-.cart-qty{display:flex;align-items:center;gap:5px;flex-shrink:0}
-.qty-btn{
-  width:26px;height:26px;border-radius:6px;border:1.5px solid var(--border);
-  background:#fff;color:var(--text);font-size:.95rem;font-weight:700;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .15s,border-color .15s;
-}
-.qty-btn:hover{background:var(--green);border-color:var(--green);color:#fff}
-.qty-num{font-size:.88rem;font-weight:700;min-width:18px;text-align:center}
-
-.cart-footer{
-  padding:14px 18px;border-top:1px solid var(--border);
-  display:flex;flex-direction:column;gap:10px;background:#fff;
-}
-.cart-total-row{display:flex;justify-content:space-between;align-items:center}
-.cart-total-label{font-size:.88rem;color:var(--text-muted);font-weight:600}
-.cart-total-val{font-size:1.35rem;font-weight:800;color:var(--text)}
-
-.wa-btn{
-  width:100%;padding:13px;border-radius:10px;border:none;
-  background:var(--wa);color:#fff;font-family:inherit;font-size:.95rem;font-weight:700;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:background .18s,transform .1s;
-  box-shadow:0 3px 12px rgba(37,211,102,.35);
-}
-.wa-btn:hover{background:var(--wa-dk)}
-.wa-btn:active{transform:scale(.98)}
-
-/* ── SETTINGS BTN ── */
-#settings-fab{
-  position:fixed;bottom:24px;left:20px;z-index:200;
-  width:44px;height:44px;border-radius:50%;border:none;
-  background:#fff;color:var(--text);font-size:1.1rem;
-  cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.15);
-  display:flex;align-items:center;justify-content:center;
-  transition:transform .2s,box-shadow .2s;
-}
-#settings-fab:hover{transform:scale(1.1);box-shadow:0 4px 20px rgba(0,0,0,.2)}
-
-/* ── SETTINGS PANEL ── */
-#settings-overlay{
-  position:fixed;inset:0;z-index:400;
-  background:rgba(0,0,0,.45);backdrop-filter:blur(3px);
-  opacity:0;pointer-events:none;transition:opacity .3s;
-}
-#settings-overlay.open{opacity:1;pointer-events:all}
-#settings-panel{
-  position:fixed;left:0;top:0;bottom:0;z-index:401;
-  width:min(340px,100vw);background:#fff;
-  display:flex;flex-direction:column;
-  transform:translateX(-100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
-  box-shadow:4px 0 32px rgba(0,0,0,.12);overflow-y:auto;
-}
-#settings-panel.open{transform:translateX(0)}
-.sp-header{
-  padding:16px 18px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  background:var(--green);color:#fff;position:sticky;top:0;z-index:1;
-}
-.sp-header h2{font-size:1rem;font-weight:700}
-.sp-close{
-  background:rgba(255,255,255,.18);border:none;color:#fff;
-  width:32px;height:32px;border-radius:50%;font-size:1rem;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-}
-.sp-close:hover{background:rgba(255,255,255,.3)}
-.sp-body{padding:16px 18px;display:flex;flex-direction:column;gap:20px}
-.sp-section{display:flex;flex-direction:column;gap:10px}
-.sp-section-title{
-  font-size:.68rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.1em;color:var(--text-muted);
-  padding-bottom:6px;border-bottom:1px solid var(--border);
-}
-.sp-row{display:flex;flex-direction:column;gap:5px}
-.sp-label{font-size:.8rem;font-weight:600;color:var(--text)}
-.sp-input{
-  padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;
-  font-family:inherit;font-size:.85rem;color:var(--text);
-  background:#fff;outline:none;transition:border-color .2s;width:100%;
-}
-.sp-input:focus{border-color:var(--green)}
-.sp-swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.sp-swatch{
-  width:30px;height:30px;border-radius:50%;border:2.5px solid transparent;
-  cursor:pointer;transition:transform .15s,border-color .15s;flex-shrink:0;
-}
-.sp-swatch:hover{transform:scale(1.15)}
-.sp-swatch.active{border-color:var(--text);transform:scale(1.1)}
-.sp-swatch-custom{
-  width:30px;height:30px;border-radius:50%;
-  background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
-  border:2.5px solid transparent;cursor:pointer;position:relative;
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;overflow:hidden;
-}
-.sp-swatch-custom input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
-.sp-swatch-custom span{font-size:.75rem;color:#fff;font-weight:700;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.sp-img-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.sp-preview{
-  width:52px;height:52px;border-radius:8px;object-fit:cover;
-  border:1.5px solid var(--border);background:var(--surface2);
-}
-.sp-preview.hidden{display:none}
-.sp-upload{
-  padding:7px 14px;background:var(--surface2);border:1.5px solid var(--border);
-  border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;
-  color:var(--text);transition:border-color .2s;white-space:nowrap;
-}
-.sp-upload:hover{border-color:var(--green)}
-.sp-remove{
-  padding:7px 12px;background:none;border:1.5px solid var(--border);
-  border-radius:8px;font-size:.8rem;font-weight:500;cursor:pointer;
-  color:var(--text-muted);transition:all .2s;
-}
-.sp-remove:hover{border-color:#e03030;color:#e03030}
-.sp-themes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sp-theme{
-  border:2px solid var(--border);border-radius:10px;padding:10px 8px;
-  cursor:pointer;text-align:center;transition:all .18s;background:#fff;
-}
-.sp-theme:hover{border-color:var(--green)}
-.sp-theme.active{border-color:var(--green);background:#f0faf5}
-.sp-theme-preview{height:28px;border-radius:5px;margin-bottom:6px}
-.sp-theme-name{font-size:.72rem;font-weight:700;color:var(--text)}
-.sp-save{
-  width:100%;padding:12px;background:var(--green);color:#fff;
-  border:none;border-radius:10px;font-family:inherit;font-size:.9rem;
-  font-weight:700;cursor:pointer;transition:background .2s;margin-top:4px;
-}
-.sp-save:hover{background:var(--green-lt)}
-.sp-reset{
-  width:100%;padding:9px;background:none;color:var(--text-muted);
-  border:1.5px solid var(--border);border-radius:10px;font-family:inherit;
-  font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;
-}
-.sp-reset:hover{border-color:#e03030;color:#e03030}
-
-/* ── HERO BANNER ── */
-#hero-banner{
-  width:100%;min-height:120px;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--green);
-  position:relative;overflow:hidden;
-  padding:28px 20px;text-align:center;
-}
-#hero-banner.hidden{display:none}
-#hero-banner-bg{
-  position:absolute;inset:0;object-fit:cover;width:100%;height:100%;
-  opacity:.35;pointer-events:none;
-}
-.hero-banner-content{position:relative;z-index:1}
-#hero-banner-title{
-  font-size:clamp(1.4rem,4vw,2.2rem);font-weight:800;
-  color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.25);
-  margin-bottom:4px;
-}
-#hero-banner-sub{font-size:.9rem;color:rgba(255,255,255,.8);font-weight:500}
-
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--text);color:#fff;
-  padding:10px 20px;border-radius:30px;font-size:.82rem;font-weight:600;
-  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
-  z-index:500;white-space:nowrap;box-shadow:var(--shadow);
-}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-</style>
+    /* FOOTER */
+    footer {
+      margin-top: auto;
+      background: #1a1a1a;
+      color: #aaa;
+      text-align: center;
+      padding: 28px 24px;
+      font-size: 0.85rem;
+    }
+    footer strong { color: #ffffff; }
+    footer .heart { color: #ff6b00; }
+  </style>
 </head>
 <body>
 
-<!-- HERO BANNER -->
-<div id="hero-banner" class="hidden">
-  <img id="hero-banner-bg" src="" alt=""/>
-  <div class="hero-banner-content">
-    <div id="hero-banner-title">TALARA</div>
-    <div id="hero-banner-sub">Hecho a mano · Pieza única</div>
-  </div>
-</div>
+  <nav>
+    <div class="nav-logo">TAL<span>A</span>RA</div>
+  </nav>
 
-<!-- HEADER -->
-<header class="site-header">
-  <div class="header-top">
-    <a class="logo" href="#">TALARA<span>.</span></a>
-    <div class="search-wrap">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input id="search" type="search" placeholder="Buscar producto…" autocomplete="off"/>
+  <section class="hero">
+    <div class="hero-badge">✦ Tienda artesanal</div>
+    <h1 class="hero-title">
+      <span class="green">TAL</span><span class="orange">A</span>RA
+    </h1>
+    <p class="hero-tagline">Dulces típicos &amp; Pulseras artesanales</p>
+    <p class="hero-sub">Productos hechos con amor, directo a tus manos</p>
+  </section>
+
+  <section class="cards-section">
+    <h2>Elige tu tienda</h2>
+    <div class="cards-grid">
+
+      <a href="dulces.html" class="store-card dulces">
+        <div class="card-emoji">🍬</div>
+        <span class="card-tag">Comida artesanal</span>
+        <div class="card-title">Dulces Típicos</div>
+        <p class="card-desc">Sabores tradicionales hechos a mano con recetas de siempre</p>
+        <span class="card-btn">Ver dulces →</span>
+      </a>
+
+      <a href="pulseras.html" class="store-card pulseras">
+        <div class="card-emoji">📿</div>
+        <span class="card-tag">Joyería artesanal</span>
+        <div class="card-title">Pulseras Artesanales</div>
+        <p class="card-desc">Joyería artesanal, cada pieza es única e irrepetible</p>
+        <span class="card-btn">Ver pulseras →</span>
+      </a>
+
     </div>
-    <button class="cart-icon-btn" onclick="openCart()" aria-label="Ver carrito">
-      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-      <span id="cart-badge" class="hidden">0</span>
-    </button>
-  </div>
-  <div class="cat-tabs">
-    <button class="cat-btn active" data-cat="">Todos</button>
-    <button class="cat-btn" data-cat="dulces">🍬 Dulces</button>
-    <button class="cat-btn" data-cat="pulseras">📿 Pulseras</button>
-  </div>
-</header>
+  </section>
 
-<!-- CATALOG -->
-<main class="catalog">
-  <p class="result-label hidden" id="result-label"></p>
-  <div id="catalog-sections"></div>
-  <div class="empty hidden" id="empty-state">
-    <span>🔍</span>
-    <p>No se encontraron productos.</p>
-  </div>
-</main>
-
-<!-- CART OVERLAY -->
-<div id="cart-overlay" onclick="closeCart()"></div>
-
-<!-- CART PANEL -->
-<aside id="cart-panel" role="dialog" aria-label="Carrito de compras">
-  <div class="cart-header">
-    <h2>🛒 Tu pedido</h2>
-    <button class="cart-close" onclick="closeCart()" aria-label="Cerrar carrito">✕</button>
-  </div>
-  <div class="cart-items" id="cart-items"></div>
-  <div class="cart-footer">
-    <div class="cart-total-row">
-      <span class="cart-total-label">Total</span>
-      <span class="cart-total-val" id="cart-total">$0.00</span>
-    </div>
-    <button class="wa-btn" onclick="sendWhatsApp()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      Pedir por WhatsApp
-    </button>
-  </div>
-</aside>
-
-<!-- TOAST -->
-<div id="toast"></div>
-
-<!-- SETTINGS FAB -->
-<button id="settings-fab" onclick="openSettings()" title="Personalizar tienda" aria-label="Personalizar">⚙️</button>
-
-<!-- SETTINGS OVERLAY -->
-<div id="settings-overlay" onclick="closeSettings()"></div>
-
-<!-- SETTINGS PANEL -->
-<aside id="settings-panel" aria-label="Personalización">
-  <div class="sp-header">
-    <h2>🎨 Personalizar tienda</h2>
-    <button class="sp-close" onclick="closeSettings()">✕</button>
-  </div>
-  <div class="sp-body">
-
-    <!-- Identidad -->
-    <div class="sp-section">
-      <div class="sp-section-title">Identidad</div>
-      <div class="sp-row">
-        <label class="sp-label">Nombre de la tienda</label>
-        <input class="sp-input" id="sp-name" type="text" placeholder="TALARA"/>
+  <section class="features">
+    <div class="features-inner">
+      <div class="feature-item">
+        <div class="feature-icon">🤝</div>
+        <div class="feature-title">100% Artesanal</div>
+        <p class="feature-desc">Cada producto elaborado a mano con dedicación</p>
       </div>
-      <div class="sp-row">
-        <label class="sp-label">Subtítulo / slogan</label>
-        <input class="sp-input" id="sp-sub" type="text" placeholder="Hecho a mano · Pieza única"/>
+      <div class="feature-item">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title">Pedidos por WhatsApp</div>
+        <p class="feature-desc">Fácil y rápido, directo con nosotros</p>
       </div>
-      <div class="sp-row">
-        <label class="sp-label">Logo (encabezado)</label>
-        <div class="sp-img-row">
-          <img id="sp-logo-preview" class="sp-preview hidden" src="" alt="Logo"/>
-          <label class="sp-upload" for="sp-logo-file">📷 Subir logo</label>
-          <input type="file" id="sp-logo-file" accept="image/*" style="display:none"/>
-          <button class="sp-remove hidden" id="sp-logo-remove">Quitar</button>
-        </div>
+      <div class="feature-item">
+        <div class="feature-icon">✨</div>
+        <div class="feature-title">Calidad garantizada</div>
+        <p class="feature-desc">Materiales seleccionados, sabores auténticos</p>
       </div>
     </div>
+  </section>
 
-    <!-- Banner -->
-    <div class="sp-section">
-      <div class="sp-section-title">Banner superior</div>
-      <div class="sp-row">
-        <label class="sp-label">Imagen de banner</label>
-        <div class="sp-img-row">
-          <img id="sp-banner-preview" class="sp-preview hidden" src="" alt="Banner" style="width:80px;height:44px;object-fit:cover"/>
-          <label class="sp-upload" for="sp-banner-file">🖼️ Subir imagen</label>
-          <input type="file" id="sp-banner-file" accept="image/*" style="display:none"/>
-          <button class="sp-remove hidden" id="sp-banner-remove">Quitar</button>
-        </div>
-      </div>
-    </div>
+  <footer>
+    <strong>TALARA</strong> &nbsp;·&nbsp; Hecho con <span class="heart">♥</span> amor
+  </footer>
 
-    <!-- Colores -->
-    <div class="sp-section">
-      <div class="sp-section-title">Color principal</div>
-      <div class="sp-swatches" id="sp-swatches">
-        <button class="sp-swatch active" data-color="#1a9e5c" style="background:#1a9e5c" title="Verde"></button>
-        <button class="sp-swatch" data-color="#e07b39" style="background:#e07b39" title="Naranja"></button>
-        <button class="sp-swatch" data-color="#6366f1" style="background:#6366f1" title="Índigo"></button>
-        <button class="sp-swatch" data-color="#ec4899" style="background:#ec4899" title="Rosa"></button>
-        <button class="sp-swatch" data-color="#0ea5e9" style="background:#0ea5e9" title="Azul"></button>
-        <button class="sp-swatch" data-color="#f59e0b" style="background:#f59e0b" title="Ámbar"></button>
-        <button class="sp-swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Violeta"></button>
-        <label class="sp-swatch-custom" title="Color personalizado">
-          <input type="color" id="sp-custom-color" value="#1a9e5c"/>
-          <span>+</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Precio -->
-    <div class="sp-section">
-      <div class="sp-section-title">Color del precio</div>
-      <div class="sp-swatches" id="sp-price-swatches">
-        <button class="sp-swatch active" data-color="#ff6b00" style="background:#ff6b00" title="Naranja"></button>
-        <button class="sp-swatch" data-color="#e03030" style="background:#e03030" title="Rojo"></button>
-        <button class="sp-swatch" data-color="#1a9e5c" style="background:#1a9e5c" title="Verde"></button>
-        <button class="sp-swatch" data-color="#6366f1" style="background:#6366f1" title="Índigo"></button>
-        <button class="sp-swatch" data-color="#1a1a1a" style="background:#1a1a1a" title="Negro"></button>
-        <label class="sp-swatch-custom" title="Color personalizado">
-          <input type="color" id="sp-price-color" value="#ff6b00"/>
-          <span>+</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Tema -->
-    <div class="sp-section">
-      <div class="sp-section-title">Tema de fondo</div>
-      <div class="sp-themes">
-        <div class="sp-theme active" data-theme="light">
-          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#f5f5f5,#e8e8e8)"></div>
-          <div class="sp-theme-name">☀️ Claro</div>
-        </div>
-        <div class="sp-theme" data-theme="dark">
-          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#141414,#272727)"></div>
-          <div class="sp-theme-name">🌙 Oscuro</div>
-        </div>
-        <div class="sp-theme" data-theme="warm">
-          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#faf7f2,#f0e8d8)"></div>
-          <div class="sp-theme-name">🌿 Cálido</div>
-        </div>
-        <div class="sp-theme" data-theme="mint">
-          <div class="sp-theme-preview" style="background:linear-gradient(135deg,#f0faf5,#d8f0e4)"></div>
-          <div class="sp-theme-name">🍃 Menta</div>
-        </div>
-      </div>
-    </div>
-
-    <button class="sp-save" id="sp-save-btn">💾 Guardar cambios</button>
-    <button class="sp-reset" id="sp-reset-btn">Restablecer valores</button>
-  </div>
-</aside>
-
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-'use strict';
-
-// ── FIREBASE CONFIG ────────────────────────────────────
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
-  authDomain: "gestor-de-inventario-853d8.firebaseapp.com",
-  projectId: "gestor-de-inventario-853d8",
-  storageBucket: "gestor-de-inventario-853d8.firebasestorage.app",
-  messagingSenderId: "980977651129",
-  appId: "1:980977651129:web:791dd31e9b2825c4d57a68"
-};
-
-const app = initializeApp(FIREBASE_CONFIG);
-const db  = getFirestore(app);
-
-// ── STATE ──────────────────────────────────────────────
-let products = [];
-let cart = {};
-let activeCat = '';
-let searchQ = '';
-
-// ── HELPERS ────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const fmt = n => '$' + Number(n).toFixed(2);
-
-function catNorm(c) {
-  if (!c) return '';
-  const s = c.toString().toLowerCase().trim();
-  if (s === 'dulce')   return 'dulces';
-  if (s === 'pulsera') return 'pulseras';
-  return s;
-}
-
-function emoji(cat) {
-  const c = catNorm(cat);
-  if (c === 'dulces')   return '🍬';
-  if (c === 'pulseras') return '📿';
-  return '🛍️';
-}
-
-function escHtml(s) {
-  return String(s || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
-
-// ── RENDER CATALOG ─────────────────────────────────────
-function cardHTML(p) {
-  const inCart = (cart[p.id] || 0) > 0;
-  const imgContent = p.img
-    ? `<img src="${escHtml(p.img)}" alt="${escHtml(p.name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.dataset.fb='1';this.parentElement.insertAdjacentText('beforeend','${emoji(p.category)}')"/>`
-    : emoji(p.category);
-  return `
-<article class="card" data-id="${p.id}">
-  <div class="card-img-wrap">
-    ${imgContent}
-    <button class="add-circle${inCart ? ' in-cart' : ''}" onclick="addToCart('${p.id}')" aria-label="Agregar al carrito">
-      ${inCart ? '✓' : '+'}
-    </button>
-  </div>
-  <div class="card-body">
-    <div class="card-name">${escHtml(p.name)}</div>
-    <div class="card-price">${fmt(p.sellPrice)}</div>
-    <div class="card-tag">✦ Hecho a mano</div>
-  </div>
-</article>`;
-}
-
-function render() {
-  const sectionsEl = $('catalog-sections');
-  const emptyEl    = $('empty-state');
-  const label      = $('result-label');
-
-  const q = searchQ.toLowerCase();
-  const list = products.filter(p => {
-    const matchCat = !activeCat || catNorm(p.category) === activeCat;
-    const matchQ   = !q ||
-      (p.name     || '').toLowerCase().includes(q) ||
-      (p.desc     || '').toLowerCase().includes(q) ||
-      (p.category || '').toLowerCase().includes(q);
-    return matchCat && matchQ;
-  });
-
-  if (list.length) {
-    label.textContent = list.length + ' producto' + (list.length !== 1 ? 's' : '');
-    label.classList.remove('hidden');
-  } else {
-    label.classList.add('hidden');
-  }
-
-  if (!list.length) {
-    sectionsEl.innerHTML = '';
-    emptyEl.classList.remove('hidden');
-    return;
-  }
-  emptyEl.classList.add('hidden');
-
-  const dulces   = list.filter(p => catNorm(p.category) === 'dulces');
-  const pulseras = list.filter(p => catNorm(p.category) === 'pulseras');
-  const otros    = list.filter(p => catNorm(p.category) !== 'dulces' && catNorm(p.category) !== 'pulseras');
-
-  let html = '';
-
-  if (dulces.length) {
-    html += `
-<section class="cat-section" id="sec-dulces">
-  <div class="sec-header dulces-hdr">
-    <span class="sec-emoji">🍬</span>
-    <span class="sec-title">Dulces Típicos</span>
-    <span class="sec-count">${dulces.length} producto${dulces.length !== 1 ? 's' : ''}</span>
-  </div>
-  <div class="grid">${dulces.map(cardHTML).join('')}</div>
-</section>`;
-  }
-
-  if (pulseras.length) {
-    html += `
-<section class="cat-section" id="sec-pulseras">
-  <div class="sec-header pulseras-hdr">
-    <span class="sec-emoji">📿</span>
-    <span class="sec-title">Pulseras Artesanales</span>
-    <span class="sec-count">${pulseras.length} producto${pulseras.length !== 1 ? 's' : ''}</span>
-  </div>
-  <div class="grid">${pulseras.map(cardHTML).join('')}</div>
-</section>`;
-  }
-
-  if (otros.length) {
-    html += `
-<section class="cat-section" id="sec-otros">
-  <div class="sec-header">
-    <span class="sec-emoji">🛍️</span>
-    <span class="sec-title">Otros productos</span>
-    <span class="sec-count">${otros.length} producto${otros.length !== 1 ? 's' : ''}</span>
-  </div>
-  <div class="grid">${otros.map(cardHTML).join('')}</div>
-</section>`;
-  }
-
-  sectionsEl.innerHTML = html;
-}
-
-// ── CART RENDER ─────────────────────────────────────────
-function renderCart() {
-  const itemsEl = $('cart-items');
-  const totalEl = $('cart-total');
-  const badge   = $('cart-badge');
-
-  const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
-  let total = 0;
-  let totalQty = 0;
-
-  if (!entries.length) {
-    itemsEl.innerHTML = `<div class="cart-empty"><span>🛒</span><p>Tu carrito está vacío</p></div>`;
-    totalEl.textContent = '$0.00';
-    badge.classList.add('hidden');
-    return;
-  }
-
-  let html = '';
-  for (const [id, qty] of entries) {
-    const p = products.find(x => x.id === id);
-    if (!p) continue;
-    const lineTotal = p.sellPrice * qty;
-    total += lineTotal;
-    totalQty += qty;
-    const thumb = p.img
-      ? `<img src="${escHtml(p.img)}" alt="${escHtml(p.name)}" onerror="this.style.display='none';this.parentElement.textContent='${emoji(p.category)}'">`
-      : emoji(p.category);
-    html += `
-<div class="cart-row">
-  <div class="cart-row-thumb">${thumb}</div>
-  <div class="cart-row-info">
-    <div class="cart-row-name">${escHtml(p.name)}</div>
-    <div class="cart-row-price">${fmt(lineTotal)}</div>
-  </div>
-  <div class="cart-qty">
-    <button class="qty-btn" onclick="changeQty('${id}',-1)">−</button>
-    <span class="qty-num">${qty}</span>
-    <button class="qty-btn" onclick="changeQty('${id}',1)">+</button>
-  </div>
-</div>`;
-  }
-
-  itemsEl.innerHTML = html;
-  totalEl.textContent = fmt(total);
-
-  badge.textContent = totalQty;
-  badge.classList.remove('hidden');
-  badge.classList.add('pop');
-  setTimeout(() => badge.classList.remove('pop'), 300);
-}
-
-// ── CART ACTIONS ────────────────────────────────────────
-window.addToCart = function(id) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  cart[id] = (cart[id] || 0) + 1;
-  renderCart();
-  render();
-  showToast(p.name + ' añadido al carrito');
-};
-
-window.changeQty = function(id, delta) {
-  cart[id] = Math.max(0, (cart[id] || 0) + delta);
-  if (cart[id] === 0) delete cart[id];
-  renderCart();
-  render();
-};
-
-window.openCart = function() {
-  $('cart-panel').classList.add('open');
-  $('cart-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-};
-
-window.closeCart = function() {
-  $('cart-panel').classList.remove('open');
-  $('cart-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-};
-
-// ── WHATSAPP ────────────────────────────────────────────
-window.sendWhatsApp = function() {
-  const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
-  if (!entries.length) { showToast('Tu carrito está vacío'); return; }
-
-  let msg = '¡Hola! Quiero hacer un pedido en TALARA:\n\n';
-  let total = 0;
-  for (const [id, qty] of entries) {
-    const p = products.find(x => x.id === id);
-    if (!p) continue;
-    const line = p.sellPrice * qty;
-    total += line;
-    msg += `• ${p.name} x${qty} — ${fmt(line)}\n`;
-  }
-  msg += `\n*Total: ${fmt(total)}*`;
-
-  const url = 'https://wa.me/522281103615?text=' + encodeURIComponent(msg);
-  window.open(url, '_blank');
-};
-
-// ── TOAST ────────────────────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// ── CATEGORY FILTER ─────────────────────────────────────
-document.querySelectorAll('.cat-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    activeCat = btn.dataset.cat;
-    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    render();
-    // Scroll to section if specific category selected
-    if (activeCat) {
-      const sec = document.getElementById('sec-' + activeCat);
-      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
-});
-
-// ── SEARCH ──────────────────────────────────────────────
-$('search').addEventListener('input', e => {
-  searchQ = e.target.value.trim();
-  render();
-});
-
-// ── SETTINGS ────────────────────────────────────────────
-const THEMES = {
-  light: { bg:'#f5f5f5', surface:'#ffffff', surface2:'#f0f0f0', border:'#e8e8e8', text:'#1a1a1a', textMuted:'#888' },
-  dark:  { bg:'#141414', surface:'#1e1e1e', surface2:'#272727', border:'#333',    text:'#f0f0f0', textMuted:'#999' },
-  warm:  { bg:'#faf7f2', surface:'#ffffff', surface2:'#f3ede4', border:'#e0d5c5', text:'#1a1a1a', textMuted:'#7a6e5f' },
-  mint:  { bg:'#f0faf5', surface:'#ffffff', surface2:'#d8f0e4', border:'#b8e4cc', text:'#1a1a1a', textMuted:'#4a7a5f' },
-};
-
-const DEFAULTS_SETTINGS = {
-  name:'TALARA', sub:'Hecho a mano · Pieza única',
-  logo:'', banner:'',
-  primary:'#1a9e5c', price:'#ff6b00', theme:'light'
-};
-
-let storeSettings = { ...DEFAULTS_SETTINGS };
-
-function loadStoredSettings() {
-  try {
-    const saved = localStorage.getItem('talara_settings');
-    if (saved) storeSettings = { ...DEFAULTS_SETTINGS, ...JSON.parse(saved) };
-  } catch(e) {}
-  applyStoreSettings();
-}
-
-function applyStoreSettings() {
-  const s = storeSettings;
-  const t = THEMES[s.theme] || THEMES.light;
-  const root = document.documentElement;
-
-  // Theme colors
-  root.style.setProperty('--bg', t.bg);
-  root.style.setProperty('--surface', t.surface);
-  root.style.setProperty('--surface2', t.surface2);
-  root.style.setProperty('--border', t.border);
-  root.style.setProperty('--text', t.text);
-  root.style.setProperty('--text-muted', t.textMuted);
-
-  // Primary & price
-  root.style.setProperty('--green', s.primary);
-  // Darken slightly for hover
-  root.style.setProperty('--green-dk', s.primary);
-  root.style.setProperty('--green-lt', s.primary);
-  root.style.setProperty('--orange', s.price);
-
-  // Logo in header
-  const logoEl = document.querySelector('.logo');
-  if (s.logo) {
-    logoEl.innerHTML = `<img src="${s.logo}" alt="${s.name}" style="height:36px;object-fit:contain;border-radius:6px"/>`;
-  } else {
-    logoEl.innerHTML = s.name + '<span>.</span>';
-  }
-
-  // Banner
-  const banner = $('hero-banner');
-  const bannerBg = $('hero-banner-bg');
-  $('hero-banner-title').textContent = s.name;
-  $('hero-banner-sub').textContent = s.sub;
-  if (s.banner) {
-    bannerBg.src = s.banner;
-    banner.classList.remove('hidden');
-  } else {
-    banner.classList.add('hidden');
-  }
-
-  // Page title
-  document.title = s.name + ' — Tienda';
-
-  // Header bg matches theme surface
-  document.querySelector('.site-header').style.background = t.surface;
-}
-
-window.openSettings = function() {
-  // Populate form
-  $('sp-name').value = storeSettings.name;
-  $('sp-sub').value  = storeSettings.sub;
-
-  // Logo preview
-  if (storeSettings.logo) {
-    $('sp-logo-preview').src = storeSettings.logo;
-    $('sp-logo-preview').classList.remove('hidden');
-    $('sp-logo-remove').classList.remove('hidden');
-  }
-  // Banner preview
-  if (storeSettings.banner) {
-    $('sp-banner-preview').src = storeSettings.banner;
-    $('sp-banner-preview').classList.remove('hidden');
-    $('sp-banner-remove').classList.remove('hidden');
-  }
-
-  // Active swatches
-  document.querySelectorAll('#sp-swatches .sp-swatch').forEach(s => {
-    s.classList.toggle('active', s.dataset.color === storeSettings.primary);
-  });
-  document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(s => {
-    s.classList.toggle('active', s.dataset.color === storeSettings.price);
-  });
-  document.querySelectorAll('.sp-theme').forEach(t => {
-    t.classList.toggle('active', t.dataset.theme === storeSettings.theme);
-  });
-
-  $('settings-panel').classList.add('open');
-  $('settings-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-};
-
-window.closeSettings = function() {
-  $('settings-panel').classList.remove('open');
-  $('settings-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-};
-
-// Color swatches — primary
-document.querySelectorAll('#sp-swatches .sp-swatch').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#sp-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    storeSettings.primary = btn.dataset.color;
-    applyStoreSettings();
-  });
-});
-$('sp-custom-color').addEventListener('input', e => {
-  storeSettings.primary = e.target.value;
-  document.querySelectorAll('#sp-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
-  applyStoreSettings();
-});
-
-// Color swatches — price
-document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    storeSettings.price = btn.dataset.color;
-    applyStoreSettings();
-  });
-});
-$('sp-price-color').addEventListener('input', e => {
-  storeSettings.price = e.target.value;
-  document.querySelectorAll('#sp-price-swatches .sp-swatch').forEach(b => b.classList.remove('active'));
-  applyStoreSettings();
-});
-
-// Theme selector
-document.querySelectorAll('.sp-theme').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.sp-theme').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    storeSettings.theme = btn.dataset.theme;
-    applyStoreSettings();
-  });
-});
-
-// Logo upload
-$('sp-logo-file').addEventListener('change', function() {
-  const file = this.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    storeSettings.logo = e.target.result;
-    $('sp-logo-preview').src = e.target.result;
-    $('sp-logo-preview').classList.remove('hidden');
-    $('sp-logo-remove').classList.remove('hidden');
-    applyStoreSettings();
-  };
-  reader.readAsDataURL(file);
-});
-$('sp-logo-remove').addEventListener('click', () => {
-  storeSettings.logo = '';
-  $('sp-logo-preview').classList.add('hidden');
-  $('sp-logo-remove').classList.add('hidden');
-  $('sp-logo-file').value = '';
-  applyStoreSettings();
-});
-
-// Banner upload
-$('sp-banner-file').addEventListener('change', function() {
-  const file = this.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    storeSettings.banner = e.target.result;
-    $('sp-banner-preview').src = e.target.result;
-    $('sp-banner-preview').classList.remove('hidden');
-    $('sp-banner-remove').classList.remove('hidden');
-    applyStoreSettings();
-  };
-  reader.readAsDataURL(file);
-});
-$('sp-banner-remove').addEventListener('click', () => {
-  storeSettings.banner = '';
-  $('sp-banner-preview').classList.add('hidden');
-  $('sp-banner-remove').classList.add('hidden');
-  $('sp-banner-file').value = '';
-  applyStoreSettings();
-});
-
-// Live preview as user types
-$('sp-name').addEventListener('input', e => { storeSettings.name = e.target.value || 'Mi Tienda'; applyStoreSettings(); });
-$('sp-sub').addEventListener('input',  e => { storeSettings.sub  = e.target.value; applyStoreSettings(); });
-
-// Save
-$('sp-save-btn').addEventListener('click', () => {
-  localStorage.setItem('talara_settings', JSON.stringify(storeSettings));
-  closeSettings();
-  showToast('✓ Cambios guardados');
-});
-
-// Reset
-$('sp-reset-btn').addEventListener('click', () => {
-  if (!confirm('¿Restablecer todos los ajustes?')) return;
-  storeSettings = { ...DEFAULTS_SETTINGS };
-  localStorage.removeItem('talara_settings');
-  applyStoreSettings();
-  closeSettings();
-  showToast('Ajustes restablecidos');
-});
-
-loadStoredSettings();
-
-
-onSnapshot(collection(db, 'products'), snap => {
-  products = snap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
-    .filter(p => (p.stock || 0) > 0);
-
-  // Preserve cart for items still in stock
-  for (const id of Object.keys(cart)) {
-    if (!products.find(p => p.id === id)) delete cart[id];
-  }
-
-  render();
-  renderCart();
-}, err => {
-  console.error('Firebase error:', err);
-  $('catalog-sections').innerHTML = '<p style="text-align:center;padding:40px;color:#888">Error al cargar productos.</p>';
-});
-</script>
 </body>
 </html>
