@@ -268,6 +268,18 @@
     </div>
 
     <div class="settings-group">
+      <span class="settings-label">Logo de la tienda</span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <img id="s-logo-preview" src="" alt="Logo" style="width:52px;height:52px;object-fit:contain;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);display:none"/>
+        <label class="upload-label" style="margin:0">
+          <span>🖼️</span> <span>Subir logo</span>
+          <input type="file" accept="image/*" id="s-logo-upload" onchange="window.onLogoUpload(event)" />
+        </label>
+        <button id="s-logo-remove" onclick="window.removeLogo()" style="display:none;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;font-size:0.82rem">Quitar</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
       <span class="settings-label">Nombre de la tienda</span>
       <input type="text" class="settings-input" id="s-store-name" value="TALARA" oninput="window.livePreview()" />
     </div>
@@ -371,6 +383,7 @@
       priceColor: '#8b5cf6',
       theme: 'light',
       bannerData: null,
+      logoData: null,
     };
 
     const app = initializeApp(FIREBASE_CONFIG);
@@ -517,7 +530,11 @@
       root.style.setProperty('--text', t.text);
       root.style.setProperty('--text-muted', t.textMuted);
       const logo = document.getElementById('header-logo');
-      if (logo) logo.textContent = (s.storeName || 'TALARA') + ' 📿';
+      if (s.logoData) {
+        logo.innerHTML = `<img src="${s.logoData}" alt="${s.storeName||'TALARA'}" style="height:38px;max-width:120px;object-fit:contain;border-radius:6px"/>`;
+      } else {
+        logo.textContent = (s.storeName || 'TALARA') + ' 📿';
+      }
       const banner = document.getElementById('custom-banner');
       if (s.bannerData) { banner.src = s.bannerData; banner.style.display = 'block'; }
       else { banner.style.display = 'none'; }
@@ -570,6 +587,29 @@
       settings.theme = theme;
       document.querySelectorAll('#theme-grid .theme-card').forEach(c => c.classList.remove('active'));
       if (el) el.classList.add('active');
+      applySettings(settings);
+    };
+
+    window.onLogoUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        settings.logoData = ev.target.result;
+        const prev = document.getElementById('s-logo-preview');
+        prev.src = ev.target.result; prev.style.display = 'block';
+        document.getElementById('s-logo-remove').style.display = 'inline-block';
+        applySettings(settings);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.removeLogo = () => {
+      settings.logoData = null;
+      const prev = document.getElementById('s-logo-preview');
+      prev.src = ''; prev.style.display = 'none';
+      document.getElementById('s-logo-remove').style.display = 'none';
+      document.getElementById('s-logo-upload').value = '';
       applySettings(settings);
     };
 
