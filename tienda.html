@@ -51,7 +51,267 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #1a9e5c;
+      --orange: #ff6b00;
+      --purple: #8b5cf6;
+      --bg: #fafaf8;
+      --surface: #ffffff;
+      --border: #ebebeb;
+      --text: #1a1a1a;
+      --muted: #888;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      padding: 0 28px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      animation: fadeDown 0.5s ease both;
+    }
+    @keyframes fadeDown {
+      from { opacity:0; transform:translateY(-16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; font-weight: 900;
+      letter-spacing: 1px; color: var(--text);
+    }
+    .nav-logo .dot { color: var(--orange); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 72px 24px 56px;
+      text-align: center;
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #f0faf5 0%, #fff8f0 50%, #f5f0ff 100%);
+    }
+    /* Círculos decorativos animados */
+    .hero-circle {
+      position: absolute; border-radius: 50%;
+      pointer-events: none; opacity: 0.5;
+    }
+    .hero-circle-1 {
+      width: 400px; height: 400px;
+      top: -120px; right: -100px;
+      background: radial-gradient(circle, rgba(26,158,92,0.15), transparent 70%);
+      animation: floatCircle 8s ease-in-out infinite;
+    }
+    .hero-circle-2 {
+      width: 300px; height: 300px;
+      bottom: -80px; left: -80px;
+      background: radial-gradient(circle, rgba(255,107,0,0.12), transparent 70%);
+      animation: floatCircle 10s ease-in-out infinite reverse;
+    }
+    .hero-circle-3 {
+      width: 200px; height: 200px;
+      top: 40%; left: 50%; transform: translate(-50%,-50%);
+      background: radial-gradient(circle, rgba(139,92,246,0.08), transparent 70%);
+      animation: floatCircle 6s ease-in-out infinite 2s;
+    }
+    @keyframes floatCircle {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-20px) scale(1.05); }
+    }
+
+    .hero-eyebrow {
+      position: relative; z-index: 1;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(26,158,92,0.08);
+      border: 1px solid rgba(26,158,92,0.2);
+      color: var(--green);
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 6px 16px; border-radius: 100px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+    .eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform:scale(1); opacity:1; }
+      50%      { transform:scale(1.6); opacity:0.5; }
+    }
+
+    .hero-title {
+      position: relative; z-index: 1;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.8rem, 10vw, 6.5rem);
+      font-weight: 900; line-height: 1;
+      letter-spacing: -2px; margin-bottom: 20px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+    .hero-title .line1 { display: block; color: var(--text); font-size: 0.45em; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0; margin-bottom: 8px; color: var(--muted); }
+    .hero-title .line2 {
+      display: block;
+      background: linear-gradient(135deg, var(--green) 0%, var(--orange) 50%, var(--purple) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-size: 200% auto;
+      animation: fadeUp 0.6s 0.2s ease both, shimmer 5s linear infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .hero-tagline {
+      position: relative; z-index: 1;
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      color: var(--muted); font-weight: 400;
+      margin-bottom: 0;
+      animation: fadeUp 0.6s 0.35s ease both;
+    }
+    .hero-tagline strong { color: var(--text); font-weight: 600; }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── STORES ── */
+    .stores-section {
+      padding: 60px 24px 80px;
+      max-width: 900px; margin: 0 auto; width: 100%;
+    }
+    .section-label {
+      text-align: center;
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 36px;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 580px) { .cards-grid { grid-template-columns: 1fr; } }
+
+    .store-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 24px; padding: 44px 32px;
+      text-align: center; text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      position: relative; overflow: hidden;
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s, border-color 0.3s;
+      cursor: pointer;
+    }
+    .store-card::after {
+      content: '';
+      position: absolute; inset: 0; opacity: 0;
+      transition: opacity 0.3s; border-radius: 24px;
+    }
+    .store-card.dulces::after  { background: linear-gradient(160deg, rgba(255,107,0,0.04) 0%, transparent 60%); }
+    .store-card.pulseras::after{ background: linear-gradient(160deg, rgba(139,92,246,0.04) 0%, transparent 60%); }
+    .store-card:hover { transform: translateY(-8px); }
+    .store-card:hover::after { opacity: 1; }
+    .store-card.dulces:hover  { border-color: rgba(255,107,0,0.35); box-shadow: 0 20px 60px rgba(255,107,0,0.12); }
+    .store-card.pulseras:hover{ border-color: rgba(139,92,246,0.35); box-shadow: 0 20px 60px rgba(139,92,246,0.12); }
+
+    .card-emoji {
+      font-size: 4rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 80px; position: relative; z-index: 1;
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .store-card:hover .card-emoji { transform: scale(1.18) rotate(-6deg); }
+
+    .card-tag {
+      font-size: 0.72rem; font-weight: 700;
+      padding: 4px 14px; border-radius: 100px;
+      position: relative; z-index: 1;
+    }
+    .store-card.dulces  .card-tag { background: #fff3e8; color: #e05a00; border: 1px solid rgba(255,107,0,0.15); }
+    .store-card.pulseras .card-tag{ background: #f3eeff; color: #7c3aed; border: 1px solid rgba(139,92,246,0.15); }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem; font-weight: 900;
+      letter-spacing: -0.5px; position: relative; z-index: 1;
+    }
+    .store-card.dulces  .card-title { color: #e05a00; }
+    .store-card.pulseras .card-title{ color: #7c3aed; }
+
+    .card-desc {
+      font-size: 0.88rem; color: var(--muted);
+      line-height: 1.6; position: relative; z-index: 1;
+    }
+
+    .card-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 26px; border-radius: 100px;
+      font-size: 0.88rem; font-weight: 700; color: #fff;
+      text-decoration: none; margin-top: 4px;
+      position: relative; z-index: 1;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card-btn:hover { transform: scale(1.04); }
+    .store-card.dulces  .card-btn { background: linear-gradient(135deg,#ff6b00,#ff9a4d); box-shadow: 0 6px 20px rgba(255,107,0,0.3); }
+    .store-card.pulseras .card-btn{ background: linear-gradient(135deg,#8b5cf6,#b794f4); box-shadow: 0 6px 20px rgba(139,92,246,0.3); }
+    .btn-arrow { transition: transform 0.2s; }
+    .card-btn:hover .btn-arrow { transform: translateX(4px); }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 48px 24px 72px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+    }
+    .features-inner {
+      max-width: 800px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 20px; text-align: center;
+    }
+    @media (max-width: 580px) { .features-inner { grid-template-columns: 1fr; } }
+    .feature-item {
+      padding: 28px 20px; border-radius: 18px;
+      border: 1px solid var(--border);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-item:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .feature-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
+    .feature-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; }
+    .feature-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: auto; text-align: center;
+      padding: 28px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--muted); font-size: 0.82rem;
+    }
+    footer strong { color: var(--text); font-family: 'Playfair Display', serif; }
+    footer .heart { color: var(--orange); }
+
+    /* ── REVEAL ── */
+    .reveal { opacity:0; transform:translateY(32px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+  </style>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -362,8 +622,9 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-particles" id="particles"></div>
+    <div class="hero-circle hero-circle-1"></div>
+    <div class="hero-circle hero-circle-2"></div>
+    <div class="hero-circle hero-circle-3"></div>
 
     <div class="hero-eyebrow">
       <span class="eyebrow-dot"></span>
@@ -379,11 +640,6 @@
       <strong>Dulces típicos</strong> &amp; <strong>Pulseras artesanales</strong><br>
       Sabores y colores que enamoran
     </p>
-
-    <div class="hero-scroll">
-      <div class="scroll-line"></div>
-      Explorar
-    </div>
   </section>
 
   <!-- STORES -->
@@ -392,7 +648,6 @@
     <div class="cards-grid">
 
       <a href="dulces.html" class="store-card dulces reveal reveal-delay-1">
-        <div class="card-glow"></div>
         <div class="card-emoji" id="logo-dulces">🍬</div>
         <span class="card-tag">✦ Comida artesanal</span>
         <div class="card-title">Dulces Típicos</div>
@@ -401,7 +656,6 @@
       </a>
 
       <a href="pulseras.html" class="store-card pulseras reveal reveal-delay-2">
-        <div class="card-glow"></div>
         <div class="card-emoji" id="logo-pulseras">📿</div>
         <span class="card-tag">✦ Joyería artesanal</span>
         <div class="card-title">Pulseras Artesanales</div>
@@ -438,30 +692,13 @@
   </footer>
 
   <script>
-    // ── Partículas flotantes ──
-    const colors = ['#1a9e5c','#ff6b00','#8b5cf6','#ffb347','#4ade80'];
-    const container = document.getElementById('particles');
-    for (let i = 0; i < 18; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const size = Math.random() * 6 + 3;
-      p.style.cssText = `
-        width:${size}px; height:${size}px;
-        left:${Math.random()*100}%;
-        background:${colors[Math.floor(Math.random()*colors.length)]};
-        animation-duration:${Math.random()*12+8}s;
-        animation-delay:${Math.random()*8}s;
-      `;
-      container.appendChild(p);
-    }
-
-    // ── Scroll reveal ──
+    // Scroll reveal
     const observer = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.15 });
+    }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // ── Logos de cada tienda ──
+    // Logos de cada tienda desde localStorage
     function loadStoreLogo(storageKey, elementId) {
       try {
         const raw = localStorage.getItem(storageKey);
