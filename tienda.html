@@ -11,17 +11,16 @@
   <meta name="author" content="TALARA Joyería Artesanal" />
   <meta name="robots" content="index, follow" />
   <meta name="google-site-verification" content="imWmWPXuYGfsmeox20zJP0h-HEHXwH7_dVnTTXbyl9w" />
-  <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-R2P986CFLS"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-R2P986CFLS');
-</script>
 
   <!-- Google Analytics -->
-   <link rel="canonical" href="https://greimon10892-design.github.io/inventario/tienda.html" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-R2P986CFLS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-R2P986CFLS');
+  </script>
+  <link rel="canonical" href="https://greimon10892-design.github.io/inventario/tienda.html" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
@@ -200,6 +199,10 @@
       font-size: 4rem;
       line-height: 1;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
     }
     .card-title {
       font-size: 1.5rem;
@@ -292,7 +295,7 @@
     <div class="cards-grid">
 
       <a href="dulces.html" class="store-card dulces">
-        <div class="card-emoji">🍬</div>
+        <div class="card-emoji" id="logo-dulces">🍬</div>
         <span class="card-tag">Comida artesanal</span>
         <div class="card-title">Dulces Típicos</div>
         <p class="card-desc">Sabores tradicionales hechos a mano con recetas de siempre</p>
@@ -300,7 +303,7 @@
       </a>
 
       <a href="pulseras.html" class="store-card pulseras">
-        <div class="card-emoji">📿</div>
+        <div class="card-emoji" id="logo-pulseras">📿</div>
         <span class="card-tag">Joyería artesanal</span>
         <div class="card-title">Pulseras Artesanales</div>
         <p class="card-desc">Joyería artesanal, cada pieza es única e irrepetible</p>
@@ -333,6 +336,23 @@
   <footer>
     <strong>TALARA</strong> &nbsp;·&nbsp; Hecho con <span class="heart">♥</span> amor
   </footer>
+
+  <script>
+    // Muestra el logo de cada tienda si fue configurado
+    function loadStoreLogo(storageKey, elementId, fallback) {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (s.logoData) {
+          const el = document.getElementById(elementId);
+          if (el) el.innerHTML = `<img src="${s.logoData}" alt="Logo" style="width:80px;height:80px;object-fit:contain;border-radius:12px"/>`;
+        }
+      } catch(e) {}
+    }
+    loadStoreLogo('talara_dulces_settings',   'logo-dulces',   '🍬');
+    loadStoreLogo('talara_pulseras_settings', 'logo-pulseras', '📿');
+  </script>
 
 </body>
 </html>
