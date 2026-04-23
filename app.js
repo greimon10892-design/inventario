@@ -1259,7 +1259,15 @@ function saveItem(colName, item) {
     showSyncStatus('saving');
     fbSet(colName, item)
       .then(() => showSyncStatus('online'))
-      .catch(e => { console.error(e); showSyncStatus('error'); });
+      .catch(e => {
+        console.error('[saveItem]', e);
+        // Reintenta una vez después de 2 segundos
+        setTimeout(() => {
+          fbSet(colName, item)
+            .then(() => showSyncStatus('online'))
+            .catch(e2 => { console.error('[saveItem retry]', e2); showSyncStatus('error'); });
+        }, 2000);
+      });
   } else {
     if (colName === 'products')  { const i = products.findIndex(x=>x.id===item.id);  if(i>=0) products[i]=item;  else products.push(item);  }
     if (colName === 'movements') { const i = movements.findIndex(x=>x.id===item.id); if(i>=0) movements[i]=item; else movements.push(item); }
@@ -1274,7 +1282,15 @@ function deleteItem(colName, id) {
     showSyncStatus('saving');
     fbDelete(colName, id)
       .then(() => showSyncStatus('online'))
-      .catch(e => { console.error(e); showSyncStatus('error'); });
+      .catch(e => {
+        console.error('[deleteItem]', e);
+        // Reintenta una vez después de 2 segundos
+        setTimeout(() => {
+          fbDelete(colName, id)
+            .then(() => showSyncStatus('online'))
+            .catch(e2 => { console.error('[deleteItem retry]', e2); showSyncStatus('error'); });
+        }, 2000);
+      });
   } else {
     if (colName === 'products')  products  = products.filter(x=>x.id!==id);
     if (colName === 'movements') movements = movements.filter(x=>x.id!==id);
