@@ -355,7 +355,7 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore, collection, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
@@ -629,6 +629,7 @@
     window.saveSettings = () => {
       settings.storeName = document.getElementById('s-store-name').value;
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch(e) {}
+      setDoc(doc(db, 'tienda_settings', 'pulseras'), settings, { merge: true }).catch(console.error);
       applySettings(settings);
       showToast('✅ Configuración guardada');
       window.closeSettings();
@@ -637,6 +638,7 @@
     window.resetSettings = () => {
       settings = { ...DEFAULT_SETTINGS };
       try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+      setDoc(doc(db, 'tienda_settings', 'pulseras'), settings).catch(console.error);
       applySettings(settings);
       syncSettingsUI();
       showToast('↺ Configuración restablecida');
@@ -648,6 +650,24 @@
       t.className = 'toast'; t.textContent = msg;
       c.appendChild(t);
       setTimeout(() => t.remove(), 2600);
+    }
+
+    async function loadSettings() {
+      try {
+        const snap = await getDoc(doc(db, 'tienda_settings', 'pulseras'));
+        if (snap.exists()) {
+          settings = { ...DEFAULT_SETTINGS, ...snap.data() };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        } else {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+        }
+      } catch(e) {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      }
+      applySettings(settings);
+      syncSettingsUI();
     }
 
     loadSettings();
