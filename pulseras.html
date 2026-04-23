@@ -540,15 +540,6 @@
       else { banner.style.display = 'none'; }
     }
 
-    function loadSettings() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-      } catch(e) {}
-      applySettings(settings);
-      syncSettingsUI();
-    }
-
     function syncSettingsUI() {
       document.getElementById('s-store-name').value = settings.storeName || 'TALARA';
       document.getElementById('s-primary-custom').value = settings.primaryColor;
