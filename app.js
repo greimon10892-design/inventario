@@ -211,7 +211,7 @@ document.getElementById('filter-category').addEventListener('change', renderInve
 document.getElementById('filter-mov-type').addEventListener('change', renderMovements);
 
 // ── Product form ───────────────────────────────────────────────────────────
-document.getElementById('product-form').addEventListener('submit', e => {
+document.getElementById('product-form').addEventListener('submit', async e => {
   e.preventDefault();
   const editId = document.getElementById('edit-id').value;
   const data = {
@@ -227,13 +227,34 @@ document.getElementById('product-form').addEventListener('submit', e => {
     alert('El precio de venta no puede ser menor al precio de compra.');
     return;
   }
-  if (editId) {
-    const idx = products.findIndex(p => p.id === editId);
-    products[idx] = { ...products[idx], ...data };
-    saveItem('products', products[idx]);
+
+  // Si hay imagen nueva en base64, súbela a Storage
+  if (_productImgData && _productImgData.startsWith('data:') && typeof uploadProductImage === 'function') {
+    showSyncStatus('saving');
+    const productId = editId || uid();
+    try {
+      data.img = await uploadProductImage(_productImgData, productId);
+    } catch(e) {
+      console.error('Error subiendo imagen:', e);
+      // Continúa con base64 comprimida si falla Storage
+    }
+    if (editId) {
+      const idx = products.findIndex(p => p.id === editId);
+      products[idx] = { ...products[idx], ...data };
+      saveItem('products', products[idx]);
+    } else {
+      const newP = { id: productId, ...data };
+      saveItem('products', newP);
+    }
   } else {
-    const newP = { id: uid(), ...data };
-    saveItem('products', newP);
+    if (editId) {
+      const idx = products.findIndex(p => p.id === editId);
+      products[idx] = { ...products[idx], ...data };
+      saveItem('products', products[idx]);
+    } else {
+      const newP = { id: uid(), ...data };
+      saveItem('products', newP);
+    }
   }
   resetForm();
   navigate('productos');
