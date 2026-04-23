@@ -211,7 +211,7 @@ document.getElementById('filter-category').addEventListener('change', renderInve
 document.getElementById('filter-mov-type').addEventListener('change', renderMovements);
 
 // ── Product form ───────────────────────────────────────────────────────────
-document.getElementById('product-form').addEventListener('submit', async e => {
+document.getElementById('product-form').addEventListener('submit', e => {
   e.preventDefault();
   const editId = document.getElementById('edit-id').value;
   const data = {
@@ -227,34 +227,13 @@ document.getElementById('product-form').addEventListener('submit', async e => {
     alert('El precio de venta no puede ser menor al precio de compra.');
     return;
   }
-
-  // Si hay imagen nueva en base64, súbela a Storage
-  if (_productImgData && _productImgData.startsWith('data:') && typeof uploadProductImage === 'function') {
-    showSyncStatus('saving');
-    const productId = editId || uid();
-    try {
-      data.img = await uploadProductImage(_productImgData, productId);
-    } catch(e) {
-      console.error('Error subiendo imagen:', e);
-      // Continúa con base64 comprimida si falla Storage
-    }
-    if (editId) {
-      const idx = products.findIndex(p => p.id === editId);
-      products[idx] = { ...products[idx], ...data };
-      saveItem('products', products[idx]);
-    } else {
-      const newP = { id: productId, ...data };
-      saveItem('products', newP);
-    }
+  if (editId) {
+    const idx = products.findIndex(p => p.id === editId);
+    products[idx] = { ...products[idx], ...data };
+    saveItem('products', products[idx]);
   } else {
-    if (editId) {
-      const idx = products.findIndex(p => p.id === editId);
-      products[idx] = { ...products[idx], ...data };
-      saveItem('products', products[idx]);
-    } else {
-      const newP = { id: uid(), ...data };
-      saveItem('products', newP);
-    }
+    const newP = { id: uid(), ...data };
+    saveItem('products', newP);
   }
   resetForm();
   navigate('productos');
@@ -301,7 +280,19 @@ function compressImage(file, maxSize, quality, callback) {
       else if (h > maxSize)     { w = w * maxSize / h; h = maxSize; }
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      callback(canvas.toDataURL('image/jpeg', quality));
+      // Si aún es muy grande, reduce más
+      let dataUrl = canvas.toDataURL('image/jpeg', quality);
+      if (dataUrl.length > 700000) {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.4);
+      }
+      if (dataUrl.length > 700000) {
+        // Reduce tamaño a la mitad
+        const c2 = document.createElement('canvas');
+        c2.width = Math.round(w * 0.6); c2.height = Math.round(h * 0.6);
+        c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height);
+        dataUrl = c2.toDataURL('image/jpeg', 0.5);
+      }
+      callback(dataUrl);
     };
     img.src = e.target.result;
   };

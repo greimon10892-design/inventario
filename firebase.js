@@ -9,10 +9,11 @@ const FIREBASE_CONFIG = {
   appId:             "1:980977651129:web:791dd31e9b2825c4d57a68"
 };
 
-let db     = null;
-let fbAuth = null;
-let _fb    = null;
-let _fa    = null;
+let db      = null;
+let fbAuth  = null;
+let _fb     = null;
+let _fa     = null;
+let _fs     = null;
 let _listeners = [];
 
 // ── Inicializa Firebase ────────────────────────────────────────────────────
@@ -39,6 +40,8 @@ async function initFirebase() {
   } catch (err) {
     console.error('[Firebase]', err);
     showSyncStatus('error');
+    // Reintenta inicializar después de 8 segundos
+    setTimeout(() => initFirebase(), 8000);
     return false;
   }
 }
@@ -79,6 +82,13 @@ async function onUserSignedIn(fbUser) {
   } catch (err) {
     console.error('[onUserSignedIn]', err);
     showSyncStatus('error');
+    // Reintenta la conexión después de 5 segundos
+    setTimeout(() => {
+      if (fbAuth && fbAuth.currentUser) {
+        console.log('[Firebase] Reintentando conexión…');
+        onUserSignedIn(fbAuth.currentUser);
+      }
+    }, 5000);
   }
 }
 
