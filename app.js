@@ -1078,13 +1078,15 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     showSaveInfo('Sin cambios nuevos.');
     return;
   }
-  // Fusiona pending con los ajustes guardados del usuario activo
-  const current = getUserSettings(activeUserId);
+  // Usa siempre el UID de Firebase como clave
+  const uid = (fbAuth && fbAuth.currentUser) ? fbAuth.currentUser.uid : activeUserId;
+  const current = getUserSettings(uid);
   const merged  = { ...current, ...pending };
-  saveUserSettings(activeUserId, merged);
+  saveUserSettings(uid, merged);
+  activeUserId = uid;
   pending = {};
   applySettings();
-  const u = users.find(x => x.id === activeUserId);
+  const u = users.find(x => x.id === uid);
   showSaveInfo(`✓ Cambios guardados para ${u ? u.name : 'usuario'}`);
 });
 
