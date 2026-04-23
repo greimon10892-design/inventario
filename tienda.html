@@ -82,9 +82,10 @@
     /* HERO */
     .hero {
       background: linear-gradient(135deg, #f0faf5 0%, #fff8f0 100%);
-      padding: 72px 24px 56px;
+      padding: 72px 40px 56px;
       text-align: center;
       position: relative; overflow: hidden;
+      width: 100%;
     }
     .hero::before {
       content: '';
@@ -128,8 +129,8 @@
 
     /* CARDS */
     .cards-section {
-      padding: 64px 24px 80px;
-      max-width: 900px; margin: 0 auto; width: 100%;
+      padding: 48px 40px 80px;
+      max-width: 100%; margin: 0; width: 100%;
     }
     .cards-section h2 {
       text-align: center; font-size: 1rem; font-weight: 600;
@@ -137,7 +138,11 @@
       margin-bottom: 40px;
     }
     .cards-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     @media (max-width: 600px) { .cards-grid { grid-template-columns: 1fr; } }
 
