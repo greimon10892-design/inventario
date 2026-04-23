@@ -1,5 +1,5 @@
 // Service Worker — PWA para GitHub Pages
-const CACHE = 'inv-2026-05';
+const CACHE = 'inv-2026-06';
 const BASE  = '/inventario';
 
 const ASSETS = [
@@ -34,8 +34,23 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+// Network first — siempre intenta la red, caché solo como fallback
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Para JS y HTML siempre va a la red primero
+  const url = e.request.url;
+  if (url.includes('.js') || url.includes('.html')) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
   e.respondWith(
     fetch(e.request)
       .then(res => {
