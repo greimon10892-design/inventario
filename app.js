@@ -258,16 +258,34 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 document.getElementById('f-img').addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    _productImgData = e.target.result;
-    document.getElementById('f-img-preview').src = e.target.result;
+  // Comprime la imagen antes de guardar (máx 600px, calidad 0.7)
+  compressImage(file, 600, 0.7, dataUrl => {
+    _productImgData = dataUrl;
+    document.getElementById('f-img-preview').src = dataUrl;
     document.getElementById('f-img-preview').classList.remove('hidden');
     document.getElementById('f-img-placeholder').style.display = 'none';
     document.getElementById('f-img-remove').style.display = 'inline-block';
+  });
+});
+
+// Comprime imagen usando canvas
+function compressImage(file, maxSize, quality, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > h && w > maxSize) { h = h * maxSize / w; w = maxSize; }
+      else if (h > maxSize)     { w = w * maxSize / h; h = maxSize; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
-});
+}
 
 document.getElementById('f-img-remove').addEventListener('click', () => {
   _productImgData = '';
