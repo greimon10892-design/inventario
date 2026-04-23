@@ -9,11 +9,10 @@ const FIREBASE_CONFIG = {
   appId:             "1:980977651129:web:791dd31e9b2825c4d57a68"
 };
 
-let db      = null;
-let fbAuth  = null;
-let _fb     = null;
-let _fa     = null;
-let _fs     = null;
+let db     = null;
+let fbAuth = null;
+let _fb    = null;
+let _fa    = null;
 let _listeners = [];
 
 // ── Inicializa Firebase ────────────────────────────────────────────────────
@@ -30,7 +29,6 @@ async function initFirebase() {
     showSyncStatus('connecting');
 
     _fa.onAuthStateChanged(fbAuth, user => {
-      // Siempre muestra el body cuando Firebase responde
       document.body.style.visibility = 'visible';
       if (user) { onUserSignedIn(user); }
       else      { stopListeners(); hideSplash(); showLoginScreen(); }
@@ -40,8 +38,6 @@ async function initFirebase() {
   } catch (err) {
     console.error('[Firebase]', err);
     showSyncStatus('error');
-    // Reintenta inicializar después de 8 segundos
-    setTimeout(() => initFirebase(), 8000);
     return false;
   }
 }
@@ -50,7 +46,6 @@ async function initFirebase() {
 async function onUserSignedIn(fbUser) {
   showSyncStatus('connecting');
   try {
-    // Busca o crea perfil
     const snap = await _fb.getDocs(
       _fb.query(_fb.collection(db, 'users'), _fb.where('email', '==', fbUser.email))
     );
@@ -66,15 +61,12 @@ async function onUserSignedIn(fbUser) {
       await fbSet('users', me);
     }
 
-    // Seed productos si está vacío
     const pSnap = await _fb.getDocs(_fb.collection(db, 'products'));
     if (pSnap.empty) {
       for (const p of SEED_PRODUCTS) await fbSet('products', p);
     }
 
-    // Inicia escuchas en tiempo real
     startListeners(fbUser);
-
     hideLoginScreen();
     showSyncStatus('online');
     if (typeof hideSplash === 'function') hideSplash();
@@ -82,13 +74,6 @@ async function onUserSignedIn(fbUser) {
   } catch (err) {
     console.error('[onUserSignedIn]', err);
     showSyncStatus('error');
-    // Reintenta la conexión después de 5 segundos
-    setTimeout(() => {
-      if (fbAuth && fbAuth.currentUser) {
-        console.log('[Firebase] Reintentando conexión…');
-        onUserSignedIn(fbAuth.currentUser);
-      }
-    }, 5000);
   }
 }
 
@@ -96,7 +81,6 @@ async function onUserSignedIn(fbUser) {
 function startListeners(fbUser) {
   stopListeners();
 
-  // Productos
   _listeners.push(
     _fb.onSnapshot(_fb.collection(db, 'products'), snap => {
       products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -106,7 +90,6 @@ function startListeners(fbUser) {
     })
   );
 
-  // Movimientos
   _listeners.push(
     _fb.onSnapshot(_fb.collection(db, 'movements'), snap => {
       movements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -114,7 +97,6 @@ function startListeners(fbUser) {
     })
   );
 
-  // Usuarios
   _listeners.push(
     _fb.onSnapshot(_fb.collection(db, 'users'), snap => {
       users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -128,25 +110,20 @@ function startListeners(fbUser) {
     })
   );
 
-  // Ajustes del usuario actual (por uid de Firebase)
   const settingsDocRef = _fb.doc(db, 'settings', fbUser.uid);
   _listeners.push(
     _fb.onSnapshot(settingsDocRef, snap => {
       if (snap.exists()) {
         const data = snap.data();
-        // Guarda en localStorage para acceso rápido
         localStorage.setItem('inv_settings_' + fbUser.uid, JSON.stringify(data));
         activeUserId = fbUser.uid;
-        // Aplica ajustes en tiempo real
         applySettings({ ...DEFAULTS, ...data });
-        // Actualiza UI de ajustes si está abierta
         const va = document.getElementById('view-ajustes');
         if (va && !va.classList.contains('hidden')) loadSettingsUI();
       }
     })
   );
 
-  // Navega al panel después de que lleguen los primeros datos
   setTimeout(() => {
     applySettings();
     loadSettingsUI();
@@ -233,7 +210,6 @@ function showLoginScreen() {
       </div>`;
     document.body.appendChild(el);
 
-    // ── Login
     document.getElementById('login-btn').addEventListener('click', async () => {
       const email = document.getElementById('login-email').value.trim();
       const pass  = document.getElementById('login-password').value;
@@ -248,7 +224,6 @@ function showLoginScreen() {
       }
     });
 
-    // ── Mostrar/ocultar registro
     document.getElementById('show-register').addEventListener('click', e => {
       e.preventDefault();
       const s = document.getElementById('register-section');
@@ -257,7 +232,6 @@ function showLoginScreen() {
         s.style.display === 'none' ? 'Crear cuenta' : 'Cancelar';
     });
 
-    // ── Registro
     document.getElementById('register-btn').addEventListener('click', async () => {
       const email = document.getElementById('login-email').value.trim();
       const pass  = document.getElementById('reg-password2').value;
@@ -279,7 +253,6 @@ function showLoginScreen() {
       }
     });
 
-    // Enter en contraseña
     document.getElementById('login-password').addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('login-btn').click();
     });
