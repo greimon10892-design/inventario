@@ -678,6 +678,7 @@ function buildReportHTML(title, subtitle, sales, showBars) {
         </div>
         <div class="report-actions">
           <button class="btn-ghost-sm" onclick="downloadCSV('${encodeURIComponent(title)}')">Descargar CSV</button>
+          <button class="btn-ghost-sm" onclick="downloadPDF('${encodeURIComponent(title)}')">📄 PDF</button>
           <button class="btn-ghost-sm" onclick="printReport()">Imprimir</button>
           <button class="btn-ghost-sm" onclick="shareReport('${encodeURIComponent(title)}')">Compartir</button>
         </div>
@@ -791,6 +792,54 @@ function shareReport(encodedTitle) {
     navigator.clipboard.writeText(window.location.href)
       .then(() => alert('URL copiada al portapapeles'))
       .catch(() => alert('Comparte esta URL: ' + window.location.href));
+  }
+}
+
+// Descargar reporte como PDF
+function downloadPDF(encodedTitle) {
+  const title = decodeURIComponent(encodedTitle);
+  // Busca el reporte activo
+  const card = document.querySelector('.report-card');
+  if (!card) return;
+
+  const s = activeSettings ? activeSettings() : {};
+  const storeName = s.storeName || 'Inventario';
+
+  // Construye HTML del PDF
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>${title}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 20px; }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .sub { color: #888; font-size: 11px; margin-bottom: 16px; }
+  .stats { display: flex; gap: 20px; margin-bottom: 16px; }
+  .stat { background: #f5f5f5; padding: 10px 16px; border-radius: 8px; }
+  .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
+  .stat-value { font-size: 16px; font-weight: bold; }
+  .green { color: #1a9e5c; }
+  .orange { color: #e07b39; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th { background: #f0f0f0; padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; }
+  td { padding: 8px; border-bottom: 1px solid #eee; }
+  .footer { margin-top: 20px; font-size: 10px; color: #aaa; text-align: center; }
+</style>
+</head>
+<body>
+${card.innerHTML}
+<div class="footer">${storeName} · Generado el ${new Date().toLocaleDateString('es-MX', {day:'2-digit',month:'long',year:'numeric'})}</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if (win) {
+    win.onload = () => {
+      setTimeout(() => { win.print(); }, 500);
+    };
   }
 }
 
