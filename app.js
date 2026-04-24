@@ -13,6 +13,7 @@ function getProduct(id) { return products.find(p => p.id === id); }
 
 // Imagen temporal del formulario de producto
 let _productImgData = '';
+let _productImgs = ['', '', '']; // fotos adicionales slots 1 y 2
 
 // ── State ──────────────────────────────────────────────────────────────────
 let products  = JSON.parse(localStorage.getItem('inv_products')  || '[]');
@@ -222,6 +223,7 @@ document.getElementById('product-form').addEventListener('submit', e => {
     sellPrice: parseFloat(document.getElementById('f-sell').value),
     desc:      document.getElementById('f-desc').value.trim(),
     img:       _productImgData,
+    imgs:      _productImgs.filter(Boolean), // fotos adicionales
   };
   if (data.sellPrice < data.buyPrice) {
     alert('El precio de venta no puede ser menor al precio de compra.');
@@ -245,9 +247,21 @@ function resetForm() {
   document.getElementById('product-form').reset();
   document.getElementById('cancel-edit').style.display = 'none';
   _productImgData = '';
+  _productImgs = ['', '', ''];
   document.getElementById('f-img-preview').classList.add('hidden');
   document.getElementById('f-img-placeholder').style.display = '';
   document.getElementById('f-img-remove').style.display = 'none';
+  // Limpiar slots adicionales
+  [1, 2].forEach(i => {
+    const prev = document.getElementById(`f-img-preview-${i}`);
+    const ph   = document.getElementById(`f-img-placeholder-${i}`);
+    const rm   = document.getElementById(`f-img-remove-${i}`);
+    if (prev) { prev.classList.add('hidden'); prev.src = ''; }
+    if (ph)   ph.style.display = '';
+    if (rm)   rm.style.display = 'none';
+    const inp = document.getElementById(`f-img-${i}`);
+    if (inp) inp.value = '';
+  });
 }
 
 document.getElementById('cancel-edit').addEventListener('click', () => {
@@ -307,6 +321,33 @@ document.getElementById('f-img-remove').addEventListener('click', () => {
   document.getElementById('f-img').value = '';
 });
 
+// Listeners para fotos adicionales (slots 1 y 2)
+[1, 2].forEach(i => {
+  const inp = document.getElementById(`f-img-${i}`);
+  const rm  = document.getElementById(`f-img-remove-${i}`);
+  if (inp) inp.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    compressImage(file, 400, 0.6, dataUrl => {
+      _productImgs[i] = dataUrl;
+      const prev = document.getElementById(`f-img-preview-${i}`);
+      const ph   = document.getElementById(`f-img-placeholder-${i}`);
+      const rmb  = document.getElementById(`f-img-remove-${i}`);
+      if (prev) { prev.src = dataUrl; prev.classList.remove('hidden'); }
+      if (ph)   ph.style.display = 'none';
+      if (rmb)  rmb.style.display = 'inline-block';
+    });
+  });
+  if (rm) rm.addEventListener('click', () => {
+    _productImgs[i] = '';
+    const prev = document.getElementById(`f-img-preview-${i}`);
+    const ph   = document.getElementById(`f-img-placeholder-${i}`);
+    if (prev) { prev.classList.add('hidden'); prev.src = ''; }
+    if (ph)   ph.style.display = '';
+    rm.style.display = 'none';
+    if (inp) inp.value = '';
+  });
+});
+
 function editProduct(id) {
   const p = getProduct(id);
   if (!p) return;
@@ -319,7 +360,7 @@ function editProduct(id) {
   document.getElementById('f-desc').value     = p.desc || '';
   document.getElementById('form-title').textContent = 'Editar Producto';
   document.getElementById('cancel-edit').style.display = 'inline-block';
-  // Imagen
+  // Imagen principal
   _productImgData = p.img || '';
   if (p.img) {
     document.getElementById('f-img-preview').src = p.img;
@@ -331,6 +372,25 @@ function editProduct(id) {
     document.getElementById('f-img-placeholder').style.display = '';
     document.getElementById('f-img-remove').style.display = 'none';
   }
+  // Fotos adicionales
+  _productImgs = ['', '', ''];
+  const extraImgs = p.imgs || [];
+  [1, 2].forEach(i => {
+    const img  = extraImgs[i - 1] || '';
+    _productImgs[i] = img;
+    const prev = document.getElementById(`f-img-preview-${i}`);
+    const ph   = document.getElementById(`f-img-placeholder-${i}`);
+    const rm   = document.getElementById(`f-img-remove-${i}`);
+    if (img) {
+      if (prev) { prev.src = img; prev.classList.remove('hidden'); }
+      if (ph)   ph.style.display = 'none';
+      if (rm)   rm.style.display = 'inline-block';
+    } else {
+      if (prev) prev.classList.add('hidden');
+      if (ph)   ph.style.display = '';
+      if (rm)   rm.style.display = 'none';
+    }
+  });
   navigate('agregar');
 }
 
