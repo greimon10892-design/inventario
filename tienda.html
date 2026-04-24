@@ -82,7 +82,7 @@
     /* HERO */
     .hero {
       background: linear-gradient(135deg, #f0faf5 0%, #fff8f0 100%);
-      padding: 72px 40px 56px;
+      padding: 28px 40px 24px;
       text-align: center;
       position: relative; overflow: hidden;
       width: 100%;
@@ -104,43 +104,43 @@
     .hero-badge {
       display: inline-block;
       background: rgba(26,158,92,0.1); color: #1a9e5c;
-      font-size: 0.75rem; font-weight: 700;
+      font-size: 0.72rem; font-weight: 700;
       letter-spacing: 1.5px; text-transform: uppercase;
-      padding: 6px 16px; border-radius: 100px;
-      margin-bottom: 20px; position: relative; z-index: 1;
+      padding: 4px 12px; border-radius: 100px;
+      margin-bottom: 10px; position: relative; z-index: 1;
     }
     .hero-title {
-      font-size: clamp(3rem, 10vw, 6rem);
+      font-size: clamp(2rem, 7vw, 4rem);
       font-weight: 900; letter-spacing: -2px; line-height: 1;
-      color: #1a1a1a; margin-bottom: 16px;
+      color: #1a1a1a; margin-bottom: 8px;
       position: relative; z-index: 1;
     }
     .hero-title .green  { color: #1a9e5c; }
     .hero-title .orange { color: #ff6b00; }
     .hero-tagline {
-      font-size: clamp(1rem, 3vw, 1.2rem);
-      color: #555; font-weight: 500; margin-bottom: 6px;
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      color: #555; font-weight: 500; margin-bottom: 4px;
       position: relative; z-index: 1;
     }
     .hero-sub {
-      font-size: 0.9rem; color: #888;
+      font-size: 0.82rem; color: #888;
       position: relative; z-index: 1;
     }
 
     /* CARDS */
     .cards-section {
-      padding: 48px 40px 80px;
+      padding: 20px 40px 20px;
       max-width: 100%; margin: 0; width: 100%;
     }
     .cards-section h2 {
-      text-align: center; font-size: 1rem; font-weight: 600;
+      text-align: center; font-size: 0.85rem; font-weight: 600;
       color: #888; letter-spacing: 1px; text-transform: uppercase;
-      margin-bottom: 40px;
+      margin-bottom: 16px;
     }
     .cards-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      gap: 16px;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -148,43 +148,43 @@
 
     .store-card {
       background: #ffffff; border: 1.5px solid #e8e8e8;
-      border-radius: 24px; padding: 40px 32px;
+      border-radius: 20px; padding: 20px 24px;
       text-align: center; text-decoration: none; color: inherit;
-      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
       transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
     }
-    .store-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.10); }
+    .store-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.10); }
     .store-card.dulces:hover   { border-color: #ff6b00; }
     .store-card.pulseras:hover { border-color: #8b5cf6; }
 
     .card-emoji {
-      font-size: 4rem; line-height: 1;
+      font-size: 3rem; line-height: 1;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.12));
       display: flex; align-items: center; justify-content: center;
-      min-height: 80px;
+      min-height: 60px;
       transition: transform 0.25s;
     }
     .store-card:hover .card-emoji { transform: scale(1.12) rotate(-5deg); }
 
     .card-tag {
-      font-size: 0.78rem; font-weight: 600;
-      padding: 4px 12px; border-radius: 100px;
+      font-size: 0.72rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 100px;
     }
     .store-card.dulces  .card-tag { background: #fff3e8; color: #e05a00; }
     .store-card.pulseras .card-tag { background: #f3eeff; color: #7c3aed; }
 
     .card-title {
-      font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;
+      font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px;
     }
     .store-card.dulces  .card-title { color: #e05a00; }
     .store-card.pulseras .card-title { color: #7c3aed; }
 
-    .card-desc { font-size: 0.92rem; color: #666; line-height: 1.55; }
+    .card-desc { font-size: 0.82rem; color: #666; line-height: 1.5; }
 
     .card-btn {
-      display: inline-block; padding: 12px 28px;
-      border-radius: 100px; font-size: 0.92rem; font-weight: 700;
-      color: #ffffff; text-decoration: none; margin-top: 6px;
+      display: inline-block; padding: 10px 24px;
+      border-radius: 100px; font-size: 0.88rem; font-weight: 700;
+      color: #ffffff; text-decoration: none; margin-top: 4px;
       transition: opacity 0.2s, transform 0.15s;
     }
     .card-btn:hover { opacity: 0.88; transform: scale(1.03); }
@@ -192,10 +192,10 @@
     .store-card.pulseras .card-btn { background: #8b5cf6; }
 
     /* FEATURES */
-    .features { background: #f9f9f9; padding: 48px 24px 64px; }
+    .features { background: #f9f9f9; padding: 24px 24px 32px; }
     .features-inner {
       max-width: 800px; margin: 0 auto;
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 24px;
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
       text-align: center;
     }
     @media (max-width: 600px) { .features-inner { grid-template-columns: 1fr; } }
