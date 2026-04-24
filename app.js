@@ -597,8 +597,11 @@ function initReportSelectors() {
     `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`
   ).join('');
 
-  // Fecha de hoy por defecto
-  document.getElementById('r-date').value = now.toISOString().slice(0, 10);
+  // Fecha de hoy por defecto — usando hora local, no UTC
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  const dd   = String(now.getDate()).padStart(2, '0');
+  document.getElementById('r-date').value = `${yyyy}-${mm}-${dd}`;
 }
 
 // Filtra ventas (salidas) por rango de fechas
@@ -798,48 +801,55 @@ function shareReport(encodedTitle) {
 // Descargar reporte como PDF
 function downloadPDF(encodedTitle) {
   const title = decodeURIComponent(encodedTitle);
-  // Busca el reporte activo
   const card = document.querySelector('.report-card');
   if (!card) return;
 
   const s = activeSettings ? activeSettings() : {};
   const storeName = s.storeName || 'Inventario';
+  const fecha = new Date().toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'});
 
-  // Construye HTML del PDF
+  // Estilos limpios para impresión
   const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
 <title>${title}</title>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 20px; }
-  h1 { font-size: 18px; margin-bottom: 4px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 24px; }
+  h2 { font-size: 16px; font-weight: bold; margin-bottom: 2px; }
   .sub { color: #888; font-size: 11px; margin-bottom: 16px; }
-  .stats { display: flex; gap: 20px; margin-bottom: 16px; }
-  .stat { background: #f5f5f5; padding: 10px 16px; border-radius: 8px; }
-  .stat-label { font-size: 10px; color: #888; text-transform: uppercase; }
-  .stat-value { font-size: 16px; font-weight: bold; }
-  .green { color: #1a9e5c; }
-  .orange { color: #e07b39; }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+  .stat { background: #f5f5f5; padding: 10px; border-radius: 6px; }
+  .stat-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-size: 15px; font-weight: bold; margin-top: 2px; }
+  .green { color: #1a9e5c; } .orange { color: #e07b39; }
   table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th { background: #f0f0f0; padding: 8px; text-align: left; font-size: 11px; text-transform: uppercase; }
-  td { padding: 8px; border-bottom: 1px solid #eee; }
-  .footer { margin-top: 20px; font-size: 10px; color: #aaa; text-align: center; }
+  th { background: #f0f0f0; padding: 7px 10px; text-align: left; font-size: 10px; text-transform: uppercase; }
+  td { padding: 7px 10px; border-bottom: 1px solid #eee; font-size: 11px; }
+  .footer { margin-top: 20px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
+  @media print { body { padding: 0; } }
 </style>
 </head>
 <body>
-${card.innerHTML}
-<div class="footer">${storeName} · Generado el ${new Date().toLocaleDateString('es-MX', {day:'2-digit',month:'long',year:'numeric'})}</div>
+<h2>${title}</h2>
+<div class="sub">${storeName} · ${fecha}</div>
+${card.querySelector('.report-stats') ? `<div class="stats">${card.querySelector('.report-stats').innerHTML}</div>` : ''}
+${card.querySelector('table') ? card.querySelector('table').outerHTML : ''}
+<div class="footer">Generado por ${storeName} el ${fecha}</div>
+<script>window.onload=()=>{window.print();}<\/script>
 </body>
 </html>`;
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
   const win  = window.open(url, '_blank');
-  if (win) {
-    win.onload = () => {
-      setTimeout(() => { win.print(); }, 500);
-    };
+  if (!win) {
+    // Si el popup fue bloqueado, descarga como archivo
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = title.replace(/\s+/g,'_') + '.html';
+    a.click();
   }
 }
 
