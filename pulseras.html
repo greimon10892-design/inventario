@@ -279,6 +279,26 @@
     </div>
   </div>
 
+  <!-- Product Detail Modal -->
+  <div class="prod-modal-overlay hidden" id="prod-modal-overlay" onclick="window.closeProductModal()"></div>
+  <div class="prod-modal hidden" id="prod-modal">
+    <button class="prod-modal-close" onclick="window.closeProductModal()">✕</button>
+    <div class="prod-modal-img-wrap">
+      <img id="prod-modal-img" src="" alt="" />
+      <div id="prod-modal-emoji" class="prod-modal-emoji"></div>
+    </div>
+    <div class="prod-modal-info">
+      <div class="prod-modal-tag" id="prod-modal-tag">✦ Pieza única</div>
+      <h2 class="prod-modal-name" id="prod-modal-name"></h2>
+      <div class="prod-modal-price" id="prod-modal-price"></div>
+      <p class="prod-modal-desc" id="prod-modal-desc"></p>
+      <div class="prod-modal-stock" id="prod-modal-stock"></div>
+      <button class="prod-modal-add" id="prod-modal-add-btn" onclick="window.modalAddToCart()">
+        🛒 Agregar al carrito
+      </button>
+    </div>
+  </div>
+
   <div class="cart-overlay" id="cart-overlay" onclick="window.closeCart()"></div>
   <div class="cart-panel" id="cart-panel">
     <div class="cart-header">
