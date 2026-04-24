@@ -553,7 +553,12 @@
       }
     }
 
-    window.openSettings = () => { document.getElementById('settings-panel').classList.add('open'); document.getElementById('settings-overlay').classList.add('open'); };
+    window.openSettings = () => {
+      const pwd = prompt('🔒 Contraseña de ajustes:');
+      if (pwd !== 'T4L4R4') { if (pwd !== null) alert('Contraseña incorrecta.'); return; }
+      document.getElementById('settings-panel').classList.add('open');
+      document.getElementById('settings-overlay').classList.add('open');
+    };
     window.closeSettings = () => { document.getElementById('settings-panel').classList.remove('open'); document.getElementById('settings-overlay').classList.remove('open'); };
 
     window.livePreview = () => { settings.storeName = document.getElementById('s-store-name').value; applySettings(settings); };
