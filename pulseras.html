@@ -212,6 +212,27 @@
     .toast { background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
     @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    /* PRODUCT MODAL */
+    .prod-modal-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); }
+    .prod-modal-overlay.hidden { display: none; }
+    .prod-modal { position: fixed; z-index: 601; top: 50%; left: 50%; transform: translate(-50%,-50%); background: var(--surface); border-radius: 20px; width: min(560px, 94vw); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
+    .prod-modal.hidden { display: none; }
+    @media (max-width: 540px) { .prod-modal { top: auto; bottom: 0; left: 0; right: 0; transform: none; width: 100%; border-radius: 20px 20px 0 0; max-height: 92vh; } }
+    .prod-modal-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.08); border: none; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; z-index: 1; transition: background .2s; }
+    .prod-modal-close:hover { background: rgba(0,0,0,0.15); }
+    .prod-modal-img-wrap { width: 100%; aspect-ratio: 1/1; max-height: 300px; background: var(--surface2); overflow: hidden; display: flex; align-items: center; justify-content: center; border-radius: 20px 20px 0 0; flex-shrink: 0; }
+    .prod-modal-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .prod-modal-emoji { font-size: 5rem; }
+    .prod-modal-info { padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 10px; }
+    .prod-modal-tag { font-size: 0.72rem; font-weight: 700; color: var(--primary); }
+    .prod-modal-name { font-size: 1.3rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .prod-modal-price { font-size: 1.6rem; font-weight: 900; color: var(--price-color); }
+    .prod-modal-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+    .prod-modal-stock { font-size: 0.8rem; color: var(--text-muted); }
+    .prod-modal-add { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #fff; font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 6px; transition: opacity .2s, transform .1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .prod-modal-add:hover { opacity: .88; }
+    .prod-modal-add:active { transform: scale(.98); }
   </style>
 </head>
 <body>
@@ -237,6 +258,26 @@
     </div>
     <div class="product-grid" id="product-grid"></div>
   </main>
+
+  <!-- Product Detail Modal -->
+  <div class="prod-modal-overlay hidden" id="prod-modal-overlay" onclick="window.closeProductModal()"></div>
+  <div class="prod-modal hidden" id="prod-modal">
+    <button class="prod-modal-close" onclick="window.closeProductModal()">✕</button>
+    <div class="prod-modal-img-wrap">
+      <img id="prod-modal-img" src="" alt="" />
+      <div id="prod-modal-emoji" class="prod-modal-emoji"></div>
+    </div>
+    <div class="prod-modal-info">
+      <div class="prod-modal-tag" id="prod-modal-tag">✦ Pieza única</div>
+      <h2 class="prod-modal-name" id="prod-modal-name"></h2>
+      <div class="prod-modal-price" id="prod-modal-price"></div>
+      <p class="prod-modal-desc" id="prod-modal-desc"></p>
+      <div class="prod-modal-stock" id="prod-modal-stock"></div>
+      <button class="prod-modal-add" id="prod-modal-add-btn" onclick="window.modalAddToCart()">
+        🛒 Agregar al carrito
+      </button>
+    </div>
+  </div>
 
   <div class="cart-overlay" id="cart-overlay" onclick="window.closeCart()"></div>
   <div class="cart-panel" id="cart-panel">
@@ -500,7 +541,35 @@
     window.closeCart = () => { document.getElementById('cart-panel').classList.remove('open'); document.getElementById('cart-overlay').classList.remove('open'); };
     window.addToCart = (id) => { cart[id] = (cart[id] || 0) + 1; renderCart(); showToast('📿 Añadido al carrito'); };
     window.changeQty = (id, delta) => { cart[id] = Math.max(0, (cart[id] || 0) + delta); if (cart[id] === 0) delete cart[id]; renderCart(); };
-    window.openProduct = (id) => { const p = products.find(x => x.id === id); if (p) window.addToCart(id); };
+
+    let _modalProductId = null;
+    window.openProduct = (id) => {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      _modalProductId = id;
+      const imgEl = document.getElementById('prod-modal-img');
+      const emojiEl = document.getElementById('prod-modal-emoji');
+      if (p.img) { imgEl.src = p.img; imgEl.style.display = 'block'; emojiEl.style.display = 'none'; }
+      else { imgEl.style.display = 'none'; emojiEl.style.display = 'flex'; emojiEl.textContent = '📿'; }
+      document.getElementById('prod-modal-name').textContent  = p.name || 'Sin nombre';
+      document.getElementById('prod-modal-price').textContent = fmt(p.sellPrice);
+      document.getElementById('prod-modal-desc').textContent  = p.desc || 'Pulsera artesanal hecha a mano, pieza única.';
+      document.getElementById('prod-modal-stock').textContent = `Stock disponible: ${p.stock} uds.`;
+      document.getElementById('prod-modal-overlay').classList.remove('hidden');
+      document.getElementById('prod-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    };
+    window.closeProductModal = () => {
+      document.getElementById('prod-modal-overlay').classList.add('hidden');
+      document.getElementById('prod-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+    window.modalAddToCart = () => {
+      if (!_modalProductId) return;
+      window.addToCart(_modalProductId);
+      window.closeProductModal();
+      window.openCart();
+    };
 
     window.sendWhatsApp = () => {
       const keys = Object.keys(cart).filter(k => cart[k] > 0);
