@@ -1,1644 +1,841 @@
-<!DOCTYPE html>
-<html lang="es" style="
-  --primary: #ec4899;
-  --price-color: #4f46e5;
-  --bg: #f0faf5;
-  --surface: #ffffff;
-  --surface2: #d8f0e4;
-  --border: #b8e4cc;
-  --text: #1a1a1a;
-  --text-muted: #4a7a5f;
-">
+﻿<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🍬 Dulces Típicos — TALARA</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#6B2D0A" />
-
-  <!-- Fonts -->
+  <title>TALARA 🍬 Dulces</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* ===== RESET & BASE ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --brown-dark:   #3B1A08;
-      --brown-mid:    #6B2D0A;
-      --brown-warm:   #A0461A;
-      --caramel:      #C8742A;
-      --gold:         #E8A830;
-      --gold-light:   #F5C842;
-      --cream:        #FFF8F0;
-      --cream2:       #FFF0DC;
-      --white:        #FFFFFF;
-      --text-dark:    #2C1A0E;
-      --text-mid:     #6B4A30;
-      --text-muted:   #9B7A5A;
-      --green-whats:  #25D366;
-      --red-badge:    #D63820;
+      --primary: #ff6b00;
+      --price-color: #ff6b00;
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --surface2: #f0f0f0;
+      --border: #e8e8e8;
+      --text: #1a1a1a;
+      --text-muted: #888;
     }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
 
-    html { scroll-behavior: smooth; }
+    /* BANNER */
+    #custom-banner { width: 100%; max-height: 200px; object-fit: cover; display: none; }
 
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--cream);
-      color: var(--text-dark);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ===== HEADER ===== */
+    /* HEADER */
     header {
-      background: var(--brown-dark);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+      position: sticky; top: 0; z-index: 200;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 20px; height: 60px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-
-    .header-inner {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 16px;
-      max-width: 680px;
-      margin: 0 auto;
+    .back-link { font-size: 0.82rem; color: var(--text-muted); text-decoration: none; white-space: nowrap; font-weight: 500; }
+    .back-link:hover { color: var(--primary); }
+    .header-logo { font-size: 1.2rem; font-weight: 900; color: var(--text); white-space: nowrap; }
+    .search-wrap { flex: 1; position: relative; }
+    .search-wrap input {
+      width: 100%; padding: 8px 16px 8px 36px;
+      border: 1.5px solid var(--border); border-radius: 100px;
+      background: var(--surface2); color: var(--text);
+      font-size: 0.88rem; font-family: inherit; outline: none;
+      transition: border-color 0.2s;
     }
-
-    .btn-back {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--gold-light);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 700;
-      white-space: nowrap;
-      background: rgba(255,255,255,0.08);
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.15);
-      transition: background 0.2s;
+    .search-wrap input:focus { border-color: var(--primary); }
+    .search-wrap .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; pointer-events: none; }
+    .cart-btn {
+      position: relative; background: none; border: none; cursor: pointer;
+      font-size: 1.5rem; padding: 4px; color: var(--text);
     }
-    .btn-back:hover { background: rgba(255,255,255,0.15); }
-
-    .header-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-    }
-    .logo-img {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--gold);
+    .cart-badge {
+      position: absolute; top: -2px; right: -4px;
+      background: var(--primary); color: #fff;
+      font-size: 0.65rem; font-weight: 700;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
       display: none;
     }
-    .logo-img.visible { display: block; }
-    .logo-text {
-      font-family: 'Playfair Display', serif;
-      font-size: 20px;
-      font-weight: 900;
-      color: var(--gold-light);
-      letter-spacing: 1px;
-    }
-    .logo-text span { color: var(--caramel); }
 
-    .header-actions { display: flex; align-items: center; gap: 8px; }
+    /* MAIN */
+    main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 100px; }
 
-    .btn-search {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--cream);
-      font-size: 16px;
-    }
+    /* SECTION TITLE */
+    .section-header { margin-bottom: 20px; }
+    .section-header h2 { font-size: 1.3rem; font-weight: 800; }
+    .section-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
 
-    .btn-cart {
-      background: var(--gold);
-      border: none;
-      border-radius: 22px;
-      padding: 7px 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 800;
-      font-size: 13px;
-      color: var(--brown-dark);
-      position: relative;
-    }
-    .cart-count {
-      background: var(--red-badge);
-      color: #fff;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      font-size: 10px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* ===== SEARCH BAR ===== */
-    .search-bar {
-      background: var(--brown-mid);
-      padding: 10px 16px;
-      display: none;
-    }
-    .search-bar.open { display: block; }
-    .search-input-wrap {
-      max-width: 680px;
-      margin: 0 auto;
-      position: relative;
-    }
-    .search-input {
-      width: 100%;
-      padding: 10px 16px 10px 40px;
-      border: none;
-      border-radius: 24px;
-      font-family: 'Nunito', sans-serif;
-      font-size: 14px;
-      background: rgba(255,255,255,0.12);
-      color: var(--cream);
-      outline: none;
-    }
-    .search-input::placeholder { color: rgba(255,248,240,0.5); }
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,248,240,0.6);
-      font-size: 15px;
-      pointer-events: none;
-    }
-
-    /* ===== HERO BANNER ===== */
-    .hero {
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(160deg, var(--brown-dark) 0%, var(--brown-mid) 60%, var(--brown-warm) 100%);
-      min-height: 200px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.5rem 1.8rem;
-      text-align: center;
-    }
-
-    .hero-banner-img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.25;
-    }
-
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, rgba(59,26,8,0.5) 0%, rgba(59,26,8,0.75) 100%);
-    }
-
-    .hero-content { position: relative; z-index: 2; }
-
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(232,168,48,0.2);
-      border: 1px solid rgba(232,168,48,0.4);
-      color: var(--gold-light);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 5px 14px;
-      border-radius: 20px;
-      margin-bottom: 12px;
-    }
-
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.4rem;
-      font-weight: 900;
-      color: var(--cream);
-      line-height: 1.1;
-      margin-bottom: 6px;
-    }
-    .hero-title .accent { color: var(--gold-light); }
-
-    .hero-subtitle {
-      color: rgba(255,248,240,0.7);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-
-    .hero-stats {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-    }
-    .hero-stat {
-      text-align: center;
-    }
-    .hero-stat-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--gold-light);
-      display: block;
-    }
-    .hero-stat-label {
-      font-size: 10px;
-      color: rgba(255,248,240,0.6);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* ===== CUSTOM BANNER ===== */
-    #custom-banner {
-      display: block;
-      width: 100%;
-      max-height: 220px;
-      object-fit: cover;
-    }
-
-    /* ===== SECTION HEADING ===== */
-    .section-head {
-      padding: 1.6rem 16px 0.8rem;
-      max-width: 680px;
-      margin: 0 auto;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-    }
-    .section-head-left {}
-    .section-eyebrow {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--brown-warm);
-      margin-bottom: 2px;
-    }
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-dark);
-    }
-    .section-divider {
-      width: 48px;
-      height: 3px;
-      background: linear-gradient(90deg, var(--caramel), var(--gold));
-      border-radius: 2px;
-      margin-top: 6px;
-    }
-    .product-count {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 600;
-      padding-bottom: 4px;
-    }
-
-    /* ===== FILTER CHIPS ===== */
-    .filter-wrap {
-      overflow-x: auto;
-      padding: 0.6rem 16px 0.8rem;
-      scrollbar-width: none;
-    }
-    .filter-wrap::-webkit-scrollbar { display: none; }
-    .filter-row {
-      display: flex;
-      gap: 8px;
-      width: max-content;
-    }
-    .filter-chip {
-      padding: 6px 16px;
-      border-radius: 20px;
-      border: 1.5px solid var(--caramel);
-      background: transparent;
-      color: var(--brown-mid);
-      font-size: 12px;
-      font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .filter-chip.active,
-    .filter-chip:hover {
-      background: var(--brown-mid);
-      color: var(--cream);
-      border-color: var(--brown-mid);
-    }
-
-    /* ===== PRODUCTS GRID ===== */
-    .products-section {
-      padding: 0 12px 100px;
-      max-width: 680px;
-      margin: 0 auto;
-    }
-
-    #product-grid {
+    /* PRODUCT GRID */
+    .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
     }
+    @media (min-width: 640px) { .product-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+    @media (min-width: 1024px) { .product-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
 
-    /* ===== PRODUCT CARD ===== */
+    /* PRODUCT CARD */
     .product-card {
-      background: var(--white);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(44,26,14,0.08);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-      cursor: pointer;
-      position: relative;
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .product-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 28px rgba(44,26,14,0.16);
-    }
-    .product-card:active { transform: scale(0.97); }
-
-    .card-img-wrap {
-      position: relative;
-      width: 100%;
-      padding-top: 75%;
-      background: linear-gradient(135deg, var(--cream2), #FFD898);
-      overflow: hidden;
-    }
-    .card-img-wrap img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.3s ease;
-    }
-    .product-card:hover .card-img-wrap img { transform: scale(1.06); }
-
-    .card-no-img {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3.5rem;
-    }
-
-    .card-badge {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      padding: 3px 10px;
-      border-radius: 10px;
-      z-index: 2;
-    }
-    .badge-popular { background: var(--red-badge); color: #fff; }
-    .badge-new     { background: var(--brown-warm); color: #fff; }
-    .badge-offer   { background: var(--gold); color: var(--brown-dark); }
-
-    .card-handmade {
-      position: absolute;
-      bottom: 8px;
-      left: 8px;
-      background: rgba(59,26,8,0.75);
-      color: var(--gold-light);
-      font-size: 9px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 8px;
-      backdrop-filter: blur(4px);
-      z-index: 2;
-    }
-
-    .card-body {
-      padding: 10px 12px 12px;
-    }
-    .card-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-dark);
-      line-height: 1.3;
-      margin-bottom: 2px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .card-desc {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-      display: -webkit-box;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-price {
-      font-family: 'Playfair Display', serif;
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--brown-warm);
-    }
-    .btn-add {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: var(--brown-mid);
-      color: var(--cream);
-      border: none;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
-      font-weight: 300;
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.10); }
+    .card-img-wrap { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--surface2); }
+    .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .product-card:hover .card-img-wrap img { transform: scale(1.05); }
+    .card-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+    .add-btn {
+      position: absolute; bottom: 10px; right: 10px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #1a9e5c; color: #fff; border: none;
+      font-size: 1.3rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(26,158,92,0.4);
+      transition: transform 0.15s, background 0.2s;
       line-height: 1;
     }
-    .btn-add:hover { background: var(--caramel); }
-    .btn-add:active { transform: scale(0.88); }
+    .add-btn:hover { transform: scale(1.15); background: #158a4e; }
+    .card-body { padding: 10px 12px 14px; }
+    .card-handmade { font-size: 0.7rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+    .card-name { font-size: 0.88rem; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 6px; color: var(--text); }
+    .card-price { font-size: 1rem; font-weight: 800; color: var(--price-color); }
+    .card-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-    /* ===== PROMO STRIP ===== */
-    .promo-strip {
-      background: linear-gradient(135deg, var(--brown-mid), var(--brown-warm));
-      border-radius: 18px;
-      padding: 1.4rem 1.2rem;
-      margin: 0.5rem 12px 1.2rem;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      max-width: 656px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .promo-icon { font-size: 2.4rem; flex-shrink: 0; }
-    .promo-text { flex: 1; }
-    .promo-text h3 {
-      font-family: 'Playfair Display', serif;
-      color: var(--gold-light);
-      font-size: 1rem;
-      margin-bottom: 3px;
-    }
-    .promo-text p {
-      color: rgba(255,248,240,0.8);
-      font-size: 11px;
-      line-height: 1.4;
-    }
-    .promo-btn {
-      background: var(--gold-light);
-      color: var(--brown-dark);
-      border: none;
-      padding: 9px 16px;
-      border-radius: 20px;
-      font-weight: 800;
-      font-size: 12px;
-      font-family: 'Nunito', sans-serif;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+    .empty-state .empty-icon { font-size: 4rem; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
 
-    /* ===== EMPTY STATE ===== */
-    .empty-state {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--text-muted);
-      grid-column: 1/-1;
-    }
-    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
-    .empty-state p { font-size: 14px; }
-
-    /* ===== CART STICKY BAR ===== */
-    .cart-sticky {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--brown-dark);
-      padding: 12px 16px;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 200;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-    }
-    .cart-sticky.visible { display: flex; }
-
-    .cart-sticky-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .cart-sticky-count {
-      font-size: 11px;
-      color: rgba(255,248,240,0.6);
-      font-weight: 600;
-    }
-    .cart-sticky-total {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--gold-light);
-    }
-
-    .btn-whatsapp {
-      background: var(--green-whats);
-      color: #fff;
-      border: none;
-      padding: 12px 22px;
-      border-radius: 28px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 800;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(37,211,102,0.3);
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .btn-whatsapp:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(37,211,102,0.4);
-    }
-    .btn-whatsapp svg { flex-shrink: 0; }
-
-    /* ===== CART PANEL (ORIGINAL LOGIC) ===== */
+    /* CART OVERLAY */
     .cart-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 300;
-      display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
-    .cart-overlay.open { display: block; }
+    .cart-overlay.open { opacity: 1; pointer-events: all; }
 
-    #cart-panel {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--white);
-      border-radius: 24px 24px 0 0;
-      z-index: 301;
-      padding: 20px 16px 32px;
-      transform: translateY(100%);
-      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-      max-height: 80vh;
-      overflow-y: auto;
+    /* CART PANEL */
+    .cart-panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: min(400px, 100vw);
+      background: var(--surface); z-index: 301;
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: -8px 0 40px rgba(0,0,0,0.15);
     }
-    #cart-panel.open { transform: translateY(0); }
-
-    .cart-handle {
-      width: 40px;
-      height: 4px;
-      background: #ddd;
-      border-radius: 2px;
-      margin: 0 auto 16px;
+    .cart-panel.open { transform: translateX(0); }
+    .cart-header {
+      padding: 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
     }
-
-    .cart-panel-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    #cart-items { margin-bottom: 16px; }
-
+    .cart-header h3 { font-size: 1.1rem; font-weight: 800; }
+    .cart-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); padding: 4px; }
+    .cart-items { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
     .cart-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid #f0e8e0;
+      display: flex; gap: 12px; align-items: center;
+      background: var(--surface2); border-radius: 12px; padding: 10px;
     }
-    .cart-item-img {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      object-fit: cover;
-      background: var(--cream2);
-      flex-shrink: 0;
+    .cart-item-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--border); flex-shrink: 0; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cart-item-price { font-size: 0.82rem; color: var(--price-color); font-weight: 700; margin-top: 2px; }
+    .cart-item-qty { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .qty-btn { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; color: var(--text); transition: background 0.15s; }
+    .qty-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .qty-num { font-size: 0.88rem; font-weight: 700; min-width: 20px; text-align: center; }
+    .cart-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+    .cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .cart-total span { font-size: 0.9rem; color: var(--text-muted); }
+    .cart-total strong { font-size: 1.2rem; font-weight: 800; color: var(--price-color); }
+    .cart-empty-msg { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
+    .cart-empty-msg .e { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+    .wa-btn {
+      width: 100%; padding: 14px; border-radius: 14px;
+      background: #25d366; color: #fff; border: none;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity 0.2s, transform 0.15s;
     }
-    .cart-item-info { flex: 1; }
-    .cart-item-name {
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--text-dark);
-    }
-    .cart-item-price {
-      font-size: 12px;
-      color: var(--brown-warm);
-      font-weight: 600;
-    }
-    .cart-item-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .qty-btn {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 1.5px solid var(--caramel);
-      background: transparent;
-      color: var(--brown-mid);
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-weight: 700;
-    }
-    .qty-val {
-      font-weight: 800;
-      font-size: 14px;
-      min-width: 20px;
-      text-align: center;
-    }
+    .wa-btn:hover { opacity: 0.9; transform: scale(1.01); }
+    .wa-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    .cart-total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-top: 2px solid var(--cream2);
-      margin-top: 8px;
-    }
-    .cart-total-label {
-      font-weight: 700;
-      font-size: 15px;
-      color: var(--text-mid);
-    }
-    .cart-total-amount {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--brown-warm);
-    }
-
-    .btn-order {
-      width: 100%;
-      background: var(--green-whats);
-      color: #fff;
-      border: none;
-      padding: 16px;
-      border-radius: 16px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 800;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      margin-top: 16px;
-    }
-
-    /* ===== PRODUCT MODAL ===== */
-    .prod-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 400;
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    .prod-modal-overlay.open { display: flex; }
-
-    #prod-modal {
-      background: var(--white);
-      border-radius: 24px 24px 0 0;
-      width: 100%;
-      max-width: 680px;
-      padding: 0 0 32px;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: slideUp 0.3s ease;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(60px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
-
-    .modal-img-wrap {
-      position: relative;
-      width: 100%;
-      padding-top: 55%;
-      background: var(--cream2);
-      overflow: hidden;
-    }
-    .modal-img-wrap img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .modal-close {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(0,0,0,0.5);
-      color: #fff;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2;
-    }
-    .modal-handmade-tag {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      background: rgba(59,26,8,0.8);
-      color: var(--gold-light);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 10px;
-      backdrop-filter: blur(4px);
-    }
-
-    .modal-body {
-      padding: 20px 20px 0;
-    }
-    .modal-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin-bottom: 6px;
-    }
-    .modal-price {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--brown-warm);
-      margin-bottom: 16px;
-    }
-
-    .modal-add-btn {
-      width: 100%;
-      background: var(--brown-mid);
-      color: var(--cream);
-      border: none;
-      padding: 16px;
-      border-radius: 16px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 800;
-      font-size: 15px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.2s;
-    }
-    .modal-add-btn:hover { background: var(--caramel); }
-
-    /* ===== SETTINGS FAB ===== */
+    /* SETTINGS FAB */
     .settings-fab {
-      position: fixed;
-      bottom: 80px;
-      right: 16px;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--brown-dark);
-      border: 2px solid var(--gold);
-      color: var(--gold);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 150;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      position: fixed; bottom: 24px; left: 24px; z-index: 250;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+    .settings-fab:hover { transform: scale(1.1); box-shadow: 0 8px 28px rgba(0,0,0,0.18); }
 
-    /* ===== SETTINGS PANEL (original) ===== */
+    /* SETTINGS PANEL */
     .settings-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 500;
-      display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 400; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
-    .settings-overlay.open { display: block; }
-
-    #settings-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: min(320px, 90vw);
-      background: var(--white);
-      z-index: 501;
-      padding: 20px 16px;
-      overflow-y: auto;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    }
-    #settings-panel.open { transform: translateX(0); }
-
-    .settings-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .settings-close {
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      color: var(--text-mid);
-    }
-
-    .setting-group { margin-bottom: 18px; }
-    .setting-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-      display: block;
-    }
-    .setting-input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1.5px solid #e0d8d0;
-      border-radius: 10px;
-      font-family: 'Nunito', sans-serif;
-      font-size: 14px;
-      color: var(--text-dark);
-      background: var(--cream);
-    }
-
-    .logo-preview-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-    #logo-preview {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--caramel);
-      display: none;
-    }
-    #logo-preview.visible { display: block; }
-
-    .btn-upload {
-      flex: 1;
-      padding: 8px;
-      border: 1.5px dashed var(--caramel);
-      border-radius: 10px;
-      background: var(--cream2);
-      color: var(--brown-warm);
-      font-family: 'Nunito', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-    }
-    .btn-remove-logo {
-      padding: 8px 12px;
-      border: 1.5px solid #ddd;
-      border-radius: 10px;
-      background: transparent;
-      color: var(--text-muted);
-      font-family: 'Nunito', sans-serif;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .banner-preview {
-      width: 100%;
-      height: 80px;
-      border-radius: 10px;
-      object-fit: cover;
-      margin-top: 8px;
-      display: none;
-      border: 1.5px solid #e0d8d0;
-    }
-    .banner-preview.visible { display: block; }
-
-    .color-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .color-input {
-      width: 44px;
-      height: 36px;
-      border-radius: 8px;
-      border: 1.5px solid #e0d8d0;
-      cursor: pointer;
-      padding: 2px;
-      background: none;
-    }
-    .color-label-text {
-      font-size: 13px;
-      color: var(--text-mid);
-    }
-
-    .theme-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .theme-btn {
-      padding: 8px;
-      border-radius: 10px;
-      border: 1.5px solid #e0d8d0;
-      background: var(--cream);
-      font-family: 'Nunito', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text-mid);
-    }
-    .theme-btn.active { border-color: var(--brown-mid); background: var(--cream2); color: var(--brown-mid); }
-
-    .settings-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 20px;
-    }
-    .btn-save {
-      flex: 1;
-      padding: 12px;
-      background: var(--brown-mid);
-      color: var(--cream);
-      border: none;
-      border-radius: 12px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 800;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .btn-reset {
-      padding: 12px 16px;
-      background: transparent;
-      border: 1.5px solid #ddd;
-      border-radius: 12px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      color: var(--text-muted);
-    }
-
-    /* ===== TOAST ===== */
-    #toast-container {
-      position: fixed;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
-    }
-    .toast {
-      background: var(--brown-dark);
-      color: var(--cream);
-      padding: 10px 20px;
-      border-radius: 24px;
-      font-size: 13px;
-      font-weight: 700;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
-      white-space: nowrap;
-      border-left: 3px solid var(--gold);
-    }
-    @keyframes toastIn  { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes toastOut { from { opacity:1; } to { opacity:0; } }
-
-    /* ===== RESPONSIVE ===== */
-    @media (min-width: 480px) {
-      #product-grid { grid-template-columns: repeat(3, 1fr); }
-      .hero-title { font-size: 3rem; }
+    .settings-overlay.open { opacity: 1; pointer-events: all; }
+    .settings-panel {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-height: 90vh; overflow-y: auto;
+      background: var(--surface); border-radius: 24px 24px 0 0;
+      z-index: 401; padding: 24px 20px 40px;
+      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
     }
     @media (min-width: 640px) {
-      #product-grid { grid-template-columns: repeat(4, 1fr); }
+      .settings-panel {
+        left: auto; right: 0; top: 0; bottom: 0;
+        width: 380px; border-radius: 0; max-height: 100vh;
+        transform: translateX(100%);
+      }
+      .settings-panel.open { transform: translateX(0); }
     }
+    .settings-panel.open { transform: translateY(0); }
+    .settings-drag { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+    @media (min-width: 640px) { .settings-drag { display: none; } }
+    .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .settings-header h3 { font-size: 1.1rem; font-weight: 800; }
+    .settings-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted); }
+    .settings-group { margin-bottom: 22px; }
+    .settings-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 10px; display: block; }
+    .settings-input {
+      width: 100%; padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: var(--surface2);
+      color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none;
+    }
+    .settings-input:focus { border-color: var(--primary); }
+    .color-swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .swatch {
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      border: 2.5px solid transparent; transition: transform 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .swatch:hover { transform: scale(1.15); }
+    .swatch.active { border-color: var(--text); transform: scale(1.1); }
+    .swatch-custom { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; cursor: pointer; border: 2px solid var(--border); }
+    .swatch-custom input { width: 200%; height: 200%; margin: -50%; cursor: pointer; border: none; padding: 0; }
+    .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .theme-card {
+      padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      border: 2px solid var(--border); transition: border-color 0.2s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .theme-card.active { border-color: var(--primary); }
+    .theme-preview { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; }
+    .theme-name { font-size: 0.82rem; font-weight: 600; }
+    .settings-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .btn-save {
+      flex: 1; padding: 12px; border-radius: 12px;
+      background: var(--primary); color: #fff; border: none;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-save:hover { opacity: 0.88; }
+    .btn-reset {
+      padding: 12px 18px; border-radius: 12px;
+      background: var(--surface2); color: var(--text-muted); border: 1.5px solid var(--border);
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-reset:hover { background: var(--border); }
+    .upload-label {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 10px;
+      border: 1.5px dashed var(--border); cursor: pointer;
+      font-size: 0.85rem; color: var(--text-muted);
+      transition: border-color 0.2s;
+    }
+    .upload-label:hover { border-color: var(--primary); color: var(--primary); }
+    .upload-label input { display: none; }
+    .banner-preview { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; margin-top: 8px; display: none; }
+
+    /* TOAST */
+    .toast-container { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+    .toast {
+      background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 100px;
+      font-size: 0.85rem; font-weight: 600; white-space: nowrap;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    /* PRODUCT MODAL */
+    .prod-modal-overlay {
+      position: fixed; inset: 0; z-index: 600;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+    }
+    .prod-modal-overlay.hidden { display: none; }
+    .prod-modal {
+      position: fixed; z-index: 601;
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      background: var(--surface); border-radius: 20px;
+      width: min(560px, 94vw); max-height: 90vh;
+      overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      display: flex; flex-direction: column;
+    }
+    .prod-modal.hidden { display: none; }
+    @media (max-width: 540px) {
+      .prod-modal { top: auto; bottom: 0; left: 0; right: 0; transform: none;
+        width: 100%; border-radius: 20px 20px 0 0; max-height: 92vh; }
+    }
+    .prod-modal-close {
+      position: absolute; top: 12px; right: 12px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(0,0,0,0.08); border: none; cursor: pointer;
+      font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      z-index: 1; transition: background .2s;
+    }
+    .prod-modal-close:hover { background: rgba(0,0,0,0.15); }
+    .prod-modal-img-wrap {
+      width: 100%; aspect-ratio: 1/1; max-height: 300px;
+      background: var(--surface2); overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 20px 20px 0 0; flex-shrink: 0;
+    }
+    .prod-modal-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .prod-modal-emoji { font-size: 5rem; }
+    .prod-modal-info { padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 10px; }
+    .prod-modal-tag { font-size: 0.72rem; font-weight: 700; color: var(--primary); }
+    .prod-modal-name { font-size: 1.3rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .prod-modal-price { font-size: 1.6rem; font-weight: 900; color: var(--price-color); }
+    .prod-modal-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+    .prod-modal-stock { font-size: 0.8rem; color: var(--text-muted); }
+    .prod-modal-add {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      background: var(--primary); color: #fff;
+      font-family: inherit; font-size: 1rem; font-weight: 700;
+      cursor: pointer; margin-top: 6px;
+      transition: opacity .2s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .prod-modal-add:hover { opacity: .88; }
+    .prod-modal-add:active { transform: scale(.98); }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
+  <img id="custom-banner" src="" alt="Banner" />
+
   <header>
-    <div class="header-inner">
-      <a class="btn-back" href="tienda.html">← Inicio</a>
-      <div class="header-logo">
-        <img id="header-logo-img" class="logo-img" src="" alt="Logo" />
-        <span class="logo-text" id="header-store-name">TALARA</span>
-      </div>
-      <div class="header-actions">
-        <button class="btn-search" id="toggle-search" title="Buscar">🔍</button>
-        <button class="btn-cart" id="open-cart">
-          🛒 <span class="cart-count" id="cart-count">0</span>
-        </button>
-      </div>
+    <a href="tienda.html" class="back-link">← Inicio</a>
+    <div class="header-logo" id="header-logo">TALARA 🍬</div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Buscar dulces..." oninput="window.onSearch()" />
     </div>
+    <button class="cart-btn" onclick="window.openCart()">
+      🛒<span class="cart-badge" id="cart-badge">0</span>
+    </button>
   </header>
 
-  <!-- SEARCH BAR -->
-  <div class="search-bar" id="search-bar">
-    <div class="search-input-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="search-input" type="text" placeholder="Buscar dulces..." autocomplete="off" />
+  <main>
+    <div class="section-header">
+      <h2>🍬 Dulces Típicos</h2>
+      <p id="product-count">Cargando productos...</p>
+    </div>
+    <div class="product-grid" id="product-grid"></div>
+  </main>
+
+  <!-- Product Detail Modal -->
+  <div class="prod-modal-overlay hidden" id="prod-modal-overlay" onclick="window.closeProductModal()"></div>
+  <div class="prod-modal hidden" id="prod-modal">
+    <button class="prod-modal-close" onclick="window.closeProductModal()">✕</button>
+    <div class="prod-modal-img-wrap">
+      <img id="prod-modal-img" src="" alt="" />
+      <div id="prod-modal-emoji" class="prod-modal-emoji"></div>
+    </div>
+    <div class="prod-modal-info">
+      <div class="prod-modal-tag" id="prod-modal-tag">✦ Hecho a mano</div>
+      <h2 class="prod-modal-name" id="prod-modal-name"></h2>
+      <div class="prod-modal-price" id="prod-modal-price"></div>
+      <p class="prod-modal-desc" id="prod-modal-desc"></p>
+      <div class="prod-modal-stock" id="prod-modal-stock"></div>
+      <button class="prod-modal-add" id="prod-modal-add-btn" onclick="window.modalAddToCart()">
+        🛒 Agregar al carrito
+      </button>
     </div>
   </div>
 
-  <!-- CUSTOM BANNER -->
-  <img id="custom-banner" src="" alt="Banner" style="display:none;" />
+  <!-- Cart overlay -->
+  <div class="cart-overlay" id="cart-overlay" onclick="window.closeCart()"></div>
+  <div class="cart-panel" id="cart-panel">
+    <div class="cart-header">
+      <h3>🛒 Tu carrito</h3>
+      <button class="cart-close" onclick="window.closeCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cart-items"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total</span>
+        <strong id="cart-total">$0.00</strong>
+      </div>
+      <button class="wa-btn" id="wa-btn" onclick="window.sendWhatsApp()" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir por WhatsApp
+      </button>
+    </div>
+  </div>
 
-  <!-- HERO -->
-  <div class="hero" id="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <div class="hero-eyebrow">✦ Auténticos &amp; Artesanales</div>
-      <h1 class="hero-title">Dulces <span class="accent">Típicos</span></h1>
-      <p class="hero-subtitle">Tradición hecha con amor · TALARA</p>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <span class="hero-stat-num" id="stat-count">—</span>
-          <span class="hero-stat-label">Productos</span>
+  <!-- Settings FAB -->
+  <button class="settings-fab" onclick="window.openSettings()" title="Personalizar tienda">⚙️</button>
+
+  <!-- Settings overlay -->
+  <div class="settings-overlay" id="settings-overlay" onclick="window.closeSettings()"></div>
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-drag"></div>
+    <div class="settings-header">
+      <h3>⚙️ Personalizar tienda</h3>
+      <button class="settings-close" onclick="window.closeSettings()">✕</button>
+    </div>
+
+    <div class="settings-group">
+      <span class="settings-label">Logo de la tienda</span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <img id="s-logo-preview" src="" alt="Logo" style="width:52px;height:52px;object-fit:contain;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);display:none"/>
+        <label class="upload-label" style="margin:0">
+          <span>🖼️</span> <span>Subir logo</span>
+          <input type="file" accept="image/*" id="s-logo-upload" onchange="window.onLogoUpload(event)" />
+        </label>
+        <button id="s-logo-remove" onclick="window.removeLogo()" style="display:none;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;font-size:0.82rem">Quitar</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <span class="settings-label">Nombre de la tienda</span>
+      <input type="text" class="settings-input" id="s-store-name" value="TALARA" oninput="window.livePreview()" />
+    </div>
+
+    <div class="settings-group">
+      <span class="settings-label">Imagen de banner</span>
+      <label class="upload-label">
+        <span>📷</span> <span>Subir imagen</span>
+        <input type="file" accept="image/*" id="s-banner-upload" onchange="window.onBannerUpload(event)" />
+      </label>
+      <img id="s-banner-preview" class="banner-preview" src="" alt="" />
+    </div>
+
+    <div class="settings-group">
+      <span class="settings-label">Color principal</span>
+      <div class="color-swatches" id="primary-swatches">
+        <div class="swatch active" style="background:#ff6b00" data-color="#ff6b00" onclick="window.setPrimary('#ff6b00',this)"></div>
+        <div class="swatch" style="background:#e53e3e" data-color="#e53e3e" onclick="window.setPrimary('#e53e3e',this)"></div>
+        <div class="swatch" style="background:#1a9e5c" data-color="#1a9e5c" onclick="window.setPrimary('#1a9e5c',this)"></div>
+        <div class="swatch" style="background:#4f46e5" data-color="#4f46e5" onclick="window.setPrimary('#4f46e5',this)"></div>
+        <div class="swatch" style="background:#ec4899" data-color="#ec4899" onclick="window.setPrimary('#ec4899',this)"></div>
+        <div class="swatch" style="background:#0ea5e9" data-color="#0ea5e9" onclick="window.setPrimary('#0ea5e9',this)"></div>
+        <div class="swatch" style="background:#f59e0b" data-color="#f59e0b" onclick="window.setPrimary('#f59e0b',this)"></div>
+        <div class="swatch-custom" title="Color personalizado">
+          <input type="color" id="s-primary-custom" value="#ff6b00" oninput="window.setPrimary(this.value,null)" />
         </div>
-        <div class="hero-stat">
-          <span class="hero-stat-num">100%</span>
-          <span class="hero-stat-label">Artesanal</span>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <span class="settings-label">Color de precios</span>
+      <div class="color-swatches" id="price-swatches">
+        <div class="swatch active" style="background:#ff6b00" data-color="#ff6b00" onclick="window.setPriceColor('#ff6b00',this)"></div>
+        <div class="swatch" style="background:#e53e3e" data-color="#e53e3e" onclick="window.setPriceColor('#e53e3e',this)"></div>
+        <div class="swatch" style="background:#1a9e5c" data-color="#1a9e5c" onclick="window.setPriceColor('#1a9e5c',this)"></div>
+        <div class="swatch" style="background:#4f46e5" data-color="#4f46e5" onclick="window.setPriceColor('#4f46e5',this)"></div>
+        <div class="swatch" style="background:#1a1a1a" data-color="#1a1a1a" onclick="window.setPriceColor('#1a1a1a',this)"></div>
+        <div class="swatch-custom" title="Color personalizado">
+          <input type="color" id="s-price-custom" value="#ff6b00" oninput="window.setPriceColor(this.value,null)" />
         </div>
-        <div class="hero-stat">
-          <span class="hero-stat-num">📦</span>
-          <span class="hero-stat-label">A domicilio</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION HEAD -->
-  <div class="section-head">
-    <div class="section-head-left">
-      <div class="section-eyebrow">Nuestra selección</div>
-      <h2 class="section-title">🍬 Dulces Típicos</h2>
-      <div class="section-divider"></div>
-    </div>
-    <div class="product-count" id="product-count-label"></div>
-  </div>
-
-  <!-- PROMO STRIP -->
-  <div class="promo-strip">
-    <div class="promo-icon">📦</div>
-    <div class="promo-text">
-      <h3>¡Pide tu caja surtida!</h3>
-      <p>Arma tu combinación favorita y te la enviamos</p>
-    </div>
-    <button class="promo-btn" id="promo-whats-btn">Pedir</button>
-  </div>
-
-  <!-- FILTER CHIPS -->
-  <div class="filter-wrap">
-    <div class="filter-row" id="filter-row">
-      <button class="filter-chip active" data-filter="all">Todos</button>
-    </div>
-  </div>
-
-  <!-- PRODUCTS -->
-  <div class="products-section">
-    <div id="product-grid">
-      <div class="empty-state">
-        <span class="empty-icon">🍬</span>
-        <p>Cargando productos...</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- STICKY CART BAR -->
-  <div class="cart-sticky" id="cart-sticky">
-    <div class="cart-sticky-info">
-      <span class="cart-sticky-count" id="sticky-count">0 productos</span>
-      <span class="cart-sticky-total" id="sticky-total">$0.00</span>
-    </div>
-    <button class="btn-whatsapp" id="sticky-whats-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/>
-      </svg>
-      Pedir por WhatsApp
-    </button>
-  </div>
-
-  <!-- CART OVERLAY + PANEL -->
-  <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
-  <div id="cart-panel">
-    <div class="cart-handle"></div>
-    <div class="cart-panel-title">🛒 Tu carrito</div>
-    <div id="cart-items"></div>
-    <div class="cart-total-row">
-      <span class="cart-total-label">Total</span>
-      <span class="cart-total-amount" id="cart-total">$0.00</span>
-    </div>
-    <button class="btn-order" id="cart-whats-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.486 22 2 17.514 2 12S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/>
-      </svg>
-      Pedir por WhatsApp
-    </button>
-  </div>
-
-  <!-- PRODUCT MODAL -->
-  <div class="prod-modal-overlay" id="prod-modal-overlay" onclick="closeProdModal(event)">
-    <div id="prod-modal">
-      <div class="modal-img-wrap" id="modal-img-wrap">
-        <img id="modal-img" src="" alt="" />
-        <button class="modal-close" onclick="closeProductModal()">✕</button>
-        <div class="modal-handmade-tag">✦ Hecho a mano</div>
-      </div>
-      <div class="modal-body">
-        <div class="modal-name" id="modal-name"></div>
-        <div class="modal-price" id="modal-price"></div>
-        <button class="modal-add-btn" id="modal-add-btn">🛒 Agregar al carrito</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS FAB -->
-  <button class="settings-fab" onclick="openSettings()" title="Personalizar tienda">⚙️</button>
-
-  <!-- SETTINGS OVERLAY + PANEL -->
-  <div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
-  <div id="settings-panel">
-    <div class="settings-title">
-      ⚙️ Personalizar tienda
-      <button class="settings-close" onclick="closeSettings()">✕</button>
-    </div>
-
-    <!-- Logo -->
-    <div class="setting-group">
-      <span class="setting-label">Logo de la tienda</span>
-      <div class="logo-preview-wrap">
-        <img id="logo-preview" src="" alt="Logo" />
-        <label class="btn-upload" for="logo-upload">🖼️ Subir logo</label>
-        <button class="btn-remove-logo" onclick="removeLogo()">Quitar</button>
-      </div>
-      <input type="file" id="logo-upload" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)" />
-    </div>
-
-    <!-- Store name -->
-    <div class="setting-group">
-      <span class="setting-label">Nombre de la tienda</span>
-      <input class="setting-input" type="text" id="store-name-input" placeholder="TALARA" />
-    </div>
-
-    <!-- Banner -->
-    <div class="setting-group">
-      <span class="setting-label">Imagen de banner</span>
-      <label class="btn-upload" for="banner-upload" style="display:block; text-align:center;">📷 Subir imagen</label>
-      <input type="file" id="banner-upload" accept="image/*" style="display:none;" onchange="handleBannerUpload(event)" />
-      <img id="banner-preview" class="banner-preview" src="" alt="Banner preview" />
-    </div>
-
-    <!-- Primary color -->
-    <div class="setting-group">
-      <span class="setting-label">Color principal</span>
-      <div class="color-row">
-        <input type="color" class="color-input" id="primary-color" value="#ec4899" />
-        <span class="color-label-text">Color de botones y acentos</span>
       </div>
     </div>
 
-    <!-- Price color -->
-    <div class="setting-group">
-      <span class="setting-label">Color de precios</span>
-      <div class="color-row">
-        <input type="color" class="color-input" id="price-color" value="#4f46e5" />
-        <span class="color-label-text">Color de precios en productos</span>
-      </div>
-    </div>
-
-    <!-- Theme -->
-    <div class="setting-group">
-      <span class="setting-label">Tema</span>
+    <div class="settings-group">
+      <span class="settings-label">Tema</span>
       <div class="theme-grid" id="theme-grid">
-        <button class="theme-btn active" data-theme="warm" onclick="selectTheme('warm',this)">🍂 Cálido</button>
-        <button class="theme-btn" data-theme="light" onclick="selectTheme('light',this)">☀️ Claro</button>
-        <button class="theme-btn" data-theme="dark" onclick="selectTheme('dark',this)">🌙 Oscuro</button>
-        <button class="theme-btn" data-theme="mint" onclick="selectTheme('mint',this)">🌿 Menta</button>
+        <div class="theme-card active" data-theme="light" onclick="window.setTheme('light',this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#f5f5f5,#fff)"></div>
+          <span class="theme-name">☀️ Claro</span>
+        </div>
+        <div class="theme-card" data-theme="dark" onclick="window.setTheme('dark',this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#141414,#1e1e1e)"></div>
+          <span class="theme-name">🌙 Oscuro</span>
+        </div>
+        <div class="theme-card" data-theme="warm" onclick="window.setTheme('warm',this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#faf7f2,#f3ede4)"></div>
+          <span class="theme-name">🍂 Cálido</span>
+        </div>
+        <div class="theme-card" data-theme="mint" onclick="window.setTheme('mint',this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#f0faf5,#d8f0e4)"></div>
+          <span class="theme-name">🌿 Menta</span>
+        </div>
       </div>
     </div>
 
     <div class="settings-actions">
-      <button class="btn-save" onclick="saveSettings()">💾 Guardar</button>
-      <button class="btn-reset" onclick="resetSettings()">↺ Resetear</button>
+      <button class="btn-save" onclick="window.saveSettings()">💾 Guardar</button>
+      <button class="btn-reset" onclick="window.resetSettings()">↺ Resetear</button>
     </div>
   </div>
 
-  <!-- TOAST -->
-  <div id="toast-container"></div>
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
 
-  <!-- FIREBASE + APP LOGIC -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBrpJJaBSRxKGz1VlxMSJqH7hwPHj-fOQM",
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
       authDomain: "gestor-de-inventario-853d8.firebaseapp.com",
       projectId: "gestor-de-inventario-853d8",
-      storageBucket: "gestor-de-inventario-853d8.appspot.com",
-      messagingSenderId: "1009613736543",
-      appId: "1:1009613736543:web:7ddfadceaf0fab4df7d9ea"
+      storageBucket: "gestor-de-inventario-853d8.firebasestorage.app",
+      messagingSenderId: "980977651129",
+      appId: "1:980977651129:web:791dd31e9b2825c4d57a68"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+    const PAGE_CATEGORY = 'dulces';
+    const WA_NUMBER = '522281103615';
+    const STORAGE_KEY = 'talara_dulces_settings';
 
-    // ── Cart state ──
+    const THEMES = {
+      light: { bg:'#f5f5f5', surface:'#ffffff', surface2:'#f0f0f0', border:'#e8e8e8', text:'#1a1a1a', textMuted:'#888' },
+      dark:  { bg:'#141414', surface:'#1e1e1e', surface2:'#272727', border:'#333',    text:'#f0f0f0', textMuted:'#999' },
+      warm:  { bg:'#faf7f2', surface:'#ffffff', surface2:'#f3ede4', border:'#e0d5c5', text:'#1a1a1a', textMuted:'#7a6e5f' },
+      mint:  { bg:'#f0faf5', surface:'#ffffff', surface2:'#d8f0e4', border:'#b8e4cc', text:'#1a1a1a', textMuted:'#4a7a5f' },
+    };
+
+    const DEFAULT_SETTINGS = {
+      storeName: 'TALARA',
+      primaryColor: '#ff6b00',
+      priceColor: '#ff6b00',
+      theme: 'light',
+      bannerData: null,
+      logoData: null,
+    };
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db = getFirestore(app);
+
+    let products = [];
     let cart = {};
-    let allProducts = [];
-    let currentFilter = 'all';
-    const WHATSAPP_NUMBER = "522281103615";
+    let searchQuery = '';
+    let settings = { ...DEFAULT_SETTINGS };
 
-    // ── Load settings ──
-    function loadSettings() {
-      const s = JSON.parse(localStorage.getItem('talara-settings-dulces') || '{}');
-      if (s.logo) {
-        document.getElementById('header-logo-img').src = s.logo;
-        document.getElementById('header-logo-img').classList.add('visible');
-        document.getElementById('logo-preview').src = s.logo;
-        document.getElementById('logo-preview').classList.add('visible');
-      }
-      if (s.storeName) {
-        document.getElementById('header-store-name').textContent = s.storeName;
-        document.getElementById('store-name-input').value = s.storeName;
-      }
-      if (s.banner) {
-        const b = document.getElementById('custom-banner');
-        const hero = document.getElementById('hero-section');
-        b.src = s.banner;
-        b.style.display = 'block';
-        hero.style.display = 'none';
-        const bp = document.getElementById('banner-preview');
-        bp.src = s.banner;
-        bp.classList.add('visible');
-      }
+    function catNorm(c) {
+      if (!c) return '';
+      const s = c.toString().toLowerCase().trim();
+      if (s === 'dulce') return 'dulces';
+      if (s === 'pulsera') return 'pulseras';
+      return s;
     }
-    loadSettings();
 
-    // ── Firestore: dulces category ──
-    const q = query(
-      collection(db, 'products'),
-      where('category', '==', 'dulces'),
-      orderBy('name')
-    );
-
-    onSnapshot(q, (snap) => {
-      allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-      // Build filter chips from subcategories if any
-      const cats = [...new Set(allProducts.map(p => p.subcategory).filter(Boolean))];
-      buildFilters(cats);
-
-      document.getElementById('stat-count').textContent = allProducts.length;
-      renderProducts();
-    }, (err) => {
-      console.warn('Firestore error:', err);
-      // Fallback: try without orderBy (Firestore index may not exist yet)
-      const q2 = query(collection(db, 'products'), where('category', '==', 'dulces'));
-      onSnapshot(q2, (snap) => {
-        allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const cats = [...new Set(allProducts.map(p => p.subcategory).filter(Boolean))];
-        buildFilters(cats);
-        document.getElementById('stat-count').textContent = allProducts.length;
-        renderProducts();
-      });
+    // Firebase listener
+    onSnapshot(collection(db, 'products'), snap => {
+      products = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(p => (p.stock || 0) > 0 && catNorm(p.category) === PAGE_CATEGORY);
+      render();
+      renderCart();
+    }, err => {
+      document.getElementById('product-grid').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error al cargar</h3><p>${err.message}</p></div>`;
     });
 
-    function buildFilters(cats) {
-      const row = document.getElementById('filter-row');
-      row.innerHTML = '<button class="filter-chip active" data-filter="all" onclick="window._filterProducts(\'all\',this)">Todos</button>';
-      cats.forEach(c => {
-        const btn = document.createElement('button');
-        btn.className = 'filter-chip';
-        btn.dataset.filter = c;
-        btn.textContent = c;
-        btn.onclick = () => window._filterProducts(c, btn);
-        row.appendChild(btn);
-      });
+    function fmt(n) {
+      const num = parseFloat(n) || 0;
+      return '$' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    window._filterProducts = function(filter, btn) {
-      currentFilter = filter;
-      document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderProducts();
-    };
-
-    function renderProducts() {
+    function render() {
       const grid = document.getElementById('product-grid');
-      const search = (document.getElementById('search-input').value || '').toLowerCase();
+      const count = document.getElementById('product-count');
+      const q = searchQuery.toLowerCase();
+      const filtered = q ? products.filter(p => (p.name||'').toLowerCase().includes(q) || (p.desc||'').toLowerCase().includes(q)) : products;
 
-      let filtered = allProducts.filter(p => {
-        const matchFilter = currentFilter === 'all' || p.subcategory === currentFilter;
-        const matchSearch = !search || p.name.toLowerCase().includes(search) || (p.description || '').toLowerCase().includes(search);
-        return matchFilter && matchSearch && (p.stock === undefined || p.stock > 0);
-      });
+      count.textContent = filtered.length === 0 ? 'Sin productos disponibles' : `${filtered.length} producto${filtered.length !== 1 ? 's' : ''} disponible${filtered.length !== 1 ? 's' : ''}`;
 
-      document.getElementById('product-count-label').textContent = filtered.length + ' producto' + (filtered.length !== 1 ? 's' : '');
-
-      if (!filtered.length) {
-        grid.innerHTML = `<div class="empty-state"><span class="empty-icon">🍬</span><p>No hay productos disponibles</p></div>`;
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🍬</div><h3>Sin dulces por ahora</h3><p>Vuelve pronto, ¡hay más sabores en camino!</p></div>`;
         return;
       }
 
-      grid.innerHTML = filtered.map(p => cardHTML(p)).join('');
-    }
-
-    function cardHTML(p) {
-      const price = formatPrice(p.salePrice ?? p.sellPrice ?? p.price ?? 0);
-      const hasImg = p.imageUrl || p.image;
-      const imgPart = hasImg
-        ? `<img src="${hasImg}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-no-img" style="display:none;">🍬</div>`
-        : `<div class="card-no-img">🍬</div>`;
-
-      return `
-        <div class="product-card" onclick="window.openProductModal('${p.id}')">
-          <div class="card-img-wrap">
-            ${imgPart}
-            <div class="card-handmade-tag">✦ Hecho a mano</div>
-          </div>
-          <div class="card-body">
-            <div class="card-name">${p.name}</div>
-            ${p.description ? `<div class="card-desc">${p.description}</div>` : ''}
-            <div class="card-footer">
-              <div class="card-price">${price}</div>
-              <button class="btn-add" onclick="event.stopPropagation(); window.addToCart('${p.id}')" title="Agregar">+</button>
+      grid.innerHTML = filtered.map(p => {
+        const imgHtml = p.img
+          ? `<img src="${p.img}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-img-placeholder" style="display:none">🍬</div>`
+          : `<div class="card-img-placeholder">🍬</div>`;
+        return `
+          <div class="product-card" onclick="window.openProduct('${p.id}')">
+            <div class="card-img-wrap">
+              ${imgHtml}
+              <button class="add-btn" onclick="event.stopPropagation();window.addToCart('${p.id}')">+</button>
             </div>
-          </div>
-        </div>`;
-    }
-
-    function formatPrice(n) {
-      return '$' + parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
-
-    // ── Cart ──
-    window.addToCart = function(id) {
-      const p = allProducts.find(x => x.id === id);
-      if (!p) return;
-      cart[id] = cart[id] ? { ...cart[id], qty: cart[id].qty + 1 } : { ...p, qty: 1 };
-      updateCartUI();
-      showToast('🍬 ' + p.name + ' agregado');
-    };
-
-    window.removeFromCart = function(id) {
-      if (!cart[id]) return;
-      if (cart[id].qty > 1) cart[id].qty--;
-      else delete cart[id];
-      updateCartUI();
-    };
-
-    function updateCartUI() {
-      const items = Object.values(cart);
-      const total = items.reduce((s, i) => s + (i.salePrice ?? i.sellPrice ?? i.price ?? 0) * i.qty, 0);
-      const count = items.reduce((s, i) => s + i.qty, 0);
-
-      document.getElementById('cart-count').textContent = count;
-      document.getElementById('sticky-count').textContent = count + ' producto' + (count !== 1 ? 's' : '');
-      document.getElementById('sticky-total').textContent = formatPrice(total);
-      document.getElementById('cart-total').textContent   = formatPrice(total);
-
-      const sticky = document.getElementById('cart-sticky');
-      sticky.classList.toggle('visible', count > 0);
-
-      // Render cart items
-      const container = document.getElementById('cart-items');
-      if (!items.length) {
-        container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem 0;">Tu carrito está vacío</p>';
-        return;
-      }
-      container.innerHTML = items.map(i => {
-        const img = i.imageUrl || i.image || '';
-        return `<div class="cart-item">
-          ${img ? `<img class="cart-item-img" src="${img}" alt="${i.name}" />` : `<div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🍬</div>`}
-          <div class="cart-item-info">
-            <div class="cart-item-name">${i.name}</div>
-            <div class="cart-item-price">${formatPrice((i.salePrice ?? i.sellPrice ?? i.price ?? 0) * i.qty)}</div>
-          </div>
-          <div class="cart-item-actions">
-            <button class="qty-btn" onclick="window.removeFromCart('${i.id}')">−</button>
-            <span class="qty-val">${i.qty}</span>
-            <button class="qty-btn" onclick="window.addToCart('${i.id}')">+</button>
-          </div>
-        </div>`;
+            <div class="card-body">
+              <div class="card-handmade">✦ Hecho a mano</div>
+              <div class="card-name">${p.name || 'Sin nombre'}</div>
+              <div class="card-price">${fmt(p.sellPrice)}</div>
+              ${p.desc ? `<div class="card-desc">${p.desc}</div>` : ''}
+            </div>
+          </div>`;
       }).join('');
     }
 
-    function buildWhatsAppMsg() {
-      const items = Object.values(cart);
-      if (!items.length) return null;
-      const total = items.reduce((s, i) => s + (i.salePrice ?? i.sellPrice ?? i.price ?? 0) * i.qty, 0);
-      let msg = '🍬 *Pedido TALARA — Dulces Típicos*\n\n';
-      items.forEach(i => {
-        msg += `• ${i.name} x${i.qty} — ${formatPrice((i.salePrice ?? i.sellPrice ?? i.price ?? 0) * i.qty)}\n`;
-      });
-      msg += `\n💰 *Total: ${formatPrice(total)}*`;
-      return encodeURIComponent(msg);
+    function renderCart() {
+      const items = document.getElementById('cart-items');
+      const badge = document.getElementById('cart-badge');
+      const total = document.getElementById('cart-total');
+      const waBtn = document.getElementById('wa-btn');
+      const keys = Object.keys(cart).filter(k => cart[k] > 0);
+
+      const totalQty = keys.reduce((s, k) => s + cart[k], 0);
+      badge.textContent = totalQty;
+      badge.style.display = totalQty > 0 ? 'flex' : 'none';
+
+      if (keys.length === 0) {
+        items.innerHTML = `<div class="cart-empty-msg"><span class="e">🍬</span>Tu carrito está vacío</div>`;
+        total.textContent = '$0.00';
+        waBtn.disabled = true;
+        return;
+      }
+
+      waBtn.disabled = false;
+      let sum = 0;
+      items.innerHTML = keys.map(id => {
+        const p = products.find(x => x.id === id);
+        if (!p) return '';
+        const subtotal = (parseFloat(p.sellPrice) || 0) * cart[id];
+        sum += subtotal;
+        const imgEl = p.img
+          ? `<img class="cart-item-img" src="${p.img}" alt="${p.name||''}" onerror="this.outerHTML='<div class=cart-item-img style=font-size:1.8rem>🍬</div>'" />`
+          : `<div class="cart-item-img" style="font-size:1.8rem">🍬</div>`;
+        return `
+          <div class="cart-item">
+            ${imgEl}
+            <div class="cart-item-info">
+              <div class="cart-item-name">${p.name || 'Producto'}</div>
+              <div class="cart-item-price">${fmt(p.sellPrice)} c/u</div>
+              <div class="cart-item-qty">
+                <button class="qty-btn" onclick="window.changeQty('${id}',-1)">−</button>
+                <span class="qty-num">${cart[id]}</span>
+                <button class="qty-btn" onclick="window.changeQty('${id}',1)">+</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+      total.textContent = fmt(sum);
     }
 
-    function sendWhatsApp() {
-      const msg = buildWhatsAppMsg();
-      if (!msg) { showToast('Agrega productos primero'); return; }
-      window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
-    }
+    // ---- Window-exposed functions ----
+    window.onSearch = () => { searchQuery = document.getElementById('search-input').value; render(); };
+    window.openCart = () => { document.getElementById('cart-panel').classList.add('open'); document.getElementById('cart-overlay').classList.add('open'); };
+    window.closeCart = () => { document.getElementById('cart-panel').classList.remove('open'); document.getElementById('cart-overlay').classList.remove('open'); };
+    window.addToCart = (id) => { cart[id] = (cart[id] || 0) + 1; renderCart(); showToast('🍬 Añadido al carrito'); };
+    window.changeQty = (id, delta) => { cart[id] = Math.max(0, (cart[id] || 0) + delta); if (cart[id] === 0) delete cart[id]; renderCart(); };
 
-    document.getElementById('cart-whats-btn').onclick   = sendWhatsApp;
-    document.getElementById('sticky-whats-btn').onclick = sendWhatsApp;
-    document.getElementById('promo-whats-btn').onclick = () => {
-      const msg = encodeURIComponent('🍬 Hola TALARA, ¡me interesa armar una caja surtida de dulces!');
-      window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
-    };
-
-    // ── Cart open/close ──
-    window.closeCart = function() {
-      document.getElementById('cart-panel').classList.remove('open');
-      document.getElementById('cart-overlay').classList.remove('open');
-    };
-    document.getElementById('open-cart').onclick = () => {
-      document.getElementById('cart-panel').classList.add('open');
-      document.getElementById('cart-overlay').classList.add('open');
-    };
-
-    // ── Product Modal ──
-    window.openProductModal = function(id) {
-      const p = allProducts.find(x => x.id === id);
+    // Modal de detalle de producto
+    let _modalProductId = null;
+    window.openProduct = (id) => {
+      const p = products.find(x => x.id === id);
       if (!p) return;
-      const hasImg = p.imageUrl || p.image;
-      const imgEl  = document.getElementById('modal-img');
-      if (hasImg) { imgEl.src = hasImg; imgEl.style.display = ''; }
-      else         { imgEl.style.display = 'none'; }
-      document.getElementById('modal-name').textContent  = p.name;
-      document.getElementById('modal-price').textContent = formatPrice(p.salePrice ?? p.sellPrice ?? p.price ?? 0);
-      document.getElementById('modal-add-btn').onclick   = () => { window.addToCart(id); closeProductModal(); };
-      document.getElementById('prod-modal-overlay').classList.add('open');
+      _modalProductId = id;
+      // Imagen
+      const imgEl = document.getElementById('prod-modal-img');
+      const emojiEl = document.getElementById('prod-modal-emoji');
+      if (p.img) {
+        imgEl.src = p.img; imgEl.style.display = 'block';
+        emojiEl.style.display = 'none';
+      } else {
+        imgEl.style.display = 'none';
+        emojiEl.style.display = 'flex'; emojiEl.textContent = '🍬';
+      }
+      document.getElementById('prod-modal-name').textContent  = p.name || 'Sin nombre';
+      document.getElementById('prod-modal-price').textContent = fmt(p.sellPrice);
+      document.getElementById('prod-modal-desc').textContent  = p.desc || 'Producto artesanal hecho a mano.';
+      document.getElementById('prod-modal-stock').textContent = `Stock disponible: ${p.stock} uds.`;
+      document.getElementById('prod-modal-overlay').classList.remove('hidden');
+      document.getElementById('prod-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    };
+    window.closeProductModal = () => {
+      document.getElementById('prod-modal-overlay').classList.add('hidden');
+      document.getElementById('prod-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+    window.modalAddToCart = () => {
+      if (!_modalProductId) return;
+      window.addToCart(_modalProductId);
+      window.closeProductModal();
+      window.openCart();
     };
 
-    window.closeProductModal = function() {
-      document.getElementById('prod-modal-overlay').classList.remove('open');
-    };
-    window.closeProdModal = function(e) {
-      if (e.target === document.getElementById('prod-modal-overlay')) closeProductModal();
+    window.sendWhatsApp = () => {
+      const keys = Object.keys(cart).filter(k => cart[k] > 0);
+      if (!keys.length) return;
+      let msg = '¡Hola! Quiero pedir dulces de TALARA:\n\n';
+      let total = 0;
+      keys.forEach(id => {
+        const p = products.find(x => x.id === id);
+        if (!p) return;
+        const sub = (parseFloat(p.sellPrice) || 0) * cart[id];
+        total += sub;
+        msg += `• ${p.name} x${cart[id]} = ${fmt(sub)}\n`;
+      });
+      msg += `\n*Total: ${fmt(total)}*`;
+      window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
-    // ── Search ──
-    document.getElementById('toggle-search').onclick = () => {
-      document.getElementById('search-bar').classList.toggle('open');
-      if (document.getElementById('search-bar').classList.contains('open'))
-        document.getElementById('search-input').focus();
-    };
-    document.getElementById('search-input').oninput = renderProducts;
+    // ---- Settings ----
+    function applySettings(s) {
+      const root = document.documentElement;
+      root.style.setProperty('--primary', s.primaryColor);
+      root.style.setProperty('--price-color', s.priceColor);
+      const t = THEMES[s.theme] || THEMES.light;
+      root.style.setProperty('--bg', t.bg);
+      root.style.setProperty('--surface', t.surface);
+      root.style.setProperty('--surface2', t.surface2);
+      root.style.setProperty('--border', t.border);
+      root.style.setProperty('--text', t.text);
+      root.style.setProperty('--text-muted', t.textMuted);
+      const logo = document.getElementById('header-logo');
+      if (s.logoData) {
+        logo.innerHTML = `<img src="${s.logoData}" alt="${s.storeName||'TALARA'}" style="height:38px;max-width:120px;object-fit:contain;border-radius:6px"/>`;
+      } else {
+        logo.textContent = (s.storeName || 'TALARA') + ' 🍬';
+      }
+      const banner = document.getElementById('custom-banner');
+      if (s.bannerData) { banner.src = s.bannerData; banner.style.display = 'block'; }
+      else { banner.style.display = 'none'; }
+    }
 
-    // ── Settings ──
-    window.openSettings  = function() {
+    function syncSettingsUI() {
+      document.getElementById('s-store-name').value = settings.storeName || 'TALARA';
+      document.getElementById('s-primary-custom').value = settings.primaryColor;
+      document.getElementById('s-price-custom').value = settings.priceColor;
+      document.querySelectorAll('#primary-swatches .swatch').forEach(s => s.classList.toggle('active', s.dataset.color === settings.primaryColor));
+      document.querySelectorAll('#price-swatches .swatch').forEach(s => s.classList.toggle('active', s.dataset.color === settings.priceColor));
+      document.querySelectorAll('#theme-grid .theme-card').forEach(c => c.classList.toggle('active', c.dataset.theme === settings.theme));
+      if (settings.bannerData) {
+        const prev = document.getElementById('s-banner-preview');
+        prev.src = settings.bannerData; prev.style.display = 'block';
+      }
+    }
+
+    window.openSettings = () => {
+      const pwd = prompt('🔒 Contraseña de ajustes:');
+      if (pwd !== 'T4L4R4') { if (pwd !== null) alert('Contraseña incorrecta.'); return; }
       document.getElementById('settings-panel').classList.add('open');
       document.getElementById('settings-overlay').classList.add('open');
     };
-    window.closeSettings = function() {
-      document.getElementById('settings-panel').classList.remove('open');
-      document.getElementById('settings-overlay').classList.remove('open');
+    window.closeSettings = () => { document.getElementById('settings-panel').classList.remove('open'); document.getElementById('settings-overlay').classList.remove('open'); };
+
+    window.livePreview = () => {
+      settings.storeName = document.getElementById('s-store-name').value;
+      applySettings(settings);
     };
 
-    window.handleLogoUpload = function(e) {
-      const f = e.target.files[0];
-      if (!f) return;
-      const r = new FileReader();
-      r.onload = ev => {
-        const src = ev.target.result;
-        document.getElementById('logo-preview').src = src;
-        document.getElementById('logo-preview').classList.add('visible');
-        document.getElementById('header-logo-img').src = src;
-        document.getElementById('header-logo-img').classList.add('visible');
+    window.setPrimary = (color, el) => {
+      settings.primaryColor = color;
+      document.querySelectorAll('#primary-swatches .swatch').forEach(s => s.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById('s-primary-custom').value = color;
+      applySettings(settings);
+    };
+
+    window.setPriceColor = (color, el) => {
+      settings.priceColor = color;
+      document.querySelectorAll('#price-swatches .swatch').forEach(s => s.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById('s-price-custom').value = color;
+      applySettings(settings);
+    };
+
+    window.setTheme = (theme, el) => {
+      settings.theme = theme;
+      document.querySelectorAll('#theme-grid .theme-card').forEach(c => c.classList.remove('active'));
+      if (el) el.classList.add('active');
+      applySettings(settings);
+    };
+
+    window.onLogoUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        settings.logoData = ev.target.result;
+        const prev = document.getElementById('s-logo-preview');
+        prev.src = ev.target.result; prev.style.display = 'block';
+        document.getElementById('s-logo-remove').style.display = 'inline-block';
+        applySettings(settings);
       };
-      r.readAsDataURL(f);
+      reader.readAsDataURL(file);
     };
 
-    window.removeLogo = function() {
-      document.getElementById('logo-preview').src = '';
-      document.getElementById('logo-preview').classList.remove('visible');
-      document.getElementById('header-logo-img').src = '';
-      document.getElementById('header-logo-img').classList.remove('visible');
+    window.removeLogo = () => {
+      settings.logoData = null;
+      const prev = document.getElementById('s-logo-preview');
+      prev.src = ''; prev.style.display = 'none';
+      document.getElementById('s-logo-remove').style.display = 'none';
+      document.getElementById('s-logo-upload').value = '';
+      applySettings(settings);
     };
 
-    window.handleBannerUpload = function(e) {
-      const f = e.target.files[0];
-      if (!f) return;
-      const r = new FileReader();
-      r.onload = ev => {
-        const src = ev.target.result;
-        const bp = document.getElementById('banner-preview');
-        bp.src = src;
-        bp.classList.add('visible');
+    window.onBannerUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        settings.bannerData = ev.target.result;
+        const prev = document.getElementById('s-banner-preview');
+        prev.src = ev.target.result; prev.style.display = 'block';
+        applySettings(settings);
       };
-      r.readAsDataURL(f);
+      reader.readAsDataURL(file);
     };
 
-    window.selectTheme = function(theme, btn) {
-      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    window.saveSettings = () => {
+      settings.storeName = document.getElementById('s-store-name').value;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch(e) {}
+      // Sincroniza con Firestore para todos los dispositivos
+      setDoc(doc(db, 'tienda_settings', 'dulces'), settings, { merge: true }).catch(console.error);
+      applySettings(settings);
+      showToast('✅ Configuración guardada');
+      window.closeSettings();
     };
 
-    window.saveSettings = function() {
-      const logo    = document.getElementById('logo-preview').src;
-      const name    = document.getElementById('store-name-input').value.trim() || 'TALARA';
-      const banner  = document.getElementById('banner-preview').src;
-      const s = { logo, storeName: name, banner };
-      localStorage.setItem('talara-settings-dulces', JSON.stringify(s));
-      document.getElementById('header-store-name').textContent = name;
-      if (banner && banner !== window.location.href) {
-        const b = document.getElementById('custom-banner');
-        b.src = banner;
-        b.style.display = 'block';
-        document.getElementById('hero-section').style.display = 'none';
-      }
-      closeSettings();
-      showToast('✅ Ajustes guardados');
+    window.resetSettings = () => {
+      settings = { ...DEFAULT_SETTINGS };
+      try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+      setDoc(doc(db, 'tienda_settings', 'dulces'), settings).catch(console.error);
+      applySettings(settings);
+      syncSettingsUI();
+      showToast('↺ Configuración restablecida');
     };
 
-    window.resetSettings = function() {
-      localStorage.removeItem('talara-settings-dulces');
-      location.reload();
-    };
-
-    // ── Toast ──
-    window.showToast = function(msg) {
+    function showToast(msg) {
       const c = document.getElementById('toast-container');
       const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = msg;
+      t.className = 'toast'; t.textContent = msg;
       c.appendChild(t);
       setTimeout(() => t.remove(), 2600);
-    };
+    }
 
+    // Carga ajustes: primero Firestore, fallback a localStorage
+    async function loadSettings() {
+      try {
+        const snap = await getDoc(doc(db, 'tienda_settings', 'dulces'));
+        if (snap.exists()) {
+          settings = { ...DEFAULT_SETTINGS, ...snap.data() };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        } else {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+        }
+      } catch(e) {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      }
+      applySettings(settings);
+      syncSettingsUI();
+    }
+
+    loadSettings();
   </script>
 </body>
 </html>
