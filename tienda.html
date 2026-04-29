@@ -3,16 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TALARA — Joyería Artesanal | Dulces Típicos</title>
+  <title>TALARA — Joyería Artesanal | Catálogo de Pulseras</title>
 
-  <!-- SEO -->
-  <meta name="description" content="TALARA — Joyería artesanal y dulces típicos hechos a mano. Pulseras únicas, ojo turco, cristales y sabores tradicionales. Pide por WhatsApp." />
-  <meta name="keywords" content="TALARA, joyería artesanal, pulseras artesanales, dulces típicos, hecho a mano, pieza única, ojo turco, cristales, TALARA joyería" />
-  <meta name="author" content="TALARA Joyería Artesanal" />
-  <meta name="robots" content="index, follow" />
+  <meta name="description" content="TALARA — Joyería artesanal hecha a mano. Pulseras únicas, ojo turco, cristales y piezas exclusivas." />
   <meta name="google-site-verification" content="imWmWPXuYGfsmeox20zJP0h-HEHXwH7_dVnTTXbyl9w" />
 
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-R2P986CFLS"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -20,39 +15,11 @@
     gtag('js', new Date());
     gtag('config', 'G-R2P986CFLS');
   </script>
-  <link rel="canonical" href="https://greimon10892-design.github.io/inventario/tienda.html" />
-
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="TALARA — Joyería Artesanal" />
-  <meta property="og:description" content="Pulseras artesanales y dulces típicos hechos a mano. Pide por WhatsApp." />
-  <meta property="og:url" content="https://greimon10892-design.github.io/inventario/tienda.html" />
-  <meta property="og:site_name" content="TALARA Joyería Artesanal" />
-  <meta property="og:locale" content="es_MX" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="TALARA — Joyería Artesanal" />
-  <meta name="twitter:description" content="Pulseras artesanales y dulces típicos hechos a mano. Pide por WhatsApp." />
-
-  <!-- Schema.org -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Store",
-    "name": "TALARA Joyería Artesanal",
-    "description": "Tienda artesanal de pulseras y dulces típicos hechos a mano.",
-    "url": "https://greimon10892-design.github.io/inventario/tienda.html",
-    "telephone": "+522281103615",
-    "priceRange": "$",
-    "currenciesAccepted": "MXN",
-    "sameAs": ["https://wa.me/522281103615"]
-  }
-  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -76,221 +43,174 @@
     .nav-logo {
       font-size: 1.5rem; font-weight: 900;
       letter-spacing: -0.5px; color: #1a9e5c;
+      text-decoration: none;
     }
     .nav-logo span { color: #ff6b00; }
 
     /* HERO */
     .hero {
       background: linear-gradient(135deg, #f0faf5 0%, #fff8f0 100%);
-      padding: 28px 40px 24px;
+      padding: 40px 20px;
       text-align: center;
-      position: relative; overflow: hidden;
       width: 100%;
     }
-    .hero::before {
-      content: '';
-      position: absolute; top: -80px; right: -80px;
-      width: 320px; height: 320px;
-      background: radial-gradient(circle, rgba(26,158,92,0.12) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-    .hero::after {
-      content: '';
-      position: absolute; bottom: -60px; left: -60px;
-      width: 260px; height: 260px;
-      background: radial-gradient(circle, rgba(255,107,0,0.10) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-    .hero-badge {
-      display: inline-block;
-      background: rgba(26,158,92,0.1); color: #1a9e5c;
-      font-size: 0.72rem; font-weight: 700;
-      letter-spacing: 1.5px; text-transform: uppercase;
-      padding: 4px 12px; border-radius: 100px;
-      margin-bottom: 10px; position: relative; z-index: 1;
-    }
     .hero-title {
-      font-size: clamp(2rem, 7vw, 4rem);
+      font-size: clamp(2rem, 7vw, 3.5rem);
       font-weight: 900; letter-spacing: -2px; line-height: 1;
-      color: #1a1a1a; margin-bottom: 8px;
-      position: relative; z-index: 1;
+      margin-bottom: 10px;
     }
     .hero-title .green  { color: #1a9e5c; }
-    .hero-title .orange { color: #ff6b00; }
-    .hero-tagline {
-      font-size: clamp(0.85rem, 2vw, 1rem);
-      color: #555; font-weight: 500; margin-bottom: 4px;
-      position: relative; z-index: 1;
-    }
-    .hero-sub {
-      font-size: 0.82rem; color: #888;
-      position: relative; z-index: 1;
-    }
+    .hero-title .purple { color: #8b5cf6; }
 
-    /* CARDS */
-    .cards-section {
-      padding: 20px 40px 20px;
-      max-width: 100%; margin: 0; width: 100%;
-    }
-    .cards-section h2 {
-      text-align: center; font-size: 0.85rem; font-weight: 600;
-      color: #888; letter-spacing: 1px; text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .cards-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+    /* CATALOGO GRID */
+    .catalog-section {
+      padding: 40px 20px;
       max-width: 1200px;
       margin: 0 auto;
     }
-    @media (max-width: 600px) { .cards-grid { grid-template-columns: 1fr; } }
-
-    .store-card {
-      background: #ffffff; border: 1.5px solid #e8e8e8;
-      border-radius: 20px; padding: 20px 24px;
-      text-align: center; text-decoration: none; color: inherit;
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
-      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
-    }
-    .store-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.10); }
-    .store-card.dulces:hover   { border-color: #ff6b00; }
-    .store-card.pulseras:hover { border-color: #8b5cf6; }
-
-    .card-emoji {
-      font-size: 3rem; line-height: 1;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.12));
-      display: flex; align-items: center; justify-content: center;
-      min-height: 60px;
-      transition: transform 0.25s;
-    }
-    .store-card:hover .card-emoji { transform: scale(1.12) rotate(-5deg); }
-
-    .card-tag {
-      font-size: 0.72rem; font-weight: 600;
-      padding: 3px 10px; border-radius: 100px;
-    }
-    .store-card.dulces  .card-tag { background: #fff3e8; color: #e05a00; }
-    .store-card.pulseras .card-tag { background: #f3eeff; color: #7c3aed; }
-
-    .card-title {
-      font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px;
-    }
-    .store-card.dulces  .card-title { color: #e05a00; }
-    .store-card.pulseras .card-title { color: #7c3aed; }
-
-    .card-desc { font-size: 0.82rem; color: #666; line-height: 1.5; }
-
-    .card-btn {
-      display: inline-block; padding: 10px 24px;
-      border-radius: 100px; font-size: 0.88rem; font-weight: 700;
-      color: #ffffff; text-decoration: none; margin-top: 4px;
-      transition: opacity 0.2s, transform 0.15s;
-    }
-    .card-btn:hover { opacity: 0.88; transform: scale(1.03); }
-    .store-card.dulces  .card-btn { background: #ff6b00; }
-    .store-card.pulseras .card-btn { background: #8b5cf6; }
-
-    /* FEATURES */
-    .features { background: #f9f9f9; padding: 24px 24px 32px; }
-    .features-inner {
-      max-width: 800px; margin: 0 auto;
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+    .section-title {
       text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 30px;
     }
-    @media (max-width: 600px) { .features-inner { grid-template-columns: 1fr; } }
-    .feature-item { padding: 20px; }
-    .feature-icon { font-size: 2rem; margin-bottom: 10px; }
-    .feature-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; color: #1a1a1a; }
-    .feature-desc { font-size: 0.82rem; color: #888; line-height: 1.5; }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
 
-    /* FOOTER */
-    footer {
-      margin-top: auto; background: #1a1a1a;
-      color: #aaa; text-align: center;
-      padding: 28px 24px; font-size: 0.85rem;
+    .product-card {
+      background: #ffffff;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 20px;
+      padding: 15px;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
     }
-    footer strong { color: #ffffff; }
-    footer .heart { color: #ff6b00; }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      border-color: #8b5cf6;
+    }
+
+    .img-container {
+      width: 100%;
+      height: 250px;
+      background: #f5f5f5;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+    .img-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: #f3eeff;
+      color: #7c3aed;
+      margin-bottom: 10px;
+      align-self: flex-start;
+    }
+
+    .product-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .product-desc {
+      font-size: 0.85rem;
+      color: #666;
+      line-height: 1.4;
+      margin-bottom: 15px;
+      flex-grow: 1;
+    }
+
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .price {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #1a1a1a;
+    }
+
+    .btn-ws {
+      background: #25d366;
+      color: white;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: background 0.2s;
+    }
+    .btn-ws:hover {
+      background: #128c7e;
+    }
+
+    footer {
+      background: #1a1a1a;
+      color: #aaa;
+      text-align: center;
+      padding: 30px;
+      margin-top: 50px;
+    }
+    .heart { color: #ff6b00; }
   </style>
 </head>
 <body>
 
   <nav>
-    <div class="nav-logo">TAL<span>A</span>RA</div>
+    <a href="index.html" class="nav-logo">TAL<span>A</span>RA</a>
   </nav>
 
   <section class="hero">
-    <div class="hero-badge">✦ Tienda artesanal</div>
     <h1 class="hero-title">
-      <span class="green">TAL</span><span class="orange">A</span>RA
+      <span class="green">Colección</span> <span class="purple">Pulseras</span>
     </h1>
-    <p class="hero-tagline">Dulces típicos &amp; Pulseras artesanales</p>
-    <p class="hero-sub">Productos hechos con amor, directo a tus manos</p>
+    <p>Diseños exclusivos hechos a mano para resaltar tu estilo.</p>
   </section>
 
-  <section class="cards-section">
-    <h2>Elige tu tienda</h2>
+  <main class="catalog-section">
+    <h2 class="section-title">20 Modelos Exclusivos</h2>
+    
     <div class="cards-grid">
-
-      <a href="dulces.html" class="store-card dulces">
-        <div class="card-emoji" id="logo-dulces">🍬</div>
-        <span class="card-tag">Comida artesanal</span>
-        <div class="card-title">Dulces Típicos</div>
-        <p class="card-desc">Sabores tradicionales hechos a mano con recetas de siempre</p>
-        <span class="card-btn">Ver dulces →</span>
-      </a>
-
-      <a href="pulseras.html" class="store-card pulseras">
-        <div class="card-emoji" id="logo-pulseras">📿</div>
-        <span class="card-tag">Joyería artesanal</span>
-        <div class="card-title">Pulseras Artesanales</div>
-        <p class="card-desc">Joyería artesanal, cada pieza es única e irrepetible</p>
-        <span class="card-btn">Ver pulseras →</span>
-      </a>
-
-    </div>
-  </section>
-
-  <section class="features">
-    <div class="features-inner">
-      <div class="feature-item">
-        <div class="feature-icon">🤝</div>
-        <div class="feature-title">100% Artesanal</div>
-        <p class="feature-desc">Cada producto elaborado a mano con dedicación</p>
+      
+      <div class="product-card">
+        <div class="img-container">
+          <img src="pulsera1.jpg" alt="Pulsera Artesanal">
+        </div>
+        <span class="badge">PIEZA ÚNICA</span>
+        <h3 class="product-title">Nombre de Pulsera 1</h3>
+        <p class="product-desc">Descripción breve del material y estilo (ej. Ojo turco con cristales).</p>
+        <div class="price-row">
+          <span class="price">$000</span>
+          <a href="https://wa.me/522281103615?text=Hola%20TALARA,%20me%20interesa%20la%20Pulsera%201" class="btn-ws">Pedir 👋</a>
+        </div>
       </div>
-      <div class="feature-item">
-        <div class="feature-icon">💬</div>
-        <div class="feature-title">Pedidos por WhatsApp</div>
-        <p class="feature-desc">Fácil y rápido, directo con nosotros</p>
       </div>
-      <div class="feature-item">
-        <div class="feature-icon">✨</div>
-        <div class="feature-title">Calidad garantizada</div>
-        <p class="feature-desc">Materiales seleccionados, sabores auténticos</p>
-      </div>
-    </div>
-  </section>
+  </main>
 
   <footer>
-    <strong>TALARA</strong> &nbsp;·&nbsp; Hecho con <span class="heart">♥</span> amor
+    <p><strong>TALARA</strong> &nbsp;·&nbsp; Joyería con <span class="heart">♥</span> amor</p>
   </footer>
-
-  <script>
-    function loadStoreLogo(storageKey, elementId) {
-      try {
-        const raw = localStorage.getItem(storageKey);
-        if (!raw) return;
-        const s = JSON.parse(raw);
-        if (s.logoData) {
-          const el = document.getElementById(elementId);
-          if (el) el.innerHTML = `<img src="${s.logoData}" alt="Logo" style="width:80px;height:80px;object-fit:contain;border-radius:12px"/>`;
-        }
-      } catch(e) {}
-    }
-    loadStoreLogo('talara_dulces_settings',   'logo-dulces');
-    loadStoreLogo('talara_pulseras_settings', 'logo-pulseras');
-  </script>
 
 </body>
 </html>
