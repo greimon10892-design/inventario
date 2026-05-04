@@ -233,6 +233,11 @@
     .prod-modal-add { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #fff; font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 6px; transition: opacity .2s, transform .1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .prod-modal-add:hover { opacity: .88; }
     .prod-modal-add:active { transform: scale(.98); }
+    .prod-modal-gallery { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; background: var(--surface2); scrollbar-width: none; }
+    .prod-modal-gallery::-webkit-scrollbar { display: none; }
+    .gallery-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; flex-shrink: 0; border: 2px solid transparent; transition: border-color .2s, transform .15s; }
+    .gallery-thumb:hover { transform: scale(1.05); }
+    .gallery-thumb.active { border-color: var(--primary); }
   </style>
 </head>
 <body>
@@ -267,26 +272,7 @@
       <img id="prod-modal-img" src="" alt="" />
       <div id="prod-modal-emoji" class="prod-modal-emoji"></div>
     </div>
-    <div class="prod-modal-info">
-      <div class="prod-modal-tag" id="prod-modal-tag">✦ Pieza única</div>
-      <h2 class="prod-modal-name" id="prod-modal-name"></h2>
-      <div class="prod-modal-price" id="prod-modal-price"></div>
-      <p class="prod-modal-desc" id="prod-modal-desc"></p>
-      <div class="prod-modal-stock" id="prod-modal-stock"></div>
-      <button class="prod-modal-add" id="prod-modal-add-btn" onclick="window.modalAddToCart()">
-        🛒 Agregar al carrito
-      </button>
-    </div>
-  </div>
-
-  <!-- Product Detail Modal -->
-  <div class="prod-modal-overlay hidden" id="prod-modal-overlay" onclick="window.closeProductModal()"></div>
-  <div class="prod-modal hidden" id="prod-modal">
-    <button class="prod-modal-close" onclick="window.closeProductModal()">✕</button>
-    <div class="prod-modal-img-wrap">
-      <img id="prod-modal-img" src="" alt="" />
-      <div id="prod-modal-emoji" class="prod-modal-emoji"></div>
-    </div>
+    <div id="prod-modal-gallery" class="prod-modal-gallery" style="display:none"></div>
     <div class="prod-modal-info">
       <div class="prod-modal-tag" id="prod-modal-tag">✦ Pieza única</div>
       <h2 class="prod-modal-name" id="prod-modal-name"></h2>
@@ -567,10 +553,21 @@
       const p = products.find(x => x.id === id);
       if (!p) return;
       _modalProductId = id;
-      const imgEl = document.getElementById('prod-modal-img');
+      const imgEl   = document.getElementById('prod-modal-img');
       const emojiEl = document.getElementById('prod-modal-emoji');
       if (p.img) { imgEl.src = p.img; imgEl.style.display = 'block'; emojiEl.style.display = 'none'; }
       else { imgEl.style.display = 'none'; emojiEl.style.display = 'flex'; emojiEl.textContent = '📿'; }
+      // Galería
+      const gallery = document.getElementById('prod-modal-gallery');
+      const allImgs = [p.img, ...(p.imgs || [])].filter(Boolean);
+      if (allImgs.length > 1) {
+        gallery.innerHTML = allImgs.map((src, i) => `
+          <img src="${src}" class="gallery-thumb${i===0?' active':''}"
+            onclick="window.modalSelectImg('${src}')" alt="Foto ${i+1}" />`).join('');
+        gallery.style.display = 'flex';
+      } else {
+        gallery.innerHTML = ''; gallery.style.display = 'none';
+      }
       document.getElementById('prod-modal-name').textContent  = p.name || 'Sin nombre';
       document.getElementById('prod-modal-price').textContent = fmt(p.sellPrice);
       document.getElementById('prod-modal-desc').textContent  = p.desc || 'Pulsera artesanal hecha a mano, pieza única.';
@@ -578,6 +575,12 @@
       document.getElementById('prod-modal-overlay').classList.remove('hidden');
       document.getElementById('prod-modal').classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+    };
+    window.modalSelectImg = (src) => {
+      const imgEl = document.getElementById('prod-modal-img');
+      imgEl.src = src; imgEl.style.display = 'block';
+      document.getElementById('prod-modal-emoji').style.display = 'none';
+      document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.toggle('active', t.src === src));
     };
     window.closeProductModal = () => {
       document.getElementById('prod-modal-overlay').classList.add('hidden');
