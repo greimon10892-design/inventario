@@ -1,5 +1,5 @@
 // Service Worker — PWA para GitHub Pages
-const CACHE = 'inv-2026-08';
+const CACHE = 'inv-2026-10';
 const BASE  = '/inventario';
 
 const ASSETS = [
