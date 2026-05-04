@@ -223,7 +223,7 @@ document.getElementById('product-form').addEventListener('submit', e => {
     sellPrice: parseFloat(document.getElementById('f-sell').value),
     desc:      document.getElementById('f-desc').value.trim(),
     img:       _productImgData,
-    imgs:      _productImgs.filter(Boolean), // fotos adicionales
+    imgs:      _productImgs.filter(Boolean),
   };
   if (data.sellPrice < data.buyPrice) {
     alert('El precio de venta no puede ser menor al precio de compra.');
@@ -241,6 +241,7 @@ document.getElementById('product-form').addEventListener('submit', e => {
   navigate('productos');
 });
 
+// ── CORRECCIÓN: IDs de imágenes ahora con sufijo -0 ───────────────────────
 function resetForm() {
   document.getElementById('edit-id').value = '';
   document.getElementById('form-title').textContent = 'Nuevo Producto';
@@ -248,10 +249,14 @@ function resetForm() {
   document.getElementById('cancel-edit').style.display = 'none';
   _productImgData = '';
   _productImgs = ['', '', ''];
-  document.getElementById('f-img-preview').classList.add('hidden');
-  document.getElementById('f-img-placeholder').style.display = '';
-  document.getElementById('f-img-remove').style.display = 'none';
-  // Limpiar slots adicionales
+  // Slot 0 (foto principal)
+  const prev0 = document.getElementById('f-img-preview-0');
+  const ph0   = document.getElementById('f-img-placeholder-0');
+  const rm0   = document.getElementById('f-img-remove-0');
+  if (prev0) prev0.classList.add('hidden');
+  if (ph0)   ph0.style.display = '';
+  if (rm0)   rm0.style.display = 'none';
+  // Slots 1 y 2
   [1, 2].forEach(i => {
     const prev = document.getElementById(`f-img-preview-${i}`);
     const ph   = document.getElementById(`f-img-placeholder-${i}`);
@@ -269,16 +274,16 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
   navigate('productos');
 });
 
-document.getElementById('f-img').addEventListener('change', function() {
+// ── CORRECCIÓN: listener en f-img-0 ───────────────────────────────────────
+document.getElementById('f-img-0').addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
-  // Comprime la imagen antes de guardar (máx 600px, calidad 0.7)
   compressImage(file, 600, 0.7, dataUrl => {
     _productImgData = dataUrl;
-    document.getElementById('f-img-preview').src = dataUrl;
-    document.getElementById('f-img-preview').classList.remove('hidden');
-    document.getElementById('f-img-placeholder').style.display = 'none';
-    document.getElementById('f-img-remove').style.display = 'inline-block';
+    document.getElementById('f-img-preview-0').src = dataUrl;
+    document.getElementById('f-img-preview-0').classList.remove('hidden');
+    document.getElementById('f-img-placeholder-0').style.display = 'none';
+    document.getElementById('f-img-remove-0').style.display = 'inline-block';
   });
 });
 
@@ -294,13 +299,11 @@ function compressImage(file, maxSize, quality, callback) {
       else if (h > maxSize)     { w = w * maxSize / h; h = maxSize; }
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      // Si aún es muy grande, reduce más
       let dataUrl = canvas.toDataURL('image/jpeg', quality);
       if (dataUrl.length > 700000) {
         dataUrl = canvas.toDataURL('image/jpeg', 0.4);
       }
       if (dataUrl.length > 700000) {
-        // Reduce tamaño a la mitad
         const c2 = document.createElement('canvas');
         c2.width = Math.round(w * 0.6); c2.height = Math.round(h * 0.6);
         c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height);
@@ -313,12 +316,13 @@ function compressImage(file, maxSize, quality, callback) {
   reader.readAsDataURL(file);
 }
 
-document.getElementById('f-img-remove').addEventListener('click', () => {
+// ── CORRECCIÓN: botón quitar imagen slot 0 ────────────────────────────────
+document.getElementById('f-img-remove-0').addEventListener('click', () => {
   _productImgData = '';
-  document.getElementById('f-img-preview').classList.add('hidden');
-  document.getElementById('f-img-placeholder').style.display = '';
-  document.getElementById('f-img-remove').style.display = 'none';
-  document.getElementById('f-img').value = '';
+  document.getElementById('f-img-preview-0').classList.add('hidden');
+  document.getElementById('f-img-placeholder-0').style.display = '';
+  document.getElementById('f-img-remove-0').style.display = 'none';
+  document.getElementById('f-img-0').value = '';
 });
 
 // Listeners para fotos adicionales (slots 1 y 2)
@@ -348,6 +352,7 @@ document.getElementById('f-img-remove').addEventListener('click', () => {
   });
 });
 
+// ── CORRECCIÓN: editProduct usa IDs con -0 ────────────────────────────────
 function editProduct(id) {
   const p = getProduct(id);
   if (!p) return;
@@ -360,17 +365,17 @@ function editProduct(id) {
   document.getElementById('f-desc').value     = p.desc || '';
   document.getElementById('form-title').textContent = 'Editar Producto';
   document.getElementById('cancel-edit').style.display = 'inline-block';
-  // Imagen principal
+  // Imagen principal (slot 0)
   _productImgData = p.img || '';
   if (p.img) {
-    document.getElementById('f-img-preview').src = p.img;
-    document.getElementById('f-img-preview').classList.remove('hidden');
-    document.getElementById('f-img-placeholder').style.display = 'none';
-    document.getElementById('f-img-remove').style.display = 'inline-block';
+    document.getElementById('f-img-preview-0').src = p.img;
+    document.getElementById('f-img-preview-0').classList.remove('hidden');
+    document.getElementById('f-img-placeholder-0').style.display = 'none';
+    document.getElementById('f-img-remove-0').style.display = 'inline-block';
   } else {
-    document.getElementById('f-img-preview').classList.add('hidden');
-    document.getElementById('f-img-placeholder').style.display = '';
-    document.getElementById('f-img-remove').style.display = 'none';
+    document.getElementById('f-img-preview-0').classList.add('hidden');
+    document.getElementById('f-img-placeholder-0').style.display = '';
+    document.getElementById('f-img-remove-0').style.display = 'none';
   }
   // Fotos adicionales
   _productImgs = ['', '', ''];
@@ -507,7 +512,7 @@ function deleteUser(id) {
 }
 
 // ── Sales — Product List + Cart ────────────────────────────────────────────
-let cart = {}; // { productId: qty }
+let cart = {};
 let saleSearchFilter = '';
 let saleCatFilter    = '';
 
@@ -639,7 +644,6 @@ document.querySelectorAll('.scat-btn').forEach(btn => {
   });
 });
 
-// Inicializa selectores de mes/año
 function initReportSelectors() {
   const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -657,14 +661,12 @@ function initReportSelectors() {
     `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`
   ).join('');
 
-  // Fecha de hoy por defecto — usando hora local, no UTC
   const yyyy = now.getFullYear();
   const mm   = String(now.getMonth() + 1).padStart(2, '0');
   const dd   = String(now.getDate()).padStart(2, '0');
   document.getElementById('r-date').value = `${yyyy}-${mm}-${dd}`;
 }
 
-// Filtra ventas (salidas) por rango de fechas
 function getSalesByRange(from, to) {
   return movements.filter(m => {
     if (m.type !== 'salida') return false;
@@ -673,7 +675,6 @@ function getSalesByRange(from, to) {
   });
 }
 
-// Agrupa ventas por producto
 function groupByProduct(sales) {
   const map = {};
   sales.forEach(m => {
@@ -698,7 +699,6 @@ function groupByProduct(sales) {
   return Object.values(map).sort((a, b) => b.revenue - a.revenue);
 }
 
-// Genera HTML del reporte
 function buildReportHTML(title, subtitle, sales, showBars) {
   if (sales.length === 0) {
     return `<div class="report-card">
@@ -774,7 +774,6 @@ function buildReportHTML(title, subtitle, sales, showBars) {
     </div>`;
 }
 
-// Reporte diario
 document.getElementById('btn-gen-daily').addEventListener('click', () => {
   const dateStr = document.getElementById('r-date').value;
   if (!dateStr) return;
@@ -786,7 +785,6 @@ document.getElementById('btn-gen-daily').addEventListener('click', () => {
     buildReportHTML('Reporte Diario', label, sales, false);
 });
 
-// Reporte mensual
 document.getElementById('btn-gen-monthly').addEventListener('click', () => {
   const month = parseInt(document.getElementById('r-month').value);
   const year  = parseInt(document.getElementById('r-year').value);
@@ -799,7 +797,6 @@ document.getElementById('btn-gen-monthly').addEventListener('click', () => {
     buildReportHTML(`Reporte Mensual — ${months[month]} ${year}`, `${from.toLocaleDateString('es-MX')} al ${to.toLocaleDateString('es-MX')}`, sales, true);
 });
 
-// Tabs de reporte
 document.querySelectorAll('.rtab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
@@ -811,10 +808,8 @@ document.querySelectorAll('.rtab').forEach(btn => {
   });
 });
 
-// Descarga CSV
 function downloadCSV(encodedTitle) {
   const title = decodeURIComponent(encodedTitle);
-  // Determina si es diario o mensual por el contenido activo
   const isDiario = document.getElementById('rtab-diario').classList.contains('active');
   const dateStr  = document.getElementById('r-date').value;
   const month    = parseInt(document.getElementById('r-month').value);
@@ -840,12 +835,10 @@ function downloadCSV(encodedTitle) {
   a.click();
 }
 
-// Imprimir
 function printReport() {
   window.print();
 }
 
-// Compartir (Web Share API o fallback)
 function shareReport(encodedTitle) {
   const title = decodeURIComponent(encodedTitle);
   if (navigator.share) {
@@ -858,7 +851,6 @@ function shareReport(encodedTitle) {
   }
 }
 
-// Descargar reporte como PDF
 function downloadPDF(encodedTitle) {
   const title = decodeURIComponent(encodedTitle);
   const card = document.querySelector('.report-card');
@@ -868,7 +860,6 @@ function downloadPDF(encodedTitle) {
   const storeName = s.storeName || 'Inventario';
   const fecha = new Date().toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'});
 
-  // Estilos limpios para impresión
   const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -905,7 +896,6 @@ ${card.querySelector('table') ? card.querySelector('table').outerHTML : ''}
   const url  = URL.createObjectURL(blob);
   const win  = window.open(url, '_blank');
   if (!win) {
-    // Si el popup fue bloqueado, descarga como archivo
     const a = document.createElement('a');
     a.href = url;
     a.download = title.replace(/\s+/g,'_') + '.html';
@@ -914,9 +904,6 @@ ${card.querySelector('table') ? card.querySelector('table').outerHTML : ''}
 }
 
 // ── Settings ───────────────────────────────────────────────────────────────
-// Ajustes se guardan por usuario: clave = inv_settings_<userId>
-// "pending" acumula cambios sin aplicar hasta que el usuario presiona Guardar
-
 const DEFAULTS = {
   storeName: 'Inventario',
   subtitle:  'Dulces & Pulseras',
@@ -929,26 +916,22 @@ const DEFAULTS = {
 };
 
 let activeUserId = localStorage.getItem('inv_active_user') || (users[0] && users[0].id) || 'global';
-let pending      = {};   // cambios sin guardar del formulario actual
+let pending      = {};
 
 function settingsKey(uid) { return 'inv_settings_' + uid; }
 
 function getUserSettings(uid) {
-  // Usa el uid de Firebase si está disponible
   const key = fbAuth && fbAuth.currentUser ? fbAuth.currentUser.uid : uid;
   return JSON.parse(localStorage.getItem(settingsKey(key)) || '{}');
 }
 
 function saveUserSettings(uid, data) {
-  // Guarda local
   localStorage.setItem(settingsKey(uid), JSON.stringify(data));
-  // Guarda en Firestore si Firebase está activo
   if (typeof fbSaveSettings === 'function' && db) {
     fbSaveSettings(uid, data).catch(console.error);
   }
 }
 
-// Ajustes activos = los del usuario activo
 function activeSettings() {
   return { ...DEFAULTS, ...getUserSettings(activeUserId), ...pending };
 }
@@ -956,11 +939,9 @@ function activeSettings() {
 function applySettings(s) {
   s = s || activeSettings();
 
-  // Accent
   document.documentElement.style.setProperty('--orange',    s.accent);
   document.documentElement.style.setProperty('--orange-dk', shadeColor(s.accent, -20));
 
-  // Theme
   if (s.theme === 'light') {
     document.documentElement.style.setProperty('--bg',       '#f5f5f5');
     document.documentElement.style.setProperty('--surface',  '#ffffff');
@@ -977,7 +958,6 @@ function applySettings(s) {
     document.documentElement.style.setProperty('--muted',    '#7a7570');
   }
 
-  // Brand — sidebar y header móvil
   const brandEl  = document.querySelector('.brand-title');
   const subEl    = document.querySelector('.brand-sub');
   const mTitle   = document.getElementById('mobile-brand-title');
@@ -988,11 +968,9 @@ function applySettings(s) {
   if (mSub)    mSub.textContent    = s.subtitle;
   document.title = s.storeName + ' — Inventario';
 
-  // Logo — sidebar y header móvil
   let logoImg = document.getElementById('sidebar-logo');
   const mLogo = document.getElementById('mobile-logo');
 
-  // Logo web (sidebar)
   if (s.logo) {
     if (!logoImg) {
       logoImg = document.createElement('img');
@@ -1005,14 +983,12 @@ function applySettings(s) {
     if (logoImg) logoImg.remove();
   }
 
-  // Logo móvil (header) — usa logoMobile si existe, si no usa logo web
   const mobileSrc = s.logoMobile || s.logo;
   if (mLogo) {
     if (mobileSrc) { mLogo.src = mobileSrc; mLogo.classList.remove('hidden'); }
     else           { mLogo.classList.add('hidden'); }
   }
 
-  // Background
   const content = document.querySelector('.content');
   if (s.bg) {
     content.style.backgroundImage     = `url(${s.bg})`;
@@ -1035,7 +1011,6 @@ function shadeColor(hex, pct) {
   return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
-// Rellena el formulario con los ajustes del usuario activo
 function loadSettingsUI() {
   pending = {};
   const s = activeSettings();
@@ -1052,13 +1027,11 @@ function loadSettingsUI() {
   document.querySelectorAll('.swatch:not(.swatch-custom)').forEach(sw =>
     sw.classList.toggle('active', sw.dataset.color === s.accent));
 
-  // Logo web preview
   const lp = document.getElementById('logo-preview');
   const rl = document.getElementById('remove-logo');
   if (s.logo) { lp.src = s.logo; lp.classList.remove('hidden'); rl.style.display = 'inline-block'; }
   else        { lp.classList.add('hidden'); rl.style.display = 'none'; }
 
-  // Logo móvil preview
   const lpm = document.getElementById('logo-mobile-preview');
   const rlm = document.getElementById('remove-logo-mobile');
   if (lpm && rlm) {
@@ -1066,29 +1039,24 @@ function loadSettingsUI() {
     else              { lpm.classList.add('hidden'); rlm.style.display = 'none'; }
   }
 
-  // BG preview
   const bp = document.getElementById('bg-preview');
   const rb = document.getElementById('remove-bg');
   if (s.bg) { bp.src = s.bg; bp.classList.remove('hidden'); rb.style.display = 'inline-block'; }
   else      { bp.classList.add('hidden'); rb.style.display = 'none'; }
 
-  // Selector de usuario activo
   const sel = document.getElementById('s-active-user');
   sel.innerHTML = users.map(u =>
     `<option value="${u.id}" ${u.id === activeUserId ? 'selected' : ''}>${u.name} (${u.role})</option>`
   ).join('');
 
-  // Limpia mensaje de guardado
   document.getElementById('settings-save-info').textContent = '';
 }
 
-// Marca cambio pendiente y aplica preview en tiempo real
 function setPending(key, value) {
   pending[key] = value;
-  applySettings(); // preview inmediato
+  applySettings();
 }
 
-// ── Cambio de usuario activo ───────────────────────────────────────────────
 document.getElementById('s-active-user').addEventListener('change', function() {
   activeUserId = this.value;
   localStorage.setItem('inv_active_user', activeUserId);
@@ -1096,7 +1064,6 @@ document.getElementById('s-active-user').addEventListener('change', function() {
   applySettings();
 });
 
-// ── Controles del formulario (solo marcan pending, no guardan) ─────────────
 document.getElementById('s-storename').addEventListener('input', function() {
   setPending('storeName', this.value || DEFAULTS.storeName);
 });
@@ -1145,7 +1112,6 @@ document.getElementById('remove-logo').addEventListener('click', () => {
   document.getElementById('s-logo').value = '';
 });
 
-// Logo móvil
 document.getElementById('s-logo-mobile').addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
@@ -1191,13 +1157,11 @@ document.getElementById('s-bg-opacity').addEventListener('input', function() {
   document.getElementById('s-bg-opacity-val').textContent = this.value + '%';
 });
 
-// ── Botón Guardar cambios ──────────────────────────────────────────────────
 document.getElementById('btn-save-settings').addEventListener('click', () => {
   if (Object.keys(pending).length === 0) {
     showSaveInfo('Sin cambios nuevos.');
     return;
   }
-  // Usa siempre el UID de Firebase como clave
   const uid = (fbAuth && fbAuth.currentUser) ? fbAuth.currentUser.uid : activeUserId;
   const current = getUserSettings(uid);
   const merged  = { ...current, ...pending };
@@ -1234,7 +1198,6 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 // ── Bulk Upload ────────────────────────────────────────────────────────────
 let bulkParsed = [];
 
-// Plantilla CSV
 document.getElementById('bulk-download-template').addEventListener('click', () => {
   const csv = [
     'nombre,categoria,stock,precio_compra,precio_venta,descripcion',
@@ -1248,7 +1211,6 @@ document.getElementById('bulk-download-template').addEventListener('click', () =
   a.click();
 });
 
-// Leer archivo CSV
 document.getElementById('bulk-file').addEventListener('change', function () {
   const file = this.files[0];
   if (!file) return;
@@ -1262,9 +1224,7 @@ document.getElementById('bulk-file').addEventListener('change', function () {
 });
 
 function parseBulkCSV(text) {
-  // Normaliza saltos de línea y separa filas
   const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
-  // Detecta si la primera fila es encabezado
   const start = /nombre|name|producto/i.test(lines[0]) ? 1 : 0;
   bulkParsed = [];
 
@@ -1344,7 +1304,6 @@ function renderBulkPreview() {
   document.getElementById('bulk-confirm').disabled = valid.length === 0;
 }
 
-// Confirmar importación
 document.getElementById('bulk-confirm').addEventListener('click', () => {
   const valid = bulkParsed.filter(r => r._errors.length === 0);
   valid.forEach(r => {
@@ -1387,7 +1346,6 @@ async function doLogout() {
 
 document.getElementById('btn-logout').addEventListener('click', doLogout);
 
-// Logout desde bottom nav móvil
 const bnavLogout = document.getElementById('bnav-logout-btn');
 if (bnavLogout) bnavLogout.addEventListener('click', doLogout);
 
@@ -1403,7 +1361,6 @@ function canManageUsers() {
   return (window._currentUserRole || 'Admin') === 'Admin';
 }
 
-// Guarda protegido por rol
 function saveItem(colName, item) {
   if (!canWrite()) { alert('No tienes permiso para realizar esta acción.'); return; }
   if (db) {
@@ -1434,47 +1391,38 @@ function deleteItem(colName, id) {
   }
 }
 
-// Aplica restricciones visuales según rol
 function applyPrivileges() {
   const role    = window._currentUserRole || 'Admin';
   const isAdmin = role === 'Admin';
 
-  // ── Navegación ─────────────────────────────────────────────────────────
   document.querySelectorAll('[data-view="agregar"],[data-view="usuarios"]').forEach(el => {
     el.style.display = (role === 'Solo lectura') ? 'none' : '';
   });
 
-  // ── Tarjetas financieras — solo Admin ──────────────────────────────────
   ['card-inversion','card-ganancia','card-vendido'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = isAdmin ? '' : 'none';
   });
 
-  // ── Columnas de ganancia — solo Admin ──────────────────────────────────
   document.querySelectorAll('.col-gain-header,.col-gain-cell,.col-mov-gain-header,.col-mov-gain-cell').forEach(el => {
     el.style.display = isAdmin ? '' : 'none';
   });
 
-  // ── Botones editar/eliminar — solo Admin ───────────────────────────────
   document.querySelectorAll('.btn-edit-product, .btn-delete-product').forEach(btn => {
     btn.style.display = isAdmin ? '' : 'none';
   });
 
-  // ── Botones entrada/salida — sin Solo lectura ──────────────────────────
   document.querySelectorAll('.btn-entrada-product, .btn-salida-product').forEach(btn => {
     btn.style.display = (role === 'Solo lectura') ? 'none' : '';
   });
 
-  // ── Eliminar usuarios — solo Admin ─────────────────────────────────────
   document.querySelectorAll('.btn-delete-user').forEach(btn => {
     btn.style.display = isAdmin ? '' : 'none';
   });
 
-  // ── Ganancia en carrito — solo Admin ───────────────────────────────────
   const cartGainRow = document.querySelector('.cart-gain-row');
   if (cartGainRow) cartGainRow.style.display = isAdmin ? '' : 'none';
 
-  // ── Info del usuario ───────────────────────────────────────────────────
   const me   = users.find(u => u.id === activeUserId);
   const info = document.getElementById('sidebar-user-info');
   if (info && me) info.textContent = me.name + ' · ' + me.role;
@@ -1482,19 +1430,15 @@ function applyPrivileges() {
   if (bnavInfo && me) bnavInfo.textContent = '👤 ' + me.name + ' · ' + me.role;
 }
 
-// ── Cross-tab / Cross-device sync ─────────────────────────────────────────
-// BroadcastChannel sincroniza entre pestañas del mismo navegador al instante.
-// Para sincronizar entre dispositivos distintos necesitas Firebase (ver firebase.js).
+// ── Cross-tab sync ─────────────────────────────────────────────────────────
 try {
   const bc = new BroadcastChannel('inv_sync');
-  // Cuando otro tab guarda, recargamos los datos locales
   bc.onmessage = () => {
     products  = JSON.parse(localStorage.getItem('inv_products')  || '[]');
     movements = JSON.parse(localStorage.getItem('inv_movements') || '[]');
     users     = JSON.parse(localStorage.getItem('inv_users')     || '[]');
     renderAll();
   };
-  // Notifica a otros tabs cuando guardamos
   const _origSave = save;
   window.save = function() {
     _origSave();
@@ -1504,7 +1448,6 @@ try {
 
 // ── Splash screen ──────────────────────────────────────────────────────────
 function updateSplashBranding() {
-  // Aplica nombre, subtítulo y logo al splash desde ajustes guardados
   const s = activeSettings ? activeSettings() : {};
   const name = s.storeName || 'Inventario';
   const sub  = s.subtitle  || 'Dulces & Pulseras';
@@ -1532,7 +1475,6 @@ function hideSplash() {
   setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
 }
 
-// Muestra el splash con la marca correcta al inicio
 updateSplashBranding();
 
 // ── Init ───────────────────────────────────────────────────────────────────
@@ -1542,9 +1484,8 @@ async function initApp() {
   if (typeof initFirebase === 'function') {
     document.body.style.visibility = 'hidden';
     const ok = await initFirebase();
-    if (ok) return; // Firebase llama hideSplash después del login/auth
+    if (ok) return;
   }
-  // Sin Firebase → modo local
   document.body.style.visibility = 'visible';
   await seedLocalIfEmpty();
   renderAll();

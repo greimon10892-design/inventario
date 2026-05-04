@@ -295,19 +295,54 @@
         <form id="product-form">
           <input type="hidden" id="edit-id" />
 
-          <!-- Imagen del producto -->
+          <!-- Imágenes del producto (hasta 3) -->
           <div class="product-img-upload">
-            <div class="product-img-preview-wrap">
-              <img id="f-img-preview" src="" alt="" class="product-img-preview hidden" />
-              <div id="f-img-placeholder" class="product-img-placeholder">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <span>Foto del producto</span>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px" id="img-previews-row">
+              <!-- Foto 1 -->
+              <div class="img-slot" id="img-slot-0">
+                <div class="product-img-preview-wrap">
+                  <img id="f-img-preview-0" src="" alt="" class="product-img-preview hidden" />
+                  <div id="f-img-placeholder-0" class="product-img-placeholder">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Foto 1</span>
+                  </div>
+                </div>
+                <div class="product-img-actions" style="margin-top:4px">
+                  <label class="btn-upload" for="f-img-0" style="font-size:0.72rem;padding:5px 10px">📷</label>
+                  <input type="file" id="f-img-0" accept="image/*" style="display:none" data-slot="0"/>
+                  <button type="button" class="btn-ghost-sm" id="f-img-remove-0" style="display:none;font-size:0.72rem;padding:5px 8px" data-slot="0">✕</button>
+                </div>
               </div>
-            </div>
-            <div class="product-img-actions">
-              <label class="btn-upload" for="f-img">📷 Subir foto</label>
-              <input type="file" id="f-img" accept="image/*" style="display:none" />
-              <button type="button" class="btn-ghost-sm" id="f-img-remove" style="display:none">Quitar</button>
+              <!-- Foto 2 -->
+              <div class="img-slot" id="img-slot-1">
+                <div class="product-img-preview-wrap">
+                  <img id="f-img-preview-1" src="" alt="" class="product-img-preview hidden" />
+                  <div id="f-img-placeholder-1" class="product-img-placeholder">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Foto 2</span>
+                  </div>
+                </div>
+                <div class="product-img-actions" style="margin-top:4px">
+                  <label class="btn-upload" for="f-img-1" style="font-size:0.72rem;padding:5px 10px">📷</label>
+                  <input type="file" id="f-img-1" accept="image/*" style="display:none" data-slot="1"/>
+                  <button type="button" class="btn-ghost-sm" id="f-img-remove-1" style="display:none;font-size:0.72rem;padding:5px 8px" data-slot="1">✕</button>
+                </div>
+              </div>
+              <!-- Foto 3 -->
+              <div class="img-slot" id="img-slot-2">
+                <div class="product-img-preview-wrap">
+                  <img id="f-img-preview-2" src="" alt="" class="product-img-preview hidden" />
+                  <div id="f-img-placeholder-2" class="product-img-placeholder">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Foto 3</span>
+                  </div>
+                </div>
+                <div class="product-img-actions" style="margin-top:4px">
+                  <label class="btn-upload" for="f-img-2" style="font-size:0.72rem;padding:5px 10px">📷</label>
+                  <input type="file" id="f-img-2" accept="image/*" style="display:none" data-slot="2"/>
+                  <button type="button" class="btn-ghost-sm" id="f-img-remove-2" style="display:none;font-size:0.72rem;padding:5px 8px" data-slot="2">✕</button>
+                </div>
+              </div>
             </div>
           </div>
 
