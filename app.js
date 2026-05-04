@@ -5,1554 +5,1119 @@ function uid() {
 function fmt(n) { return '$' + Number(n).toFixed(2); }
 function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('es-MX', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    day: '2-digit', month: 'short', year: 'numeric'
   });
 }
-function getProduct(id) { return products.find(p => p.id === id); }
-
-// Imagen temporal del formulario de producto
-let _productImgData = '';
-let _productImgs = ['', '', '']; // fotos adicionales slots 1 y 2
-
-// ── State ──────────────────────────────────────────────────────────────────
-let products  = JSON.parse(localStorage.getItem('inv_products')  || '[]');
-let movements = JSON.parse(localStorage.getItem('inv_movements') || '[]');
-let users     = JSON.parse(localStorage.getItem('inv_users')     || '[]');
-
-// Guarda localmente Y en Firebase si está disponible
-function save() {
-  localStorage.setItem('inv_products',  JSON.stringify(products));
-  localStorage.setItem('inv_movements', JSON.stringify(movements));
-  localStorage.setItem('inv_users',     JSON.stringify(users));
+function localDateStr(date) {
+  const d = date || new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast', 3000);
 }
 
-function localSave() { save(); }
+// ── State ────────────────────────────────────────────────────────────────────
+let products   = [];
+let movements  = [];
+let users      = [];
+let activeUserId = null;
+let currentRole  = 'Admin';
+let _productImgData  = null;
+let _productImg2Data = null;
+let _productImg3Data = null;
+let _editId = null;
+let _saleCart = {};
+let _pendingSettings = {};
 
-// ── Seed ───────────────────────────────────────────────────────────────────
-const SEED_USERS = [
-  { id: 'admin', name: 'Administrador', email: 'admin@inventario.com', role: 'Admin', date: new Date().toISOString() }
-];
-const SEED_PRODUCTS = [
-  { id: uid(), name: 'Mazapán de Rosa',     category: 'dulce',   stock: 30, buyPrice: 5,  sellPrice: 12, desc: 'Dulce tradicional mexicano' },
-  { id: uid(), name: 'Cocada de Coco',       category: 'dulce',   stock: 20, buyPrice: 8,  sellPrice: 18, desc: 'Cocada artesanal' },
-  { id: uid(), name: 'Tamarindo Enchilado',  category: 'dulce',   stock: 4,  buyPrice: 3,  sellPrice: 7,  desc: 'Dulce picante de tamarindo' },
-  { id: uid(), name: 'Pulsera Chaquira',     category: 'pulsera', stock: 15, buyPrice: 20, sellPrice: 55, desc: 'Pulsera de chaquiras de colores' },
-  { id: uid(), name: 'Pulsera Macramé',      category: 'pulsera', stock: 3,  buyPrice: 15, sellPrice: 45, desc: 'Tejido artesanal macramé' },
-  { id: uid(), name: 'Pulsera Hilo Bordado', category: 'pulsera', stock: 25, buyPrice: 10, sellPrice: 30, desc: 'Hilo de colores bordado a mano' },
-];
-
-async function seedLocalIfEmpty() {
-  if (users.length === 0) {
-    users = SEED_USERS;
-    localStorage.setItem('inv_users', JSON.stringify(users));
+// ── Firebase bridge ──────────────────────────────────────────────────────────
+function saveItem(col, item) {
+  if (typeof fbSaveItem === 'function') {
+    fbSaveItem(col, item).catch(e => console.warn('Firebase save error:', e));
   }
-  if (products.length === 0) {
-    products = SEED_PRODUCTS;
-    localStorage.setItem('inv_products', JSON.stringify(products));
+  const arr = col === 'products' ? products : col === 'movements' ? movements : users;
+  const idx = arr.findIndex(x => x.id === item.id);
+  if (idx >= 0) arr[idx] = item; else arr.push(item);
+  renderAll();
+}
+function deleteItem(col, id) {
+  if (typeof fbDeleteItem === 'function') {
+    fbDeleteItem(col, id).catch(e => console.warn('Firebase delete error:', e));
   }
+  if (col === 'products')  products  = products.filter(x => x.id !== id);
+  if (col === 'movements') movements = movements.filter(x => x.id !== id);
+  if (col === 'users')     users     = users.filter(x => x.id !== id);
+  renderAll();
 }
 
-// ── Navigation ─────────────────────────────────────────────────────────────
+// ── Navigation ───────────────────────────────────────────────────────────────
 function navigate(view) {
-  document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.bnav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('view-' + view).classList.remove('hidden');
-  const sideItem = document.querySelector(`.nav-item[data-view="${view}"]`);
-  if (sideItem) sideItem.classList.add('active');
-  const bnavItem = document.querySelector(`.bnav-item[data-view="${view}"]`);
-  if (bnavItem) bnavItem.classList.add('active');
+
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+
+  document.querySelectorAll('[data-view="' + view + '"]').forEach(n => n.classList.add('active'));
   window.scrollTo(0, 0);
-  if (view === 'ajustes') loadSettingsUI();
-  else if (view === 'ventas') { initSaleView(); }
-  else renderAll();
+
+  if (view === 'panel')    renderPanel();
+  if (view === 'products') renderInventory();
+  if (view === 'sales')    initSaleView();
+  if (view === 'history')  renderMovements();
+  if (view === 'reports')  initReports();
+  if (view === 'users')    renderUsers();
+  if (view === 'settings') loadSettingsUI();
 }
 
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', e => { e.preventDefault(); navigate(item.dataset.view); });
-});
-document.querySelectorAll('.bnav-item').forEach(item => {
-  item.addEventListener('click', () => navigate(item.dataset.view));
-});
+// ── Render Panel ─────────────────────────────────────────────────────────────
+function renderPanel() {
+  const totalProducts = products.length;
+  const totalInvestment = products.reduce((s, p) => s + (p.buyPrice * p.stock), 0);
+  const totalPotentialGain = products.reduce((s, p) => s + ((p.sellPrice - p.buyPrice) * p.stock), 0);
+  const totalSold = movements
+    .filter(m => m.type === 'out')
+    .reduce((s, m) => s + (m.price * m.qty), 0);
 
-// Menú "Más" del bottom nav
-const moreBtn  = document.getElementById('bnav-more-btn');
-const moreMenu = document.getElementById('bnav-more-menu');
+  const el = id => document.getElementById(id);
+  if (el('stat-products'))   el('stat-products').textContent   = totalProducts;
+  if (el('stat-investment'))  el('stat-investment').textContent  = fmt(totalInvestment);
+  if (el('stat-gain'))        el('stat-gain').textContent        = fmt(totalPotentialGain);
+  if (el('stat-sold'))        el('stat-sold').textContent        = fmt(totalSold);
 
-moreBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  moreMenu.classList.toggle('hidden');
-});
-
-document.querySelectorAll('.bnav-more-item').forEach(item => {
-  item.addEventListener('click', () => {
-    moreMenu.classList.add('hidden');
-    navigate(item.dataset.view);
-  });
-});
-
-document.addEventListener('click', () => moreMenu.classList.add('hidden'));
-
-// ── Summary ────────────────────────────────────────────────────────────────
-function updateSummary() {
-  document.getElementById('total-products').textContent  = products.length;
-  document.getElementById('total-inversion').textContent =
-    fmt(products.reduce((s, p) => s + p.buyPrice * p.stock, 0));
-  document.getElementById('total-ganancia').textContent  =
-    fmt(products.reduce((s, p) => s + (p.sellPrice - p.buyPrice) * p.stock, 0));
-  document.getElementById('total-vendido').textContent   =
-    fmt(movements.filter(m => m.type === 'salida').reduce((s, m) => s + m.price * m.qty, 0));
-
-  const low = products.filter(p => p.stock <= 5);
-  const el  = document.getElementById('low-stock-list');
-  el.innerHTML = low.length === 0
-    ? '<div class="empty-state">Sin productos con bajo stock.</div>'
-    : low.map(p => `
-        <div class="low-stock-item">
-          <span class="low-stock-name">${p.name}</span>
-          <span class="low-stock-qty">${p.stock} uds.</span>
+  // Low stock list
+  const lowList = document.getElementById('low-stock-list');
+  if (lowList) {
+    const low = products.filter(p => p.stock <= 3).sort((a, b) => a.stock - b.stock);
+    if (low.length === 0) {
+      lowList.innerHTML = '<p class="muted" style="padding:12px">Sin productos con bajo stock</p>';
+    } else {
+      lowList.innerHTML = low.map(p => `
+        <div class="low-item">
+          <span>${p.name}</span>
+          <span class="badge ${p.stock === 0 ? 'badge-danger' : 'badge-warn'}">${p.stock} uds</span>
         </div>`).join('');
+    }
+  }
 }
 
-// ── Inventory ──────────────────────────────────────────────────────────────
+// ── Render Inventory ──────────────────────────────────────────────────────────
 function renderInventory() {
-  const search = (document.getElementById('search').value || '').toLowerCase();
-  const cat    = document.getElementById('filter-category').value;
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(search) && (cat ? p.category === cat : true)
-  );
+  const search = (document.getElementById('search-products') || {}).value || '';
+  const cat    = (document.getElementById('filter-cat') || {}).value || '';
+  const tbody  = document.getElementById('inventory-body');
+  if (!tbody) return;
 
-  const tbody = document.getElementById('inventory-body');
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">No se encontraron productos.</div></td></tr>`;
+  let list = products.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchCat    = !cat || p.category === cat;
+    return matchSearch && matchCat;
+  });
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Sin productos</td></tr>';
     return;
   }
 
-  tbody.innerHTML = filtered.map(p => {
-    const gain = p.sellPrice - p.buyPrice;
-    const catBadge = p.category === 'dulce'
-      ? '<span class="badge badge-dulce">Dulce</span>'
-      : '<span class="badge badge-pulsera">Pulsera</span>';
-    const thumb = p.img
-      ? `<img src="${p.img}" class="prod-thumb" alt="${p.name}" />`
-      : `<div class="prod-thumb-placeholder">${p.category === 'dulce' ? '🍬' : '📿'}</div>`;
+  const isAdmin = currentRole === 'Admin';
+  const canEdit = isAdmin;
 
-    return `<tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:10px">
-          ${thumb}
-          <div>
-            <span class="td-name">${p.name}</span>
-            ${p.desc ? `<span class="td-sub">${p.desc}</span>` : ''}
-          </div>
-        </div>
-      </td>
-      <td>${catBadge}</td>
-      <td class="${p.stock <= 5 ? 'stock-low' : ''}">${p.stock}</td>
-      <td>${fmt(p.buyPrice)}</td>
-      <td>${fmt(p.sellPrice)}</td>
-      <td class="col-gain-cell td-gain">${fmt(gain)}</td>
-      <td class="td-actions">
-        <button class="btn-icon btn-entrada-product" title="Entrada"  onclick="openModal('${p.id}','entrada')">↓</button>
-        <button class="btn-icon btn-salida-product"  title="Salida"   onclick="openModal('${p.id}','salida')">↑</button>
-        <button class="btn-icon btn-edit-product"    title="Editar"   onclick="editProduct('${p.id}')">✎</button>
-        <button class="btn-icon btn-danger btn-delete-product" title="Eliminar" onclick="deleteProduct('${p.id}')">✕</button>
-      </td>
-    </tr>`;
+  tbody.innerHTML = list.map(p => {
+    const profit = (p.sellPrice - p.buyPrice).toFixed(2);
+    const img = p.img ? `<img src="${p.img}" class="product-thumb" alt="">` : `<span class="cat-icon">${p.category === 'dulces' ? '🍬' : '📿'}</span>`;
+    return `
+      <tr>
+        <td>${img}</td>
+        <td>${p.name}</td>
+        <td><span class="badge">${p.category}</span></td>
+        <td>${p.stock}</td>
+        <td>${fmt(p.buyPrice)}</td>
+        <td>${fmt(p.sellPrice)}</td>
+        <td class="admin-only">${fmt(profit)}</td>
+        <td>
+          <button class="btn-action btn-in" onclick="openMovModal('${p.id}','in')" title="Entrada">↓</button>
+          <button class="btn-action btn-out" onclick="openMovModal('${p.id}','out')" title="Salida">↑</button>
+          ${canEdit ? `<button class="btn-action btn-edit" onclick="editProduct('${p.id}')" title="Editar">✎</button>` : ''}
+          ${isAdmin ? `<button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')" title="Eliminar">✕</button>` : ''}
+        </td>
+      </tr>`;
   }).join('');
 }
 
-// ── Movements ──────────────────────────────────────────────────────────────
-function renderMovements() {
-  const typeFilter = document.getElementById('filter-mov-type').value;
-  const filtered   = movements
-    .filter(m => typeFilter ? m.type === typeFilter : true)
-    .slice().reverse();
-
-  const tbody = document.getElementById('mov-body');
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">Sin movimientos registrados.</div></td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(m => {
-    const p    = getProduct(m.productId);
-    const name = p ? p.name : m.productName;
-    const typeBadge = m.type === 'entrada'
-      ? '<span class="badge badge-entrada">Entrada</span>'
-      : '<span class="badge badge-salida">Salida</span>';
-    const gainCell = m.type === 'salida' && p
-      ? `<span class="td-gain">${fmt((p.sellPrice - p.buyPrice) * m.qty)}</span>`
-      : '<span style="color:var(--muted)">—</span>';
-    return `<tr>
-      <td class="td-date">${fmtDate(m.date)}</td>
-      <td class="td-name">${name}</td>
-      <td>${typeBadge}</td>
-      <td>${m.qty}</td>
-      <td>${fmt(m.price)}</td>
-      <td>${fmt(m.price * m.qty)}</td>
-      <td class="col-mov-gain-cell">${gainCell}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ── Render all ─────────────────────────────────────────────────────────────
-function renderAll() {
-  updateSummary();
-  renderInventory();
-  renderMovements();
-  renderUsers();
-  applyPrivileges();
-}
-
-// ── Filters ────────────────────────────────────────────────────────────────
-document.getElementById('search').addEventListener('input', renderInventory);
-document.getElementById('filter-category').addEventListener('change', renderInventory);
-document.getElementById('filter-mov-type').addEventListener('change', renderMovements);
-
-// ── Product form ───────────────────────────────────────────────────────────
-document.getElementById('product-form').addEventListener('submit', e => {
-  e.preventDefault();
-  const editId = document.getElementById('edit-id').value;
-  const data = {
-    name:      document.getElementById('f-name').value.trim(),
-    category:  document.getElementById('f-category').value,
-    stock:     parseInt(document.getElementById('f-stock').value),
-    buyPrice:  parseFloat(document.getElementById('f-buy').value),
-    sellPrice: parseFloat(document.getElementById('f-sell').value),
-    desc:      document.getElementById('f-desc').value.trim(),
-    img:       _productImgData,
-    imgs:      _productImgs.filter(Boolean), // fotos adicionales
-  };
-  if (data.sellPrice < data.buyPrice) {
-    alert('El precio de venta no puede ser menor al precio de compra.');
-    return;
-  }
-  if (editId) {
-    const idx = products.findIndex(p => p.id === editId);
-    products[idx] = { ...products[idx], ...data };
-    saveItem('products', products[idx]);
-  } else {
-    const newP = { id: uid(), ...data };
-    saveItem('products', newP);
-  }
+// ── Product Form ──────────────────────────────────────────────────────────────
+function showProductForm() {
+  if (currentRole === 'Solo lectura') { alert('Sin permisos'); return; }
+  navigate('new-product');
   resetForm();
-  navigate('productos');
-});
+}
 
 function resetForm() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('form-title').textContent = 'Nuevo Producto';
-  document.getElementById('product-form').reset();
-  document.getElementById('cancel-edit').style.display = 'none';
-  _productImgData = '';
-  _productImgs = ['', '', ''];
-  document.getElementById('f-img-preview').classList.add('hidden');
-  document.getElementById('f-img-placeholder').style.display = '';
-  document.getElementById('f-img-remove').style.display = 'none';
-  // Limpiar slots adicionales
-  [1, 2].forEach(i => {
-    const prev = document.getElementById(`f-img-preview-${i}`);
-    const ph   = document.getElementById(`f-img-placeholder-${i}`);
-    const rm   = document.getElementById(`f-img-remove-${i}`);
-    if (prev) { prev.classList.add('hidden'); prev.src = ''; }
-    if (ph)   ph.style.display = '';
-    if (rm)   rm.style.display = 'none';
-    const inp = document.getElementById(`f-img-${i}`);
-    if (inp) inp.value = '';
+  _editId = null;
+  _productImgData = null;
+  _productImg2Data = null;
+  _productImg3Data = null;
+  const form = document.getElementById('product-form');
+  if (form) form.reset();
+  const previews = ['img-preview', 'img2-preview', 'img3-preview'];
+  previews.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.src = '';
   });
+  const title = document.getElementById('form-title');
+  if (title) title.textContent = 'Nuevo Producto';
+  const btn = document.getElementById('form-btn');
+  if (btn) btn.textContent = 'Guardar Producto';
 }
 
-document.getElementById('cancel-edit').addEventListener('click', () => {
-  resetForm();
-  navigate('productos');
-});
+function editProduct(pid) {
+  const p = products.find(x => x.id === pid);
+  if (!p) return;
+  navigate('new-product');
+  _editId = pid;
+  _productImgData  = p.img  || null;
+  _productImg2Data = p.img2 || null;
+  _productImg3Data = p.img3 || null;
+  const s = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  s('f-name', p.name);
+  s('f-category', p.category);
+  s('f-stock', p.stock);
+  s('f-buy', p.buyPrice);
+  s('f-sell', p.sellPrice);
+  s('f-desc', p.description || '');
 
-document.getElementById('f-img').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  // Comprime la imagen antes de guardar (máx 600px, calidad 0.7)
-  compressImage(file, 600, 0.7, dataUrl => {
-    _productImgData = dataUrl;
-    document.getElementById('f-img-preview').src = dataUrl;
-    document.getElementById('f-img-preview').classList.remove('hidden');
-    document.getElementById('f-img-placeholder').style.display = 'none';
-    document.getElementById('f-img-remove').style.display = 'inline-block';
-  });
-});
-
-// Comprime imagen usando canvas
-function compressImage(file, maxSize, quality, callback) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let w = img.width, h = img.height;
-      if (w > h && w > maxSize) { h = h * maxSize / w; w = maxSize; }
-      else if (h > maxSize)     { w = w * maxSize / h; h = maxSize; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      // Si aún es muy grande, reduce más
-      let dataUrl = canvas.toDataURL('image/jpeg', quality);
-      if (dataUrl.length > 700000) {
-        dataUrl = canvas.toDataURL('image/jpeg', 0.4);
-      }
-      if (dataUrl.length > 700000) {
-        // Reduce tamaño a la mitad
-        const c2 = document.createElement('canvas');
-        c2.width = Math.round(w * 0.6); c2.height = Math.round(h * 0.6);
-        c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height);
-        dataUrl = c2.toDataURL('image/jpeg', 0.5);
-      }
-      callback(dataUrl);
-    };
-    img.src = e.target.result;
+  const setPreview = (id, src) => {
+    const el = document.getElementById(id);
+    if (el && src) { el.src = src; el.style.display = 'block'; }
   };
-  reader.readAsDataURL(file);
+  setPreview('img-preview', p.img);
+  setPreview('img2-preview', p.img2);
+  setPreview('img3-preview', p.img3);
+
+  const title = document.getElementById('form-title');
+  if (title) title.textContent = 'Editar Producto';
+  const btn = document.getElementById('form-btn');
+  if (btn) btn.textContent = 'Actualizar Producto';
 }
 
-document.getElementById('f-img-remove').addEventListener('click', () => {
-  _productImgData = '';
-  document.getElementById('f-img-preview').classList.add('hidden');
-  document.getElementById('f-img-placeholder').style.display = '';
-  document.getElementById('f-img-remove').style.display = 'none';
-  document.getElementById('f-img').value = '';
-});
+async function compressImage(file, maxPx = 500, quality = 0.65) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else       { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
-// Listeners para fotos adicionales (slots 1 y 2)
-[1, 2].forEach(i => {
-  const inp = document.getElementById(`f-img-${i}`);
-  const rm  = document.getElementById(`f-img-remove-${i}`);
-  if (inp) inp.addEventListener('change', function() {
-    const file = this.files[0]; if (!file) return;
-    compressImage(file, 400, 0.6, dataUrl => {
-      _productImgs[i] = dataUrl;
-      const prev = document.getElementById(`f-img-preview-${i}`);
-      const ph   = document.getElementById(`f-img-placeholder-${i}`);
-      const rmb  = document.getElementById(`f-img-remove-${i}`);
-      if (prev) { prev.src = dataUrl; prev.classList.remove('hidden'); }
-      if (ph)   ph.style.display = 'none';
-      if (rmb)  rmb.style.display = 'inline-block';
+// ── Product Save ──────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Image inputs
+  const imgInputs = [
+    { input: 'f-img',  preview: 'img-preview',  slot: 1 },
+    { input: 'f-img2', preview: 'img2-preview', slot: 2 },
+    { input: 'f-img3', preview: 'img3-preview', slot: 3 },
+  ];
+  imgInputs.forEach(({ input, preview, slot }) => {
+    const el = document.getElementById(input);
+    if (!el) return;
+    el.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const compressed = await compressImage(file, 450, 0.65);
+      if (slot === 1) _productImgData = compressed;
+      if (slot === 2) _productImg2Data = compressed;
+      if (slot === 3) _productImg3Data = compressed;
+      const prev = document.getElementById(preview);
+      if (prev) { prev.src = compressed; prev.style.display = 'block'; }
     });
   });
-  if (rm) rm.addEventListener('click', () => {
-    _productImgs[i] = '';
-    const prev = document.getElementById(`f-img-preview-${i}`);
-    const ph   = document.getElementById(`f-img-placeholder-${i}`);
-    if (prev) { prev.classList.add('hidden'); prev.src = ''; }
-    if (ph)   ph.style.display = '';
-    rm.style.display = 'none';
-    if (inp) inp.value = '';
-  });
-});
 
-function editProduct(id) {
-  const p = getProduct(id);
-  if (!p) return;
-  document.getElementById('edit-id').value    = p.id;
-  document.getElementById('f-name').value     = p.name;
-  document.getElementById('f-category').value = p.category;
-  document.getElementById('f-stock').value    = p.stock;
-  document.getElementById('f-buy').value      = p.buyPrice;
-  document.getElementById('f-sell').value     = p.sellPrice;
-  document.getElementById('f-desc').value     = p.desc || '';
-  document.getElementById('form-title').textContent = 'Editar Producto';
-  document.getElementById('cancel-edit').style.display = 'inline-block';
-  // Imagen principal
-  _productImgData = p.img || '';
-  if (p.img) {
-    document.getElementById('f-img-preview').src = p.img;
-    document.getElementById('f-img-preview').classList.remove('hidden');
-    document.getElementById('f-img-placeholder').style.display = 'none';
-    document.getElementById('f-img-remove').style.display = 'inline-block';
-  } else {
-    document.getElementById('f-img-preview').classList.add('hidden');
-    document.getElementById('f-img-placeholder').style.display = '';
-    document.getElementById('f-img-remove').style.display = 'none';
+  // Product form submit
+  const form = document.getElementById('product-form');
+  if (form) {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name     = document.getElementById('f-name').value.trim();
+      const category = document.getElementById('f-category').value;
+      const stock    = parseInt(document.getElementById('f-stock').value) || 0;
+      const buyPrice = parseFloat(document.getElementById('f-buy').value) || 0;
+      const sellPrice= parseFloat(document.getElementById('f-sell').value) || 0;
+      const desc     = (document.getElementById('f-desc') || {}).value || '';
+
+      if (!name || !category) { showToast('Nombre y categoría son requeridos', 'error'); return; }
+      if (sellPrice < buyPrice) { showToast('Precio de venta debe ser mayor al de compra', 'error'); return; }
+
+      const product = {
+        id: _editId || uid(),
+        name, category, stock, buyPrice, sellPrice,
+        description: desc,
+        img:  _productImgData  || null,
+        img2: _productImg2Data || null,
+        img3: _productImg3Data || null,
+        createdAt: _editId ? (products.find(p => p.id === _editId) || {}).createdAt || new Date().toISOString() : new Date().toISOString()
+      };
+
+      saveItem('products', product);
+      showToast(_editId ? 'Producto actualizado' : 'Producto guardado');
+      resetForm();
+      navigate('products');
+    });
   }
-  // Fotos adicionales
-  _productImgs = ['', '', ''];
-  const extraImgs = p.imgs || [];
-  [1, 2].forEach(i => {
-    const img  = extraImgs[i - 1] || '';
-    _productImgs[i] = img;
-    const prev = document.getElementById(`f-img-preview-${i}`);
-    const ph   = document.getElementById(`f-img-placeholder-${i}`);
-    const rm   = document.getElementById(`f-img-remove-${i}`);
-    if (img) {
-      if (prev) { prev.src = img; prev.classList.remove('hidden'); }
-      if (ph)   ph.style.display = 'none';
-      if (rm)   rm.style.display = 'inline-block';
-    } else {
-      if (prev) prev.classList.add('hidden');
-      if (ph)   ph.style.display = '';
-      if (rm)   rm.style.display = 'none';
-    }
+
+  // Search / filter
+  const sp = document.getElementById('search-products');
+  if (sp) sp.addEventListener('input', renderInventory);
+  const fc = document.getElementById('filter-cat');
+  if (fc) fc.addEventListener('change', renderInventory);
+
+  // Nav items
+  document.querySelectorAll('[data-view]').forEach(el => {
+    el.addEventListener('click', () => navigate(el.dataset.view));
   });
-  navigate('agregar');
-}
 
-function deleteProduct(id) {
-  const p = getProduct(id);
-  if (!p) return;
-  if (!confirm(`¿Eliminar "${p.name}"?`)) return;
-  deleteItem('products', id);
-  renderAll();
-}
+  // More menu (bottom nav)
+  const moreBtn = document.getElementById('bnav-more');
+  const moreMenu = document.getElementById('more-menu');
+  if (moreBtn && moreMenu) {
+    moreBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      moreMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => moreMenu.classList.remove('show'));
+  }
 
-// ── Modal ──────────────────────────────────────────────────────────────────
-function openModal(productId, type) {
-  const p = getProduct(productId);
-  if (!p) return;
-  document.getElementById('m-product-id').value   = productId;
-  document.getElementById('m-product-name').value = p.name;
-  document.getElementById('m-type').value         = type;
-  document.getElementById('m-qty').value          = 1;
-  document.getElementById('m-price').value        = type === 'salida' ? p.sellPrice : p.buyPrice;
-  document.getElementById('m-price-label').textContent =
-    type === 'salida' ? 'Precio de Venta ($)' : 'Precio de Compra ($)';
-  document.getElementById('modal-title').textContent =
-    type === 'entrada' ? 'Registrar entrada' : 'Registrar salida';
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
+  // Logout
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      if (typeof fbLogout === 'function') fbLogout();
+    });
+  }
+  const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+  if (logoutBtnMobile) {
+    logoutBtnMobile.addEventListener('click', () => {
+      if (typeof fbLogout === 'function') fbLogout();
+    });
+  }
 
-document.getElementById('m-type').addEventListener('change', function () {
-  const p = getProduct(document.getElementById('m-product-id').value);
-  if (!p) return;
-  const isSalida = this.value === 'salida';
-  document.getElementById('m-price').value = isSalida ? p.sellPrice : p.buyPrice;
-  document.getElementById('m-price-label').textContent =
-    isSalida ? 'Precio de Venta ($)' : 'Precio de Compra ($)';
+  // Bulk import
+  const bulkBtn = document.getElementById('bulk-import-btn');
+  if (bulkBtn) bulkBtn.addEventListener('click', openBulkModal);
+  const bulkFile = document.getElementById('bulk-file');
+  if (bulkFile) bulkFile.addEventListener('change', handleBulkFile);
+  const bulkConfirm = document.getElementById('bulk-confirm');
+  if (bulkConfirm) bulkConfirm.addEventListener('click', confirmBulkImport);
+  const bulkClose = document.getElementById('bulk-close');
+  if (bulkClose) bulkClose.addEventListener('click', closeBulkModal);
+  const templateBtn = document.getElementById('download-template');
+  if (templateBtn) templateBtn.addEventListener('click', downloadTemplate);
+
+  // Movement modal
+  const movForm = document.getElementById('mov-form');
+  if (movForm) movForm.addEventListener('submit', submitMovement);
+  const movClose = document.getElementById('mov-close');
+  if (movClose) movClose.addEventListener('click', closeMovModal);
+
+  // Reports
+  const rptDate = document.getElementById('r-date');
+  if (rptDate) {
+    rptDate.value = localDateStr();
+    rptDate.addEventListener('change', () => generateDailyReport());
+  }
+  const rptMonth = document.getElementById('r-month');
+  const rptYear  = document.getElementById('r-year');
+  if (rptMonth && rptYear) {
+    const now = new Date();
+    rptMonth.value = now.getMonth() + 1;
+    rptYear.value  = now.getFullYear();
+    rptMonth.addEventListener('change', generateMonthlyReport);
+    rptYear.addEventListener('change', generateMonthlyReport);
+  }
+
+  // Settings save
+  const saveSettingsBtn = document.getElementById('save-settings-btn');
+  if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
+
+  // Settings fields
+  setupSettingsListeners();
+
 });
 
-document.getElementById('close-modal').addEventListener('click', closeModal);
-document.getElementById('modal-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal-overlay')) closeModal();
-});
-function closeModal() {
-  document.getElementById('modal-overlay').classList.add('hidden');
+// ── Delete product ────────────────────────────────────────────────────────────
+function deleteProduct(pid) {
+  if (currentRole !== 'Admin') { alert('Solo el Admin puede eliminar productos'); return; }
+  if (!confirm('¿Eliminar este producto?')) return;
+  deleteItem('products', pid);
+  showToast('Producto eliminado');
 }
 
-document.getElementById('mov-form').addEventListener('submit', e => {
+// ── Movement Modal ────────────────────────────────────────────────────────────
+let _movProductId = null;
+let _movType = null;
+
+function openMovModal(pid, type) {
+  if (currentRole === 'Solo lectura') { alert('Sin permisos'); return; }
+  _movProductId = pid;
+  _movType = type;
+  const p = products.find(x => x.id === pid);
+  if (!p) return;
+  const overlay = document.getElementById('modal-overlay');
+  const title   = document.getElementById('mov-title');
+  const info    = document.getElementById('mov-product-info');
+  const stockEl = document.getElementById('mov-stock');
+  if (!overlay) return;
+  if (title)   title.textContent = type === 'in' ? 'Registrar Entrada' : 'Registrar Salida';
+  if (info)    info.textContent  = p.name;
+  if (stockEl) stockEl.textContent = p.stock;
+  const priceEl = document.getElementById('mov-price');
+  if (priceEl) priceEl.value = type === 'out' ? p.sellPrice : p.buyPrice;
+  const qtyEl = document.getElementById('mov-qty');
+  if (qtyEl) { qtyEl.value = 1; qtyEl.max = type === 'out' ? p.stock : 9999; }
+  overlay.classList.remove('hidden');
+}
+
+function closeMovModal() {
+  const overlay = document.getElementById('modal-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+function submitMovement(e) {
   e.preventDefault();
-  const productId = document.getElementById('m-product-id').value;
-  const type      = document.getElementById('m-type').value;
-  const qty       = parseInt(document.getElementById('m-qty').value);
-  const price     = parseFloat(document.getElementById('m-price').value);
-  const p         = getProduct(productId);
+  const qty   = parseInt(document.getElementById('mov-qty').value) || 0;
+  const price = parseFloat(document.getElementById('mov-price').value) || 0;
+  const note  = (document.getElementById('mov-note') || {}).value || '';
+  const p     = products.find(x => x.id === _movProductId);
   if (!p) return;
-  if (type === 'salida' && qty > p.stock) {
-    alert(`Stock insuficiente. Solo hay ${p.stock} unidades.`);
-    return;
+
+  if (_movType === 'out' && qty > p.stock) {
+    showToast('Stock insuficiente', 'error'); return;
   }
-  p.stock += type === 'entrada' ? qty : -qty;
-  const mov = { id: uid(), productId, productName: p.name, type, qty, price, date: new Date().toISOString() };
-  saveItem('products',  p);
+
+  const newStock = _movType === 'in' ? p.stock + qty : p.stock - qty;
+  const updated  = { ...p, stock: newStock };
+  saveItem('products', updated);
+
+  const mov = {
+    id: uid(),
+    productId: p.id,
+    productName: p.name,
+    type: _movType,
+    qty,
+    price,
+    profit: _movType === 'out' ? (price - p.buyPrice) * qty : 0,
+    note,
+    date: new Date().toISOString()
+  };
   saveItem('movements', mov);
-  closeModal();
-  renderAll();
-});
-
-// ── Users ──────────────────────────────────────────────────────────────────
-function renderUsers() {
-  const list  = document.getElementById('user-list');
-  const label = document.getElementById('user-count-label');
-  label.textContent = `${users.length} usuario${users.length !== 1 ? 's' : ''} con acceso`;
-
-  if (users.length === 0) {
-    list.innerHTML = '<div class="empty-state">Sin usuarios registrados.</div>';
-    return;
-  }
-
-  list.innerHTML = users.map(u => {
-    const initials = u.name.split(' ').map(w => w[0]).slice(0, 2).join('');
-    const roleKey  = u.role === 'Admin' ? 'admin' : u.role === 'Usuario' ? 'usuario' : 'readonly';
-    return `<div class="user-item">
-      <div class="user-avatar">${initials}</div>
-      <div class="user-info">
-        <div class="user-name">${u.name}</div>
-        <div class="user-email">${u.email}</div>
-      </div>
-      <span class="badge badge-${roleKey}">${u.role}</span>
-      ${u.role !== 'Admin'
-        ? `<button class="btn-icon btn-danger btn-delete-user" title="Eliminar" onclick="deleteUser('${u.id}')">✕</button>`
-        : '<span style="width:32px;display:inline-block"></span>'}
-    </div>`;
-  }).join('');
+  closeMovModal();
+  showToast(_movType === 'in' ? 'Entrada registrada' : 'Venta registrada');
 }
 
-document.getElementById('user-form').addEventListener('submit', e => {
-  e.preventDefault();
-  const name  = document.getElementById('u-name').value.trim();
-  const email = document.getElementById('u-email').value.trim().toLowerCase();
-  const role  = document.getElementById('u-role').value;
-  if (users.find(u => u.email === email)) {
-    alert('Ya existe un usuario con ese correo.');
+// ── Render Movements ──────────────────────────────────────────────────────────
+function renderMovements() {
+  const tbody = document.getElementById('movements-body');
+  if (!tbody) return;
+  const list = [...movements].sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Sin movimientos</td></tr>';
     return;
   }
-  const newUser = { id: uid(), name, email, role, date: new Date().toISOString() };
-  saveItem('users', newUser);
-  document.getElementById('user-form').reset();
-  renderUsers();
-});
-
-function deleteUser(id) {
-  const u = users.find(x => x.id === id);
-  if (!u) return;
-  if (!confirm(`¿Eliminar a "${u.name}"?`)) return;
-  deleteItem('users', id);
-  renderUsers();
+  const isAdmin = currentRole === 'Admin';
+  tbody.innerHTML = list.slice(0, 100).map(m => `
+    <tr>
+      <td>${fmtDate(m.date)}</td>
+      <td>${m.productName}</td>
+      <td><span class="badge ${m.type === 'in' ? 'badge-in' : 'badge-out'}">${m.type === 'in' ? 'Entrada' : 'Salida'}</span></td>
+      <td>${m.qty}</td>
+      <td>${fmt(m.price)}</td>
+      <td class="admin-only">${m.type === 'out' ? fmt(m.profit) : '-'}</td>
+      <td>${m.note || '-'}</td>
+    </tr>`).join('');
 }
 
-// ── Sales — Product List + Cart ────────────────────────────────────────────
-let cart = {}; // { productId: qty }
-let saleSearchFilter = '';
-let saleCatFilter    = '';
-
+// ── Sale View ─────────────────────────────────────────────────────────────────
 function initSaleView() {
-  initReportSelectors();
-  saleSearchFilter = '';
-  saleCatFilter    = '';
-  document.getElementById('sale-search').value = '';
-  document.querySelectorAll('.scat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === ''));
+  _saleCart = {};
   renderSaleProductList();
   renderCart();
 }
 
 function renderSaleProductList() {
-  const el = document.getElementById('sale-product-list');
-  const q  = saleSearchFilter.toLowerCase();
-  const filtered = products.filter(p =>
-    (!saleCatFilter || p.category === saleCatFilter) &&
-    (!q || p.name.toLowerCase().includes(q))
-  );
+  const search = (document.getElementById('sale-search') || {}).value || '';
+  const catFilter = (document.getElementById('sale-cat-filter') || {}).value || '';
+  const list = document.getElementById('sale-product-list');
+  if (!list) return;
 
-  if (filtered.length === 0) {
-    el.innerHTML = '<div class="empty-state">Sin productos.</div>';
+  let prods = products.filter(p => p.stock > 0);
+  if (search) prods = prods.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  if (catFilter) prods = prods.filter(p => p.category === catFilter);
+
+  if (prods.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);padding:16px">Sin productos disponibles</p>';
     return;
   }
 
-  el.innerHTML = filtered.map(p => {
-    const qty    = cart[p.id] || 0;
-    const inCart = qty > 0;
-    const noStock = p.stock <= 0;
-    const catBadge = p.category === 'dulce'
-      ? '<span class="badge badge-dulce" style="font-size:0.65rem">Dulce</span>'
-      : '<span class="badge badge-pulsera" style="font-size:0.65rem">Pulsera</span>';
-    const saleImg = p.img
-      ? `<img src="${p.img}" class="sale-product-img" alt="${p.name}" />`
-      : `<div class="sale-product-img-placeholder">${p.category === 'dulce' ? '🍬' : '📿'}</div>`;
-
-    return `<div class="sale-product-item ${inCart?'in-cart':''} ${noStock?'out-of-stock':''}" data-id="${p.id}">
-      ${saleImg}
-      <div class="sale-product-info">
-        <div class="sale-product-name">${p.name}</div>
-        <div class="sale-product-meta">${catBadge} &nbsp;Stock: ${p.stock}</div>
-      </div>
-      <span class="sale-product-price">${fmt(p.sellPrice)}</span>
-      <div class="sale-qty-ctrl">
-        <button class="sale-qty-btn" onclick="cartChange('${p.id}',-1)">−</button>
-        <input class="sale-qty-val" type="number" min="0" max="${p.stock}"
-          value="${qty}" onchange="cartSet('${p.id}',this.value)" />
-        <button class="sale-qty-btn" onclick="cartChange('${p.id}',1)">+</button>
-      </div>
-    </div>`;
+  list.innerHTML = prods.map(p => {
+    const qty = _saleCart[p.id] || 0;
+    const img = p.img ? `<img src="${p.img}" class="sale-product-img" alt="">` : `<span class="sale-cat-icon">${p.category === 'dulces' ? '🍬' : '📿'}</span>`;
+    return `
+      <div class="sale-product-item">
+        ${img}
+        <div class="sale-product-info">
+          <div class="sale-product-name">${p.name}</div>
+          <div class="sale-product-meta">${fmt(p.sellPrice)} · Stock: ${p.stock}</div>
+        </div>
+        <div class="sale-qty-controls">
+          <button class="qty-btn" onclick="changeSaleQty('${p.id}', -1)">−</button>
+          <input class="qty-input" type="number" min="0" max="${p.stock}" value="${qty}"
+            onchange="setSaleQty('${p.id}', this.value)" />
+          <button class="qty-btn" onclick="changeSaleQty('${p.id}', 1)">+</button>
+        </div>
+      </div>`;
   }).join('');
 }
 
-function cartChange(id, delta) {
-  const p = getProduct(id); if (!p) return;
-  const nxt = Math.max(0, Math.min(p.stock, (cart[id]||0) + delta));
-  if (nxt === 0) delete cart[id]; else cart[id] = nxt;
-  renderSaleProductList(); renderCart();
+function changeSaleQty(pid, delta) {
+  const p = products.find(x => x.id === pid);
+  if (!p) return;
+  const current = _saleCart[pid] || 0;
+  const next = Math.max(0, Math.min(p.stock, current + delta));
+  if (next === 0) delete _saleCart[pid]; else _saleCart[pid] = next;
+  renderSaleProductList();
+  renderCart();
 }
 
-function cartSet(id, val) {
-  const p = getProduct(id); if (!p) return;
-  const n = Math.max(0, Math.min(p.stock, parseInt(val)||0));
-  if (n === 0) delete cart[id]; else cart[id] = n;
-  renderSaleProductList(); renderCart();
+function setSaleQty(pid, val) {
+  const p = products.find(x => x.id === pid);
+  if (!p) return;
+  const qty = Math.max(0, Math.min(p.stock, parseInt(val) || 0));
+  if (qty === 0) delete _saleCart[pid]; else _saleCart[pid] = qty;
+  renderCart();
 }
 
 function renderCart() {
-  const el  = document.getElementById('cart-items');
-  const btn = document.getElementById('btn-confirm-sale');
-  const ids = Object.keys(cart);
-  if (ids.length === 0) {
-    el.innerHTML = '<div class="empty-state" style="padding:32px">Sin productos agregados</div>';
-    document.getElementById('cart-total').textContent = '$0.00';
-    document.getElementById('cart-gain').textContent  = '$0.00';
-    btn.disabled = true; return;
-  }
-  let total = 0, gain = 0;
-  el.innerHTML = ids.map(id => {
-    const p = getProduct(id); if (!p) return '';
-    const qty = cart[id], sub = p.sellPrice * qty;
-    total += sub; gain += (p.sellPrice - p.buyPrice) * qty;
-    return `<div class="cart-item">
-      <span class="cart-item-name">${p.name}</span>
-      <span class="cart-item-qty">×${qty}</span>
-      <span class="cart-item-total">${fmt(sub)}</span>
-      <button class="btn-icon btn-danger" style="min-width:28px;min-height:28px;font-size:0.8rem"
-        onclick="cartChange('${id}',-999)">✕</button>
-    </div>`;
-  }).join('');
-  document.getElementById('cart-total').textContent = fmt(total);
-  document.getElementById('cart-gain').textContent  = fmt(gain);
-  btn.disabled = false;
-}
-
-document.getElementById('btn-confirm-sale').addEventListener('click', () => {
-  const ids = Object.keys(cart); if (!ids.length) return;
-  const date = new Date().toISOString();
-  ids.forEach(id => {
-    const p = getProduct(id); if (!p) return;
-    const qty = cart[id];
-    p.stock -= qty;
-    saveItem('products',  p);
-    saveItem('movements', { id: uid(), productId: id, productName: p.name,
-      type: 'salida', qty, price: p.sellPrice, date });
-  });
-  cart = {};
-  renderSaleProductList(); renderCart(); renderAll();
-  const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--success);color:#000;padding:10px 20px;border-radius:8px;font-weight:600;z-index:400;font-size:0.875rem';
-  t.textContent = `✓ Venta registrada — ${ids.length} producto${ids.length>1?'s':''}`;
-  document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
-});
-
-document.getElementById('cart-clear').addEventListener('click', () => {
-  cart = {}; renderSaleProductList(); renderCart();
-});
-
-document.getElementById('sale-search').addEventListener('input', function() {
-  saleSearchFilter = this.value; renderSaleProductList();
-});
-
-document.querySelectorAll('.scat-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    saleCatFilter = btn.dataset.cat;
-    document.querySelectorAll('.scat-btn').forEach(b => b.classList.toggle('active', b === btn));
-    renderSaleProductList();
-  });
-});
-
-// Inicializa selectores de mes/año
-function initReportSelectors() {
-  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const mSel = document.getElementById('r-month');
-  const ySel = document.getElementById('r-year');
-  const now  = new Date();
-
-  mSel.innerHTML = months.map((m, i) =>
-    `<option value="${i}" ${i === now.getMonth() ? 'selected' : ''}>${m}</option>`
-  ).join('');
-
-  const years = [];
-  for (let y = now.getFullYear(); y >= now.getFullYear() - 3; y--) years.push(y);
-  ySel.innerHTML = years.map(y =>
-    `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`
-  ).join('');
-
-  // Fecha de hoy por defecto — usando hora local, no UTC
-  const yyyy = now.getFullYear();
-  const mm   = String(now.getMonth() + 1).padStart(2, '0');
-  const dd   = String(now.getDate()).padStart(2, '0');
-  document.getElementById('r-date').value = `${yyyy}-${mm}-${dd}`;
-}
-
-// Filtra ventas (salidas) por rango de fechas
-function getSalesByRange(from, to) {
-  return movements.filter(m => {
-    if (m.type !== 'salida') return false;
-    const d = new Date(m.date);
-    return d >= from && d <= to;
-  });
-}
-
-// Agrupa ventas por producto
-function groupByProduct(sales) {
-  const map = {};
-  sales.forEach(m => {
-    const p = getProduct(m.productId);
-    const key = m.productId;
-    if (!map[key]) {
-      map[key] = {
-        name:     p ? p.name : m.productName,
-        category: p ? p.category : '—',
-        qty:      0,
-        revenue:  0,
-        cost:     0,
-        gain:     0,
-      };
-    }
-    const cost = p ? p.buyPrice * m.qty : 0;
-    map[key].qty     += m.qty;
-    map[key].revenue += m.price * m.qty;
-    map[key].cost    += cost;
-    map[key].gain    += (m.price * m.qty) - cost;
-  });
-  return Object.values(map).sort((a, b) => b.revenue - a.revenue);
-}
-
-// Genera HTML del reporte
-function buildReportHTML(title, subtitle, sales, showBars) {
-  if (sales.length === 0) {
-    return `<div class="report-card">
-      <div class="report-header"><div><div class="report-title">${title}</div><div class="report-subtitle">${subtitle}</div></div></div>
-      <div class="empty-state">Sin ventas en este período.</div>
-    </div>`;
-  }
-
-  const rows    = groupByProduct(sales);
-  const totQty  = rows.reduce((s, r) => s + r.qty, 0);
-  const totRev  = rows.reduce((s, r) => s + r.revenue, 0);
-  const totGain = rows.reduce((s, r) => s + r.gain, 0);
-  const maxRev  = rows[0].revenue;
-
-  const tableRows = rows.map(r => `
-    <tr>
-      <td><span class="td-name">${r.name}</span></td>
-      <td><span class="badge ${r.category === 'dulce' ? 'badge-dulce' : 'badge-pulsera'}">${r.category === 'dulce' ? 'Dulce' : 'Pulsera'}</span></td>
-      <td>${r.qty}</td>
-      <td>${fmt(r.revenue)}</td>
-      <td class="td-gain">${fmt(r.gain)}</td>
-    </tr>`).join('');
-
-  const bars = showBars ? `
-    <div class="month-bars">
-      ${rows.slice(0, 10).map(r => `
-        <div class="bar-row">
-          <span class="bar-label" title="${r.name}">${r.name}</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(r.revenue / maxRev * 100)}%"></div></div>
-          <span class="bar-val">${fmt(r.revenue)}</span>
-        </div>`).join('')}
-    </div>` : '';
-
-  return `
-    <div class="report-card">
-      <div class="report-header">
-        <div>
-          <div class="report-title">${title}</div>
-          <div class="report-subtitle">${subtitle}</div>
-        </div>
-        <div class="report-actions">
-          <button class="btn-ghost-sm" onclick="downloadCSV('${encodeURIComponent(title)}')">Descargar CSV</button>
-          <button class="btn-ghost-sm" onclick="downloadPDF('${encodeURIComponent(title)}')">📄 PDF</button>
-          <button class="btn-ghost-sm" onclick="printReport()">Imprimir</button>
-          <button class="btn-ghost-sm" onclick="shareReport('${encodeURIComponent(title)}')">Compartir</button>
-        </div>
-      </div>
-      <div class="report-stats">
-        <div class="report-stat">
-          <span class="report-stat-label">Productos vendidos</span>
-          <span class="report-stat-value">${rows.length}</span>
-        </div>
-        <div class="report-stat">
-          <span class="report-stat-label">Unidades</span>
-          <span class="report-stat-value">${totQty}</span>
-        </div>
-        <div class="report-stat">
-          <span class="report-stat-label">Total vendido</span>
-          <span class="report-stat-value orange">${fmt(totRev)}</span>
-        </div>
-        <div class="report-stat">
-          <span class="report-stat-label">Ganancia</span>
-          <span class="report-stat-value green">${fmt(totGain)}</span>
-        </div>
-      </div>
-      ${bars}
-      <div class="table-scroll">
-        <table style="min-width:400px">
-          <thead><tr><th>Producto</th><th>Categoría</th><th>Uds.</th><th>Total</th><th>Ganancia</th></tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
-    </div>`;
-}
-
-// Reporte diario
-document.getElementById('btn-gen-daily').addEventListener('click', () => {
-  const dateStr = document.getElementById('r-date').value;
-  if (!dateStr) return;
-  const from = new Date(dateStr + 'T00:00:00');
-  const to   = new Date(dateStr + 'T23:59:59');
-  const sales = getSalesByRange(from, to);
-  const label = new Date(dateStr).toLocaleDateString('es-MX', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-  document.getElementById('report-daily-out').innerHTML =
-    buildReportHTML('Reporte Diario', label, sales, false);
-});
-
-// Reporte mensual
-document.getElementById('btn-gen-monthly').addEventListener('click', () => {
-  const month = parseInt(document.getElementById('r-month').value);
-  const year  = parseInt(document.getElementById('r-year').value);
-  const from  = new Date(year, month, 1, 0, 0, 0);
-  const to    = new Date(year, month + 1, 0, 23, 59, 59);
-  const sales = getSalesByRange(from, to);
-  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  document.getElementById('report-monthly-out').innerHTML =
-    buildReportHTML(`Reporte Mensual — ${months[month]} ${year}`, `${from.toLocaleDateString('es-MX')} al ${to.toLocaleDateString('es-MX')}`, sales, true);
-});
-
-// Tabs de reporte
-document.querySelectorAll('.rtab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.rtab-content').forEach(c => { c.classList.remove('active'); c.classList.add('hidden'); });
-    btn.classList.add('active');
-    const tab = document.getElementById('rtab-' + btn.dataset.rtab);
-    tab.classList.remove('hidden');
-    tab.classList.add('active');
-  });
-});
-
-// Descarga CSV
-function downloadCSV(encodedTitle) {
-  const title = decodeURIComponent(encodedTitle);
-  // Determina si es diario o mensual por el contenido activo
-  const isDiario = document.getElementById('rtab-diario').classList.contains('active');
-  const dateStr  = document.getElementById('r-date').value;
-  const month    = parseInt(document.getElementById('r-month').value);
-  const year     = parseInt(document.getElementById('r-year').value);
-
-  let sales;
-  if (isDiario && dateStr) {
-    sales = getSalesByRange(new Date(dateStr + 'T00:00:00'), new Date(dateStr + 'T23:59:59'));
-  } else {
-    sales = getSalesByRange(new Date(year, month, 1), new Date(year, month + 1, 0, 23, 59, 59));
-  }
-
-  const rows = groupByProduct(sales);
-  const lines = [
-    ['Producto','Categoría','Unidades','Total Vendido','Ganancia'],
-    ...rows.map(r => [r.name, r.category, r.qty, r.revenue.toFixed(2), r.gain.toFixed(2)])
-  ];
-  const csv  = lines.map(l => l.map(v => `"${v}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = title.replace(/\s+/g, '_') + '.csv';
-  a.click();
-}
-
-// Imprimir
-function printReport() {
-  window.print();
-}
-
-// Compartir (Web Share API o fallback)
-function shareReport(encodedTitle) {
-  const title = decodeURIComponent(encodedTitle);
-  if (navigator.share) {
-    navigator.share({ title, text: `Reporte de ventas: ${title}`, url: window.location.href })
-      .catch(() => {});
-  } else {
-    navigator.clipboard.writeText(window.location.href)
-      .then(() => alert('URL copiada al portapapeles'))
-      .catch(() => alert('Comparte esta URL: ' + window.location.href));
-  }
-}
-
-// Descargar reporte como PDF
-function downloadPDF(encodedTitle) {
-  const title = decodeURIComponent(encodedTitle);
-  const card = document.querySelector('.report-card');
-  if (!card) return;
-
-  const s = activeSettings ? activeSettings() : {};
-  const storeName = s.storeName || 'Inventario';
-  const fecha = new Date().toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'});
-
-  // Estilos limpios para impresión
-  const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"/>
-<title>${title}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 24px; }
-  h2 { font-size: 16px; font-weight: bold; margin-bottom: 2px; }
-  .sub { color: #888; font-size: 11px; margin-bottom: 16px; }
-  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
-  .stat { background: #f5f5f5; padding: 10px; border-radius: 6px; }
-  .stat-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: .05em; }
-  .stat-value { font-size: 15px; font-weight: bold; margin-top: 2px; }
-  .green { color: #1a9e5c; } .orange { color: #e07b39; }
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th { background: #f0f0f0; padding: 7px 10px; text-align: left; font-size: 10px; text-transform: uppercase; }
-  td { padding: 7px 10px; border-bottom: 1px solid #eee; font-size: 11px; }
-  .footer { margin-top: 20px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
-  @media print { body { padding: 0; } }
-</style>
-</head>
-<body>
-<h2>${title}</h2>
-<div class="sub">${storeName} · ${fecha}</div>
-${card.querySelector('.report-stats') ? `<div class="stats">${card.querySelector('.report-stats').innerHTML}</div>` : ''}
-${card.querySelector('table') ? card.querySelector('table').outerHTML : ''}
-<div class="footer">Generado por ${storeName} el ${fecha}</div>
-<script>window.onload=()=>{window.print();}<\/script>
-</body>
-</html>`;
-
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const win  = window.open(url, '_blank');
-  if (!win) {
-    // Si el popup fue bloqueado, descarga como archivo
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = title.replace(/\s+/g,'_') + '.html';
-    a.click();
-  }
-}
-
-// ── Settings ───────────────────────────────────────────────────────────────
-// Ajustes se guardan por usuario: clave = inv_settings_<userId>
-// "pending" acumula cambios sin aplicar hasta que el usuario presiona Guardar
-
-const DEFAULTS = {
-  storeName: 'Inventario',
-  subtitle:  'Dulces & Pulseras',
-  accent:    '#e07b39',
-  theme:     'dark',
-  logo:      '',
-  logoMobile: '',
-  bg:        '',
-  bgOpacity: 15,
-};
-
-let activeUserId = localStorage.getItem('inv_active_user') || (users[0] && users[0].id) || 'global';
-let pending      = {};   // cambios sin guardar del formulario actual
-
-function settingsKey(uid) { return 'inv_settings_' + uid; }
-
-function getUserSettings(uid) {
-  // Usa el uid de Firebase si está disponible
-  const key = fbAuth && fbAuth.currentUser ? fbAuth.currentUser.uid : uid;
-  return JSON.parse(localStorage.getItem(settingsKey(key)) || '{}');
-}
-
-function saveUserSettings(uid, data) {
-  // Guarda local
-  localStorage.setItem(settingsKey(uid), JSON.stringify(data));
-  // Guarda en Firestore si Firebase está activo
-  if (typeof fbSaveSettings === 'function' && db) {
-    fbSaveSettings(uid, data).catch(console.error);
-  }
-}
-
-// Ajustes activos = los del usuario activo
-function activeSettings() {
-  return { ...DEFAULTS, ...getUserSettings(activeUserId), ...pending };
-}
-
-function applySettings(s) {
-  s = s || activeSettings();
-
-  // Accent
-  document.documentElement.style.setProperty('--orange',    s.accent);
-  document.documentElement.style.setProperty('--orange-dk', shadeColor(s.accent, -20));
-
-  // Theme
-  if (s.theme === 'light') {
-    document.documentElement.style.setProperty('--bg',       '#f5f5f5');
-    document.documentElement.style.setProperty('--surface',  '#ffffff');
-    document.documentElement.style.setProperty('--surface2', '#f0f0f0');
-    document.documentElement.style.setProperty('--border',   '#e0e0e0');
-    document.documentElement.style.setProperty('--text',     '#1a1a1a');
-    document.documentElement.style.setProperty('--muted',    '#888888');
-  } else {
-    document.documentElement.style.setProperty('--bg',       '#141414');
-    document.documentElement.style.setProperty('--surface',  '#1e1e1e');
-    document.documentElement.style.setProperty('--surface2', '#252525');
-    document.documentElement.style.setProperty('--border',   '#2e2e2e');
-    document.documentElement.style.setProperty('--text',     '#f0ece6');
-    document.documentElement.style.setProperty('--muted',    '#7a7570');
-  }
-
-  // Brand — sidebar y header móvil
-  const brandEl  = document.querySelector('.brand-title');
-  const subEl    = document.querySelector('.brand-sub');
-  const mTitle   = document.getElementById('mobile-brand-title');
-  const mSub     = document.getElementById('mobile-brand-sub');
-  if (brandEl) brandEl.textContent = s.storeName;
-  if (subEl)   subEl.textContent   = s.subtitle;
-  if (mTitle)  mTitle.textContent  = s.storeName;
-  if (mSub)    mSub.textContent    = s.subtitle;
-  document.title = s.storeName + ' — Inventario';
-
-  // Logo — sidebar y header móvil
-  let logoImg = document.getElementById('sidebar-logo');
-  const mLogo = document.getElementById('mobile-logo');
-
-  // Logo web (sidebar)
-  if (s.logo) {
-    if (!logoImg) {
-      logoImg = document.createElement('img');
-      logoImg.id = 'sidebar-logo';
-      logoImg.style.cssText = 'width:40px;height:40px;object-fit:contain;border-radius:6px;margin-bottom:8px;display:block';
-      document.querySelector('.sidebar-brand').prepend(logoImg);
-    }
-    logoImg.src = s.logo;
-  } else {
-    if (logoImg) logoImg.remove();
-  }
-
-  // Logo móvil (header) — usa logoMobile si existe, si no usa logo web
-  const mobileSrc = s.logoMobile || s.logo;
-  if (mLogo) {
-    if (mobileSrc) { mLogo.src = mobileSrc; mLogo.classList.remove('hidden'); }
-    else           { mLogo.classList.add('hidden'); }
-  }
-
-  // Background
-  const content = document.querySelector('.content');
-  if (s.bg) {
-    content.style.backgroundImage     = `url(${s.bg})`;
-    content.style.backgroundSize      = 'cover';
-    content.style.backgroundPosition  = 'center';
-    content.style.backgroundAttachment = 'fixed';
-    content.style.backgroundBlendMode = 'overlay';
-    content.style.backgroundColor     = `rgba(20,20,20,${1 - s.bgOpacity / 100})`;
-  } else {
-    content.style.backgroundImage = '';
-    content.style.backgroundColor = '';
-  }
-}
-
-function shadeColor(hex, pct) {
-  const num = parseInt(hex.replace('#',''), 16);
-  const r = Math.min(255, Math.max(0, (num >> 16) + pct));
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + pct));
-  const b = Math.min(255, Math.max(0, (num & 0xff) + pct));
-  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
-}
-
-// Rellena el formulario con los ajustes del usuario activo
-function loadSettingsUI() {
-  pending = {};
-  const s = activeSettings();
-
-  document.getElementById('s-storename').value  = s.storeName;
-  document.getElementById('s-subtitle').value   = s.subtitle;
-  document.getElementById('s-bg-opacity').value = s.bgOpacity;
-  document.getElementById('s-bg-opacity-val').textContent = s.bgOpacity + '%';
-  document.getElementById('s-custom-color').value = s.accent;
-
-  document.querySelectorAll('.theme-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.theme === s.theme));
-
-  document.querySelectorAll('.swatch:not(.swatch-custom)').forEach(sw =>
-    sw.classList.toggle('active', sw.dataset.color === s.accent));
-
-  // Logo web preview
-  const lp = document.getElementById('logo-preview');
-  const rl = document.getElementById('remove-logo');
-  if (s.logo) { lp.src = s.logo; lp.classList.remove('hidden'); rl.style.display = 'inline-block'; }
-  else        { lp.classList.add('hidden'); rl.style.display = 'none'; }
-
-  // Logo móvil preview
-  const lpm = document.getElementById('logo-mobile-preview');
-  const rlm = document.getElementById('remove-logo-mobile');
-  if (lpm && rlm) {
-    if (s.logoMobile) { lpm.src = s.logoMobile; lpm.classList.remove('hidden'); rlm.style.display = 'inline-block'; }
-    else              { lpm.classList.add('hidden'); rlm.style.display = 'none'; }
-  }
-
-  // BG preview
-  const bp = document.getElementById('bg-preview');
-  const rb = document.getElementById('remove-bg');
-  if (s.bg) { bp.src = s.bg; bp.classList.remove('hidden'); rb.style.display = 'inline-block'; }
-  else      { bp.classList.add('hidden'); rb.style.display = 'none'; }
-
-  // Selector de usuario activo
-  const sel = document.getElementById('s-active-user');
-  sel.innerHTML = users.map(u =>
-    `<option value="${u.id}" ${u.id === activeUserId ? 'selected' : ''}>${u.name} (${u.role})</option>`
-  ).join('');
-
-  // Limpia mensaje de guardado
-  document.getElementById('settings-save-info').textContent = '';
-}
-
-// Marca cambio pendiente y aplica preview en tiempo real
-function setPending(key, value) {
-  pending[key] = value;
-  applySettings(); // preview inmediato
-}
-
-// ── Cambio de usuario activo ───────────────────────────────────────────────
-document.getElementById('s-active-user').addEventListener('change', function() {
-  activeUserId = this.value;
-  localStorage.setItem('inv_active_user', activeUserId);
-  loadSettingsUI();
-  applySettings();
-});
-
-// ── Controles del formulario (solo marcan pending, no guardan) ─────────────
-document.getElementById('s-storename').addEventListener('input', function() {
-  setPending('storeName', this.value || DEFAULTS.storeName);
-});
-document.getElementById('s-subtitle').addEventListener('input', function() {
-  setPending('subtitle', this.value || DEFAULTS.subtitle);
-});
-
-document.querySelectorAll('.theme-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    setPending('theme', btn.dataset.theme);
-    document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b === btn));
-  });
-});
-
-document.querySelectorAll('.swatch:not(.swatch-custom)').forEach(sw => {
-  sw.addEventListener('click', () => {
-    setPending('accent', sw.dataset.color);
-    document.querySelectorAll('.swatch:not(.swatch-custom)').forEach(s => s.classList.remove('active'));
-    sw.classList.add('active');
-    document.getElementById('s-custom-color').value = sw.dataset.color;
-  });
-});
-
-document.getElementById('s-custom-color').addEventListener('input', function() {
-  setPending('accent', this.value);
-  document.querySelectorAll('.swatch:not(.swatch-custom)').forEach(s => s.classList.remove('active'));
-});
-
-document.getElementById('s-logo').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    setPending('logo', e.target.result);
-    document.getElementById('logo-preview').src = e.target.result;
-    document.getElementById('logo-preview').classList.remove('hidden');
-    document.getElementById('remove-logo').style.display = 'inline-block';
-  };
-  reader.readAsDataURL(file);
-});
-
-document.getElementById('remove-logo').addEventListener('click', () => {
-  setPending('logo', '');
-  document.getElementById('logo-preview').classList.add('hidden');
-  document.getElementById('remove-logo').style.display = 'none';
-  document.getElementById('s-logo').value = '';
-});
-
-// Logo móvil
-document.getElementById('s-logo-mobile').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    setPending('logoMobile', e.target.result);
-    document.getElementById('logo-mobile-preview').src = e.target.result;
-    document.getElementById('logo-mobile-preview').classList.remove('hidden');
-    document.getElementById('remove-logo-mobile').style.display = 'inline-block';
-  };
-  reader.readAsDataURL(file);
-});
-
-document.getElementById('remove-logo-mobile').addEventListener('click', () => {
-  setPending('logoMobile', '');
-  document.getElementById('logo-mobile-preview').classList.add('hidden');
-  document.getElementById('remove-logo-mobile').style.display = 'none';
-  document.getElementById('s-logo-mobile').value = '';
-});
-
-document.getElementById('s-bg').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    setPending('bg', e.target.result);
-    document.getElementById('bg-preview').src = e.target.result;
-    document.getElementById('bg-preview').classList.remove('hidden');
-    document.getElementById('remove-bg').style.display = 'inline-block';
-  };
-  reader.readAsDataURL(file);
-});
-
-document.getElementById('remove-bg').addEventListener('click', () => {
-  setPending('bg', '');
-  document.getElementById('bg-preview').classList.add('hidden');
-  document.getElementById('remove-bg').style.display = 'none';
-  document.getElementById('s-bg').value = '';
-});
-
-document.getElementById('s-bg-opacity').addEventListener('input', function() {
-  setPending('bgOpacity', parseInt(this.value));
-  document.getElementById('s-bg-opacity-val').textContent = this.value + '%';
-});
-
-// ── Botón Guardar cambios ──────────────────────────────────────────────────
-document.getElementById('btn-save-settings').addEventListener('click', () => {
-  if (Object.keys(pending).length === 0) {
-    showSaveInfo('Sin cambios nuevos.');
+  const cartEl = document.getElementById('cart-items');
+  const totalEl = document.getElementById('cart-total');
+  const gainEl  = document.getElementById('cart-gain');
+  const confirmBtn = document.getElementById('confirm-sale-btn');
+  if (!cartEl) return;
+
+  const entries = Object.entries(_saleCart).filter(([, q]) => q > 0);
+  if (entries.length === 0) {
+    cartEl.innerHTML = '<p style="color:var(--muted);padding:8px">Sin productos seleccionados</p>';
+    if (totalEl) totalEl.textContent = fmt(0);
+    if (gainEl)  gainEl.textContent  = fmt(0);
+    if (confirmBtn) confirmBtn.disabled = true;
     return;
   }
-  // Usa siempre el UID de Firebase como clave
-  const uid = (fbAuth && fbAuth.currentUser) ? fbAuth.currentUser.uid : activeUserId;
-  const current = getUserSettings(uid);
-  const merged  = { ...current, ...pending };
-  saveUserSettings(uid, merged);
-  activeUserId = uid;
-  pending = {};
-  applySettings();
-  const u = users.find(x => x.id === uid);
-  showSaveInfo(`✓ Cambios guardados para ${u ? u.name : 'usuario'}`);
-});
 
-function showSaveInfo(msg) {
-  const el = document.getElementById('settings-save-info');
-  el.textContent = msg;
-  setTimeout(() => { el.textContent = ''; }, 3000);
+  let total = 0, gain = 0;
+  cartEl.innerHTML = entries.map(([pid, qty]) => {
+    const p = products.find(x => x.id === pid);
+    if (!p) return '';
+    const subtotal = p.sellPrice * qty;
+    const subgain  = (p.sellPrice - p.buyPrice) * qty;
+    total += subtotal; gain += subgain;
+    return `<div class="cart-item">
+      <span>${p.name} x${qty}</span>
+      <span>${fmt(subtotal)}</span>
+    </div>`;
+  }).join('');
+
+  if (totalEl) totalEl.textContent = fmt(total);
+  if (gainEl)  gainEl.textContent  = fmt(gain);
+  if (confirmBtn) confirmBtn.disabled = false;
 }
 
-// ── Export / Reset ─────────────────────────────────────────────────────────
-document.getElementById('btn-export').addEventListener('click', () => {
-  const data = { products, movements, users, exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+function confirmSale() {
+  if (currentRole === 'Solo lectura') { alert('Sin permisos'); return; }
+  const entries = Object.entries(_saleCart).filter(([, q]) => q > 0);
+  if (entries.length === 0) { showToast('Agrega productos al carrito', 'error'); return; }
+
+  entries.forEach(([pid, qty]) => {
+    const p = products.find(x => x.id === pid);
+    if (!p || qty <= 0) return;
+    saveItem('products', { ...p, stock: p.stock - qty });
+    saveItem('movements', {
+      id: uid(),
+      productId: p.id,
+      productName: p.name,
+      type: 'out',
+      qty,
+      price: p.sellPrice,
+      profit: (p.sellPrice - p.buyPrice) * qty,
+      note: 'Venta rápida',
+      date: new Date().toISOString()
+    });
+  });
+
+  showToast('Venta registrada ✓');
+  initSaleView();
+}
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+function initReports() {
+  generateDailyReport();
+  generateMonthlyReport();
+}
+
+function generateDailyReport() {
+  const dateEl = document.getElementById('r-date');
+  const date = dateEl ? dateEl.value : localDateStr();
+  const dayMovs = movements.filter(m => m.type === 'out' && m.date.startsWith(date));
+
+  const container = document.getElementById('daily-report');
+  if (!container) return;
+
+  const totalSold = dayMovs.reduce((s, m) => s + m.price * m.qty, 0);
+  const totalGain = dayMovs.reduce((s, m) => s + (m.profit || 0), 0);
+  const totalUnits = dayMovs.reduce((s, m) => s + m.qty, 0);
+  const distinctProds = new Set(dayMovs.map(m => m.productId)).size;
+
+  if (dayMovs.length === 0) {
+    container.innerHTML = '<p style="color:var(--muted);padding:16px">Sin ventas para esta fecha</p>';
+    return;
+  }
+
+  container.innerHTML = buildReportHTML({
+    title: `Reporte del ${date}`,
+    movs: dayMovs,
+    stats: { totalSold, totalGain, totalUnits, distinctProds },
+    type: 'daily',
+    date
+  });
+}
+
+function generateMonthlyReport() {
+  const monthEl = document.getElementById('r-month');
+  const yearEl  = document.getElementById('r-year');
+  if (!monthEl || !yearEl) return;
+  const month = parseInt(monthEl.value);
+  const year  = parseInt(yearEl.value);
+
+  const monthMovs = movements.filter(m => {
+    if (m.type !== 'out') return false;
+    const d = new Date(m.date);
+    return d.getMonth() + 1 === month && d.getFullYear() === year;
+  });
+
+  const container = document.getElementById('monthly-report');
+  if (!container) return;
+
+  const totalSold = monthMovs.reduce((s, m) => s + m.price * m.qty, 0);
+  const totalGain = monthMovs.reduce((s, m) => s + (m.profit || 0), 0);
+  const totalUnits = monthMovs.reduce((s, m) => s + m.qty, 0);
+  const distinctProds = new Set(monthMovs.map(m => m.productId)).size;
+
+  if (monthMovs.length === 0) {
+    container.innerHTML = '<p style="color:var(--muted);padding:16px">Sin ventas para este mes</p>';
+    return;
+  }
+
+  container.innerHTML = buildReportHTML({
+    title: `Reporte ${monthEl.options[monthEl.selectedIndex].text} ${year}`,
+    movs: monthMovs,
+    stats: { totalSold, totalGain, totalUnits, distinctProds },
+    type: 'monthly',
+    date: `${year}-${String(month).padStart(2,'0')}`
+  });
+}
+
+function buildReportHTML({ title, movs, stats, type, date }) {
+  const rows = movs.map(m => `
+    <tr>
+      <td>${fmtDate(m.date)}</td>
+      <td>${m.productName}</td>
+      <td>${m.qty}</td>
+      <td>${fmt(m.price)}</td>
+      <td>${fmt(m.price * m.qty)}</td>
+      <td class="admin-only">${fmt(m.profit || 0)}</td>
+    </tr>`).join('');
+
+  return `
+    <div class="report-stats">
+      <div class="rstat"><div class="rstat-val">${stats.distinctProds}</div><div class="rstat-label">Productos</div></div>
+      <div class="rstat"><div class="rstat-val">${stats.totalUnits}</div><div class="rstat-label">Unidades</div></div>
+      <div class="rstat"><div class="rstat-val">${fmt(stats.totalSold)}</div><div class="rstat-label">Total vendido</div></div>
+      <div class="rstat admin-only"><div class="rstat-val">${fmt(stats.totalGain)}</div><div class="rstat-label">Ganancia</div></div>
+    </div>
+    <div class="report-actions">
+      <button onclick="downloadCSV('${type}','${date}')" class="btn-secondary">⬇ CSV</button>
+      <button onclick="printReport('${type}','${date}')" class="btn-secondary">🖨 Imprimir</button>
+      <button onclick="downloadPDF('${type}','${date}')" class="btn-secondary">📄 PDF</button>
+      <button onclick="shareReport('${type}','${date}')" class="btn-secondary">📤 Compartir</button>
+    </div>
+    <div class="table-scroll">
+      <table class="report-table">
+        <thead><tr><th>Fecha</th><th>Producto</th><th>Cant</th><th>Precio</th><th>Total</th><th class="admin-only">Ganancia</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function downloadCSV(type, date) {
+  const movs = type === 'daily'
+    ? movements.filter(m => m.type === 'out' && m.date.startsWith(date))
+    : movements.filter(m => {
+        if (m.type !== 'out') return false;
+        const d = new Date(m.date);
+        return m.date.startsWith(date);
+      });
+  const bom = '\uFEFF';
+  const header = 'Fecha,Producto,Cantidad,Precio,Total,Ganancia\n';
+  const rows = movs.map(m =>
+    `${fmtDate(m.date)},${m.productName},${m.qty},${m.price},${m.price * m.qty},${m.profit || 0}`
+  ).join('\n');
+  const blob = new Blob([bom + header + rows], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'inventario-backup.json';
+  a.download = `reporte_${date}.csv`;
   a.click();
-});
+}
 
-document.getElementById('btn-reset').addEventListener('click', () => {
-  if (!confirm('¿Restablecer todos los datos? Esta acción no se puede deshacer.')) return;
-  localStorage.clear();
-  location.reload();
-});
+function printReport(type, date) {
+  downloadPDF(type, date);
+}
 
-// ── Bulk Upload ────────────────────────────────────────────────────────────
-let bulkParsed = [];
+function downloadPDF(type, date) {
+  const movs = movements.filter(m => {
+    if (m.type !== 'out') return false;
+    return m.date.startsWith(date);
+  });
+  const settings = getUserSettings(activeUserId);
+  const storeName = settings.storeName || 'Inventario TALARA';
+  const rows = movs.map(m => `
+    <tr>
+      <td>${fmtDate(m.date)}</td>
+      <td>${m.productName}</td>
+      <td>${m.qty}</td>
+      <td>${fmt(m.price)}</td>
+      <td>${fmt(m.price * m.qty)}</td>
+    </tr>`).join('');
+  const total = movs.reduce((s, m) => s + m.price * m.qty, 0);
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Reporte ${date}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+      h1 { color: #e07b39; } h2 { color: #555; font-size: 14px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th { background: #f5f5f5; padding: 8px; text-align: left; border-bottom: 2px solid #ddd; }
+      td { padding: 7px 8px; border-bottom: 1px solid #eee; }
+      .total { font-weight: bold; text-align: right; margin-top: 12px; font-size: 16px; }
+    </style></head><body>
+    <h1>${storeName}</h1>
+    <h2>Reporte de ventas — ${date}</h2>
+    <table>
+      <thead><tr><th>Fecha</th><th>Producto</th><th>Cant</th><th>Precio</th><th>Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="total">Total: ${fmt(total)}</p>
+    <script>window.onload=()=>{window.print();}<\/script>
+    </body></html>`;
+  const win = window.open('', '_blank');
+  if (win) { win.document.write(html); win.document.close(); }
+  else showToast('Activa ventanas emergentes para descargar el PDF', 'error');
+}
 
-// Plantilla CSV
-document.getElementById('bulk-download-template').addEventListener('click', () => {
-  const csv = [
-    'nombre,categoria,stock,precio_compra,precio_venta,descripcion',
-    'Mazapán de Rosa,dulce,20,5,12,Dulce tradicional mexicano',
-    'Pulsera Chaquira,pulsera,10,20,55,Pulsera de chaquiras de colores',
-  ].join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+function shareReport(type, date) {
+  if (navigator.share) {
+    navigator.share({ title: 'Reporte TALARA', text: `Reporte de ventas ${date}`, url: window.location.href });
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(() => showToast('URL copiada'));
+  }
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+function renderUsers() {
+  const list = document.getElementById('users-list');
+  if (!list) return;
+  if (users.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);padding:16px">Sin usuarios registrados</p>';
+    return;
+  }
+  list.innerHTML = users.map(u => {
+    const initials = u.name ? u.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
+    const roleColors = { 'Admin': '#e07b39', 'Usuario': '#4a9e6f', 'Solo lectura': '#7a7570' };
+    const roleColor = roleColors[u.role] || '#7a7570';
+    return `
+      <div class="user-card">
+        <div class="user-avatar" style="background:${roleColor}">${initials}</div>
+        <div class="user-info">
+          <div class="user-name">${u.name || 'Sin nombre'}</div>
+          <div class="user-email">${u.email || ''}</div>
+        </div>
+        <span class="badge" style="background:${roleColor}20;color:${roleColor}">${u.role}</span>
+        ${currentRole === 'Admin' ? `
+          <select onchange="changeUserRole('${u.id}', this.value)" style="margin-left:8px">
+            <option ${u.role==='Admin'?'selected':''}>Admin</option>
+            <option ${u.role==='Usuario'?'selected':''}>Usuario</option>
+            <option ${u.role==='Solo lectura'?'selected':''}>Solo lectura</option>
+          </select>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function changeUserRole(uid, role) {
+  if (currentRole !== 'Admin') { alert('Solo Admin puede cambiar roles'); return; }
+  const u = users.find(x => x.id === uid);
+  if (!u) return;
+  saveItem('users', { ...u, role });
+  showToast('Rol actualizado');
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+const DEFAULTS = {
+  storeName: 'TALARA',
+  storeSubtitle: 'Dulces & Pulseras',
+  theme: 'dark',
+  accent: '#e07b39',
+  bgOpacity: 0,
+  logoData: null,
+  logoMobileData: null,
+  bgData: null
+};
+
+function getUserSettings(uid) {
+  try {
+    const raw = localStorage.getItem('inv_settings_' + uid);
+    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
+  } catch { return { ...DEFAULTS }; }
+}
+
+function saveUserSettings(uid, settings) {
+  localStorage.setItem('inv_settings_' + uid, JSON.stringify(settings));
+  if (typeof fbSaveSettings === 'function') {
+    fbSaveSettings(uid, settings).catch(e => console.warn('Settings save error:', e));
+  }
+}
+
+function applySettings(settings) {
+  const root = document.documentElement;
+  if (settings.theme === 'light') {
+    root.style.setProperty('--bg', '#f5f5f5');
+    root.style.setProperty('--surface', '#ffffff');
+    root.style.setProperty('--surface2', '#eeeeee');
+    root.style.setProperty('--border', '#dddddd');
+    root.style.setProperty('--text', '#111111');
+    root.style.setProperty('--muted', '#666666');
+  } else {
+    root.style.setProperty('--bg', '#141414');
+    root.style.setProperty('--surface', '#1e1e1e');
+    root.style.setProperty('--surface2', '#252525');
+    root.style.setProperty('--border', '#2e2e2e');
+    root.style.setProperty('--text', '#f0ece6');
+    root.style.setProperty('--muted', '#7a7570');
+  }
+  root.style.setProperty('--orange', settings.accent || '#e07b39');
+
+  const logo = document.getElementById('sidebar-logo');
+  const name = document.getElementById('sidebar-store-name');
+  const sub  = document.getElementById('sidebar-store-subtitle');
+  if (logo && settings.logoData) { logo.src = settings.logoData; logo.style.display = 'block'; }
+  if (name) name.textContent = settings.storeName || 'TALARA';
+  if (sub)  sub.textContent  = settings.storeSubtitle || '';
+
+  const mobileLogo = document.getElementById('mobile-logo');
+  const mobileName = document.getElementById('mobile-store-name');
+  if (mobileLogo && (settings.logoMobileData || settings.logoData)) {
+    mobileLogo.src = settings.logoMobileData || settings.logoData;
+    mobileLogo.style.display = 'block';
+  }
+  if (mobileName) mobileName.textContent = settings.storeName || 'TALARA';
+
+  const splash = document.getElementById('splash-logo-text');
+  if (splash) splash.textContent = (settings.storeName || 'TALARA')[0];
+  const splashName = document.getElementById('splash-store-name');
+  if (splashName) splashName.textContent = settings.storeName || 'TALARA';
+
+  document.title = settings.storeName || 'TALARA';
+}
+
+function loadSettingsUI() {
+  const settings = getUserSettings(activeUserId);
+  _pendingSettings = { ...settings };
+
+  const s = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  s('set-store-name', settings.storeName);
+  s('set-store-subtitle', settings.storeSubtitle);
+  s('set-accent', settings.accent || '#e07b39');
+  s('set-bg-opacity', settings.bgOpacity || 0);
+
+  const themeBtn = document.querySelector(`.theme-btn[data-theme="${settings.theme}"]`);
+  if (themeBtn) {
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    themeBtn.classList.add('active');
+  }
+
+  const logoPreview = document.getElementById('logo-preview');
+  if (logoPreview && settings.logoData) { logoPreview.src = settings.logoData; logoPreview.style.display = 'block'; }
+  const logoMobilePreview = document.getElementById('logo-mobile-preview');
+  if (logoMobilePreview && settings.logoMobileData) { logoMobilePreview.src = settings.logoMobileData; logoMobilePreview.style.display = 'block'; }
+}
+
+function setupSettingsListeners() {
+  const bind = (id, key, transform) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      _pendingSettings[key] = transform ? transform(el.value) : el.value;
+    });
+  };
+  bind('set-store-name', 'storeName');
+  bind('set-store-subtitle', 'storeSubtitle');
+  bind('set-accent', 'accent');
+  bind('set-bg-opacity', 'bgOpacity', v => parseFloat(v));
+
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _pendingSettings.theme = btn.dataset.theme;
+      applySettings(_pendingSettings);
+    });
+  });
+
+  document.querySelectorAll('.accent-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _pendingSettings.accent = btn.dataset.color;
+      const el = document.getElementById('set-accent');
+      if (el) el.value = btn.dataset.color;
+      applySettings(_pendingSettings);
+    });
+  });
+
+  const logoInput = document.getElementById('logo-upload');
+  if (logoInput) {
+    logoInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const compressed = await compressImage(file, 300, 0.8);
+      _pendingSettings.logoData = compressed;
+      const prev = document.getElementById('logo-preview');
+      if (prev) { prev.src = compressed; prev.style.display = 'block'; }
+    });
+  }
+
+  const logoMobileInput = document.getElementById('logo-mobile-upload');
+  if (logoMobileInput) {
+    logoMobileInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const compressed = await compressImage(file, 300, 0.8);
+      _pendingSettings.logoMobileData = compressed;
+      const prev = document.getElementById('logo-mobile-preview');
+      if (prev) { prev.src = compressed; prev.style.display = 'block'; }
+    });
+  }
+
+  const bgInput = document.getElementById('bg-upload');
+  if (bgInput) {
+    bgInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const compressed = await compressImage(file, 1200, 0.7);
+      _pendingSettings.bgData = compressed;
+    });
+  }
+
+  const exportBtn = document.getElementById('export-data-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const data = { products, movements, users, exported: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'inventario_backup.json';
+      a.click();
+    });
+  }
+
+  const resetBtn = document.getElementById('reset-data-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('¿Restablecer todos los datos? Esta acción no se puede deshacer.')) return;
+      products = []; movements = []; users = [];
+      renderAll();
+      showToast('Datos restablecidos');
+    });
+  }
+}
+
+function saveSettings() {
+  saveUserSettings(activeUserId, _pendingSettings);
+  applySettings(_pendingSettings);
+  showToast('✓ Cambios guardados');
+}
+
+// ── Privileges ────────────────────────────────────────────────────────────────
+function applyPrivileges(role) {
+  currentRole = role;
+  const isAdmin  = role === 'Admin';
+  const canWrite = role === 'Admin' || role === 'Usuario';
+
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+  document.querySelectorAll('.write-only').forEach(el => {
+    el.style.display = canWrite ? '' : 'none';
+  });
+
+  const newProdNav = document.querySelector('[data-view="new-product"]');
+  if (newProdNav) newProdNav.style.display = canWrite ? '' : 'none';
+
+  const usersNav = document.querySelector('[data-view="users"]');
+  if (usersNav) usersNav.style.display = isAdmin ? '' : 'none';
+
+  const userInfoEl = document.getElementById('sidebar-user-info');
+  if (userInfoEl) {
+    const u = users.find(x => x.id === activeUserId);
+    userInfoEl.textContent = u ? `${u.name} · ${u.role}` : role;
+  }
+  const mobileUserEl = document.getElementById('mobile-user-info');
+  if (mobileUserEl) {
+    const u = users.find(x => x.id === activeUserId);
+    mobileUserEl.textContent = u ? `${u.name} (${u.role})` : role;
+  }
+}
+
+// ── Bulk Import ───────────────────────────────────────────────────────────────
+let _bulkValid = [];
+
+function openBulkModal() {
+  const overlay = document.getElementById('bulk-overlay');
+  if (overlay) overlay.classList.remove('hidden');
+}
+function closeBulkModal() {
+  const overlay = document.getElementById('bulk-overlay');
+  if (overlay) overlay.classList.add('hidden');
+  _bulkValid = [];
+}
+function downloadTemplate() {
+  const csv = 'nombre,categoria,stock,precio_compra,precio_venta,descripcion\nChocolate artesanal,dulces,20,15,25,Chocolate hecho a mano\nPulsera chaquiras,pulseras,10,30,60,Pulsera de chaquiras multicolor\n';
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'plantilla_productos.csv';
   a.click();
-});
-
-// Leer archivo CSV
-document.getElementById('bulk-file').addEventListener('change', function () {
-  const file = this.files[0];
+}
+function handleBulkFile(e) {
+  const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    parseBulkCSV(e.target.result);
-    document.getElementById('bulk-overlay').classList.remove('hidden');
-    this.value = '';
+  reader.onload = ev => {
+    let text = ev.target.result.replace(/^\uFEFF/, '');
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    const header = lines[0].toLowerCase();
+    const start = header.includes('nombre') ? 1 : 0;
+    const preview = document.getElementById('bulk-preview');
+    const tbody = document.getElementById('bulk-tbody');
+    if (!tbody) return;
+    _bulkValid = [];
+    tbody.innerHTML = lines.slice(start).map(line => {
+      const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+      const [name, cat, stock, buy, sell, desc] = cols;
+      const errors = [];
+      if (!name) errors.push('Nombre vacío');
+      if (!['dulces', 'pulseras'].includes((cat || '').toLowerCase())) errors.push('Categoría inválida');
+      if (isNaN(parseInt(stock)) || parseInt(stock) < 0) errors.push('Stock inválido');
+      if (isNaN(parseFloat(buy))) errors.push('Precio compra inválido');
+      if (isNaN(parseFloat(sell))) errors.push('Precio venta inválido');
+      if (!errors.length && parseFloat(sell) < parseFloat(buy)) errors.push('Venta < compra');
+      const valid = errors.length === 0;
+      if (valid) _bulkValid.push({ id: uid(), name, category: cat.toLowerCase(), stock: parseInt(stock), buyPrice: parseFloat(buy), sellPrice: parseFloat(sell), description: desc || '', createdAt: new Date().toISOString() });
+      return `<tr class="${valid ? 'bulk-valid' : 'bulk-error'}"><td>${name||'-'}</td><td>${cat||'-'}</td><td>${stock||'-'}</td><td>${buy||'-'}</td><td>${sell||'-'}</td><td>${errors.join(', ') || '✓'}</td></tr>`;
+    }).join('');
+    if (preview) preview.classList.remove('hidden');
   };
   reader.readAsText(file, 'UTF-8');
-});
-
-function parseBulkCSV(text) {
-  // Normaliza saltos de línea y separa filas
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
-  // Detecta si la primera fila es encabezado
-  const start = /nombre|name|producto/i.test(lines[0]) ? 1 : 0;
-  bulkParsed = [];
-
-  for (let i = start; i < lines.length; i++) {
-    const cols = splitCSVLine(lines[i]);
-    const row  = {
-      name:      (cols[0] || '').trim(),
-      category:  normalizeCat(cols[1] || ''),
-      stock:     parseInt(cols[2]) || 0,
-      buyPrice:  parseFloat(cols[3]) || 0,
-      sellPrice: parseFloat(cols[4]) || 0,
-      desc:      (cols[5] || '').trim(),
-      _line:     i + 1,
-      _errors:   [],
-    };
-    if (!row.name)                          row._errors.push('Nombre vacío');
-    if (!row.category)                      row._errors.push('Categoría inválida (usa dulce o pulsera)');
-    if (row.stock < 0)                      row._errors.push('Stock negativo');
-    if (row.buyPrice < 0)                   row._errors.push('Precio compra negativo');
-    if (row.sellPrice < row.buyPrice)       row._errors.push('Precio venta < compra');
-    bulkParsed.push(row);
-  }
-
-  renderBulkPreview();
 }
-
-function splitCSVLine(line) {
-  const result = [];
-  let cur = '', inQ = false;
-  for (const ch of line) {
-    if (ch === '"') { inQ = !inQ; }
-    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
-    else cur += ch;
-  }
-  result.push(cur);
-  return result;
-}
-
-function normalizeCat(val) {
-  const v = val.toLowerCase().trim();
-  if (v.includes('dulce') || v.includes('candy') || v.includes('sweet')) return 'dulce';
-  if (v.includes('pulsera') || v.includes('bracelet') || v.includes('pulser')) return 'pulsera';
-  return '';
-}
-
-function renderBulkPreview() {
-  const valid  = bulkParsed.filter(r => r._errors.length === 0);
-  const errors = bulkParsed.filter(r => r._errors.length > 0);
-
-  document.getElementById('bulk-count').textContent =
-    `${bulkParsed.length} filas leídas — ${valid.length} válidas`;
-  const errEl = document.getElementById('bulk-errors');
-  errEl.textContent = errors.length ? `${errors.length} con errores` : '';
-
-  const tbody = document.getElementById('bulk-preview-body');
-  tbody.innerHTML = bulkParsed.map((r, i) => {
-    const ok = r._errors.length === 0;
-    const catBadge = r.category
-      ? `<span class="badge badge-${r.category}">${r.category === 'dulce' ? 'Dulce' : 'Pulsera'}</span>`
-      : '<span class="badge" style="background:rgba(248,113,113,0.12);color:var(--danger)">?</span>';
-    return `<tr class="${ok ? 'bulk-row-ok' : 'bulk-row-error'}">
-      <td style="color:var(--muted)">${r._line}</td>
-      <td>${r.name || '—'}</td>
-      <td>${catBadge}</td>
-      <td>${r.stock}</td>
-      <td>${fmt(r.buyPrice)}</td>
-      <td>${fmt(r.sellPrice)}</td>
-      <td style="color:var(--muted);font-size:0.78rem">${r.desc || ''}</td>
-      <td>${ok
-        ? '<span class="bulk-status-ok">✓ OK</span>'
-        : `<span class="bulk-status-error" title="${r._errors.join(', ')}">✕ ${r._errors[0]}</span>`
-      }</td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('bulk-preview-wrap').classList.remove('hidden');
-  document.getElementById('bulk-confirm').disabled = valid.length === 0;
-}
-
-// Confirmar importación
-document.getElementById('bulk-confirm').addEventListener('click', () => {
-  const valid = bulkParsed.filter(r => r._errors.length === 0);
-  valid.forEach(r => {
-    const item = { id: uid(), name: r.name, category: r.category,
-      stock: r.stock, buyPrice: r.buyPrice, sellPrice: r.sellPrice, desc: r.desc };
-    saveItem('products', item);
-  });
+function confirmBulkImport() {
+  if (_bulkValid.length === 0) { showToast('Sin filas válidas', 'error'); return; }
+  _bulkValid.forEach(p => saveItem('products', p));
+  showToast(`${_bulkValid.length} productos importados`);
   closeBulkModal();
-  navigate('productos');
-  setTimeout(() => {
-    const info = document.createElement('div');
-    info.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--success);color:#000;padding:10px 20px;border-radius:8px;font-weight:600;z-index:400;font-size:0.875rem';
-    info.textContent = `✓ ${valid.length} productos importados`;
-    document.body.appendChild(info);
-    setTimeout(() => info.remove(), 2500);
-  }, 100);
-});
-
-function closeBulkModal() {
-  document.getElementById('bulk-overlay').classList.add('hidden');
-  document.getElementById('bulk-preview-wrap').classList.add('hidden');
-  bulkParsed = [];
 }
 
-document.getElementById('bulk-close').addEventListener('click', closeBulkModal);
-document.getElementById('bulk-cancel').addEventListener('click', closeBulkModal);
-document.getElementById('bulk-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('bulk-overlay')) closeBulkModal();
-});
-
-// ── Logout ─────────────────────────────────────────────────────────────────
-async function doLogout() {
-  if (!confirm('¿Cerrar sesión?')) return;
-  if (typeof fbSignOut === 'function' && db) {
-    await fbSignOut();
-  } else {
-    location.reload();
-  }
+// ── Render All ────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderPanel();
+  renderInventory();
+  renderMovements();
+  renderSaleProductList();
+  renderCart();
+  renderUsers();
 }
 
-document.getElementById('btn-logout').addEventListener('click', doLogout);
-
-// Logout desde bottom nav móvil
-const bnavLogout = document.getElementById('bnav-logout-btn');
-if (bnavLogout) bnavLogout.addEventListener('click', doLogout);
-
-// ── Privilege helpers ──────────────────────────────────────────────────────
-function canWrite() {
-  const role = window._currentUserRole || 'Admin';
-  return role === 'Admin' || role === 'Usuario';
-}
-function canDelete() {
-  return (window._currentUserRole || 'Admin') === 'Admin';
-}
-function canManageUsers() {
-  return (window._currentUserRole || 'Admin') === 'Admin';
-}
-
-// Guarda protegido por rol
-function saveItem(colName, item) {
-  if (!canWrite()) { alert('No tienes permiso para realizar esta acción.'); return; }
-  if (db) {
-    showSyncStatus('saving');
-    fbSet(colName, item)
-      .then(() => showSyncStatus('online'))
-      .catch(e => { console.error(e); showSyncStatus('error'); });
-  } else {
-    if (colName === 'products')  { const i = products.findIndex(x=>x.id===item.id);  if(i>=0) products[i]=item;  else products.push(item);  }
-    if (colName === 'movements') { const i = movements.findIndex(x=>x.id===item.id); if(i>=0) movements[i]=item; else movements.push(item); }
-    if (colName === 'users')     { const i = users.findIndex(x=>x.id===item.id);     if(i>=0) users[i]=item;     else users.push(item);     }
-    save(); renderAll();
-  }
-}
-
-function deleteItem(colName, id) {
-  if (!canDelete()) { alert('Solo el administrador puede eliminar.'); return; }
-  if (db) {
-    showSyncStatus('saving');
-    fbDelete(colName, id)
-      .then(() => showSyncStatus('online'))
-      .catch(e => { console.error(e); showSyncStatus('error'); });
-  } else {
-    if (colName === 'products')  products  = products.filter(x=>x.id!==id);
-    if (colName === 'movements') movements = movements.filter(x=>x.id!==id);
-    if (colName === 'users')     users     = users.filter(x=>x.id!==id);
-    save(); renderAll();
-  }
-}
-
-// Aplica restricciones visuales según rol
-function applyPrivileges() {
-  const role    = window._currentUserRole || 'Admin';
-  const isAdmin = role === 'Admin';
-
-  // ── Navegación ─────────────────────────────────────────────────────────
-  document.querySelectorAll('[data-view="agregar"],[data-view="usuarios"]').forEach(el => {
-    el.style.display = (role === 'Solo lectura') ? 'none' : '';
-  });
-
-  // ── Tarjetas financieras — solo Admin ──────────────────────────────────
-  ['card-inversion','card-ganancia','card-vendido'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = isAdmin ? '' : 'none';
-  });
-
-  // ── Columnas de ganancia — solo Admin ──────────────────────────────────
-  document.querySelectorAll('.col-gain-header,.col-gain-cell,.col-mov-gain-header,.col-mov-gain-cell').forEach(el => {
-    el.style.display = isAdmin ? '' : 'none';
-  });
-
-  // ── Botones editar/eliminar — solo Admin ───────────────────────────────
-  document.querySelectorAll('.btn-edit-product, .btn-delete-product').forEach(btn => {
-    btn.style.display = isAdmin ? '' : 'none';
-  });
-
-  // ── Botones entrada/salida — sin Solo lectura ──────────────────────────
-  document.querySelectorAll('.btn-entrada-product, .btn-salida-product').forEach(btn => {
-    btn.style.display = (role === 'Solo lectura') ? 'none' : '';
-  });
-
-  // ── Eliminar usuarios — solo Admin ─────────────────────────────────────
-  document.querySelectorAll('.btn-delete-user').forEach(btn => {
-    btn.style.display = isAdmin ? '' : 'none';
-  });
-
-  // ── Ganancia en carrito — solo Admin ───────────────────────────────────
-  const cartGainRow = document.querySelector('.cart-gain-row');
-  if (cartGainRow) cartGainRow.style.display = isAdmin ? '' : 'none';
-
-  // ── Info del usuario ───────────────────────────────────────────────────
-  const me   = users.find(u => u.id === activeUserId);
-  const info = document.getElementById('sidebar-user-info');
-  if (info && me) info.textContent = me.name + ' · ' + me.role;
-  const bnavInfo = document.getElementById('bnav-user-info');
-  if (bnavInfo && me) bnavInfo.textContent = '👤 ' + me.name + ' · ' + me.role;
-}
-
-// ── Cross-tab / Cross-device sync ─────────────────────────────────────────
-// BroadcastChannel sincroniza entre pestañas del mismo navegador al instante.
-// Para sincronizar entre dispositivos distintos necesitas Firebase (ver firebase.js).
-try {
-  const bc = new BroadcastChannel('inv_sync');
-  // Cuando otro tab guarda, recargamos los datos locales
-  bc.onmessage = () => {
-    products  = JSON.parse(localStorage.getItem('inv_products')  || '[]');
-    movements = JSON.parse(localStorage.getItem('inv_movements') || '[]');
-    users     = JSON.parse(localStorage.getItem('inv_users')     || '[]');
-    renderAll();
-  };
-  // Notifica a otros tabs cuando guardamos
-  const _origSave = save;
-  window.save = function() {
-    _origSave();
-    bc.postMessage('update');
-  };
-} catch(e) { /* BroadcastChannel no disponible */ }
-
-// ── Splash screen ──────────────────────────────────────────────────────────
-function updateSplashBranding() {
-  // Aplica nombre, subtítulo y logo al splash desde ajustes guardados
-  const s = activeSettings ? activeSettings() : {};
-  const name = s.storeName || 'Inventario';
-  const sub  = s.subtitle  || 'Dulces & Pulseras';
-  const logo = s.logoMobile || s.logo || '';
-
-  const splashName = document.getElementById('splash-name');
-  const splashSub  = document.getElementById('splash-sub');
-  const splashLogo = document.getElementById('splash-logo');
-  const splashIcon = document.getElementById('splash-icon');
-
-  if (splashName) splashName.textContent = name;
-  if (splashSub)  splashSub.textContent  = sub;
-
-  if (logo && splashLogo && splashIcon) {
-    splashLogo.src = logo;
-    splashLogo.style.display = 'block';
-    splashIcon.style.display = 'none';
-  }
-}
-
+// ── Splash ────────────────────────────────────────────────────────────────────
 function hideSplash() {
-  const el = document.getElementById('splash');
-  if (!el) return;
-  el.classList.add('hide');
-  setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
+  const splash = document.getElementById('splash');
+  if (splash) {
+    splash.style.opacity = '0';
+    splash.style.transition = 'opacity 0.4s';
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+  }
+  document.body.style.visibility = 'visible';
 }
 
-// Muestra el splash con la marca correcta al inicio
-updateSplashBranding();
+// ── Init ──────────────────────────────────────────────────────────────────────
+navigate('panel');
 
-// ── Init ───────────────────────────────────────────────────────────────────
-applySettings();
-
-async function initApp() {
-  if (typeof initFirebase === 'function') {
-    document.body.style.visibility = 'hidden';
-    const ok = await initFirebase();
-    if (ok) return; // Firebase llama hideSplash después del login/auth
-  }
-  // Sin Firebase → modo local
-  document.body.style.visibility = 'visible';
-  await seedLocalIfEmpty();
-  renderAll();
-  loadSettingsUI();
-  navigate('panel');
+if (typeof initFirebase === 'function') {
+  initFirebase({
+    onData: (col, data) => {
+      if (col === 'products')  { products  = data; renderAll(); }
+      if (col === 'movements') { movements = data; renderAll(); }
+      if (col === 'users')     { users     = data; renderAll(); }
+    },
+    onUser: (user) => {
+      if (!user) return;
+      activeUserId = user.uid;
+      const u = users.find(x => x.id === user.uid);
+      const role = u ? u.role : 'Admin';
+      applyPrivileges(role);
+      const settings = getUserSettings(user.uid);
+      applySettings(settings);
+      hideSplash();
+    },
+    onSettings: (uid, settings) => {
+      if (uid === activeUserId) applySettings(settings);
+    }
+  });
+} else {
   hideSplash();
 }
 
-initApp();
+// Sale search/filter listeners (delegated)
+document.addEventListener('input', e => {
+  if (e.target.id === 'sale-search') renderSaleProductList();
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'sale-cat-filter') renderSaleProductList();
+});
 
-// cache-bust-20260504121644
+// Confirm sale button
+document.addEventListener('click', e => {
+  if (e.target.id === 'confirm-sale-btn') confirmSale();
+});
+
+// cache-bust-20260504
