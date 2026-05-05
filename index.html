@@ -1,182 +1,226 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIRO — Sistema Profesional</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #141414; --surface: #1e1e1e; --border: #2e2e2e;
-            --text: #f0ece6; --muted: #7a7570; --orange: #e07b39;
-            --success: #10b981; --danger: #ef4444; --accent: #e07b39;
-        }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; }
-        
-        /* Sidebar Estilo Foto */
-        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 1000; box-sizing: border-box; }
-        .content { margin-left: 260px; flex: 1; padding: 40px; padding-bottom: 100px; width: 100%; box-sizing: border-box; }
-        .nav-item { padding: 12px 16px; cursor: pointer; border-radius: 12px; color: var(--muted); margin-bottom: 6px; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-weight: 500; }
-        .nav-item:hover { background: #252525; color: var(--text); }
-        .nav-item.active { background: var(--accent); color: white; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>KIRO — Inventario Oficial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── TODO EL ESTILO DE TU VERSIÓN PREMIUM ── */
+    :root {
+      --bg: #141414; --surface: #1e1e1e; --border: #2e2e2e;
+      --text: #f0ece6; --muted: #7a7570; --orange: #e07b39;
+      --success: #10b981; --danger: #ef4444; --accent: #e07b39;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; }
+    
+    /* Sidebar */
+    .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 1000; box-sizing: border-box; }
+    .sidebar-brand { margin-bottom: 40px; }
+    .brand-title { font-size: 22px; font-weight: 700; color: var(--accent); display: block; }
+    .brand-sub { font-size: 11px; color: var(--muted); }
+    .content { margin-left: 260px; flex: 1; padding: 40px; padding-bottom: 100px; width: 100%; box-sizing: border-box; }
+    
+    .nav-item { padding: 12px 16px; cursor: pointer; border-radius: 12px; color: var(--muted); margin-bottom: 6px; transition: 0.2s; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-item:hover { background: #252525; color: var(--text); }
+    .nav-item.active { background: var(--accent); color: white; font-weight: 600; }
+    .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* Reportes Estilo Foto 1 */
-        .report-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 30px 0; }
-        .report-stat { border-left: 2px solid var(--border); padding-left: 20px; }
-        .stat-val-big { font-size: 24px; font-weight: 700; color: var(--accent); margin-top: 5px; }
+    /* Cards y Tablas */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 25px; border-radius: 20px; position: relative; }
+    .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
+    .stat-value { font-size: 32px; font-weight: 700; margin-top: 10px; color: var(--text); display: block; }
+    
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th { background: #252525; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .gain-text { color: var(--success); font-weight: 600; }
+    
+    /* Splash */
+    #splash { position: fixed; inset: 0; background: #141414; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.5s; }
+    .view { display: none; } .view.active { display: block; }
+    .hidden { display: none !important; }
 
-        /* Estilo Login Foto 4/5 */
-        #login-screen { position:fixed; inset:0; background:#141414; display:flex; align-items:center; justify-content:center; z-index:9999; }
-        .login-card { background:#1e1e1e; padding:40px; border-radius:20px; text-align:center; width:340px; border:1px solid #2e2e2e; }
-        .login-input { width:100%; padding:14px; margin-bottom:12px; background:#252525; border:1px solid #333; color:white; border-radius:10px; box-sizing:border-box; }
-        .btn-login { width:100%; padding:14px; background:var(--accent); border:none; color:white; font-weight:700; border-radius:10px; cursor:pointer; }
-        
-        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; margin-top: 20px; border: 1px solid var(--border); }
-        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
-        th { background: #252525; color: var(--muted); font-size: 11px; text-transform: uppercase; }
-        .gain-text { color: var(--success); font-weight: 600; }
-        .prod-img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; background: #333; }
-        
-        .view { display: none; } .view.active { display: block; }
-        #splash { position: fixed; inset: 0; background: #141414; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
-        @media (max-width: 900px) { .sidebar { display: none; } .content { margin-left: 0; padding: 20px; } }
-    </style>
+    /* Móvil */
+    .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); height: 75px; grid-template-columns: repeat(4, 1fr); z-index: 2000; padding: 5px; }
+    .bnav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); background: none; border: none; cursor: pointer; }
+    .bnav-item svg { width: 22px; height: 22px; margin-bottom: 4px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .bnav-item.active { color: var(--accent); }
+
+    /* Login */
+    #login-screen { position: fixed; inset: 0; background: #141414; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+    .login-card { background: #1e1e1e; padding: 40px; border-radius: 25px; width: 340px; text-align: center; border: 1px solid #2e2e2e; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .login-input { width: 100%; padding: 14px; background: #252525; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 12px; box-sizing: border-box; outline: none; }
+    .btn-orange { width: 100%; padding: 14px; background: var(--orange); border: none; border-radius: 12px; color: white; font-weight: 700; cursor: pointer; font-size: 16px; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; } .content { margin-left: 0; padding: 20px; padding-bottom: 100px; }
+      .bottom-nav { display: grid; }
+    }
+  </style>
 </head>
 <body>
-    <div id="splash"><h1>KIRO</h1><p>Restaurando sesión...</p></div>
 
-    <aside class="sidebar">
-        <div style="margin-bottom: 40px;"><h2 style="color:var(--accent); margin:0;">TALARA</h2><p style="margin:0; font-size:11px; color:var(--muted);">SISTEMA DE GESTIÓN</p></div>
-        <div class="nav-item active" onclick="navigate('panel')">📊 Panel</div>
-        <div class="nav-item" onclick="navigate('productos')">📦 Productos</div>
-        <div class="nav-item" onclick="navigate('movimientos')">🔄 Movimientos</div>
-        <div class="nav-item" onclick="navigate('nuevo')">➕ Nuevo Producto</div>
-        <div class="nav-item" onclick="navigate('usuarios')">👥 Usuarios</div>
-        <div class="nav-item" onclick="navigate('ventas')">💰 Ventas</div>
-        <div class="nav-item" onclick="navigate('ajustes')">⚙️ Ajustes</div>
-        <div style="position:absolute; bottom:30px; left:20px; right:20px;" onclick="fbLogout()"><div class="nav-item" style="opacity:0.5">🚪 Cerrar Sesión</div></div>
-    </aside>
+  <!-- SPLASH ANIMADO (Tu original) -->
+  <div id="splash">
+    <div style="background:var(--orange); width:80px; height:80px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:900; color:white; margin-bottom:20px;">I</div>
+    <h1 style="color:white; margin:0;">KIRO</h1>
+    <p style="color:var(--muted)">Iniciando sistema seguro...</p>
+  </div>
 
-    <main class="content">
-        <!-- PRODUCTOS -->
-        <section class="view" id="view-productos">
-            <h1>Inventario</h1>
-            <table>
-                <thead><tr><th>Foto</th><th>Producto</th><th>Stock</th><th>Compra</th><th>Venta</th><th>Ganancia</th></tr></thead>
-                <tbody id="inventory-list"></tbody>
-            </table>
-        </section>
+  <!-- SIDEBAR (Tu original con iconos SVG) -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-title">TALARA</span>
+      <span class="brand-sub">Dulces &amp; Pulseras</span>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="navigate('panel')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Panel</div>
+      <div class="nav-item" onclick="navigate('productos')"><svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> Productos</div>
+      <div class="nav-item" onclick="navigate('ventas')"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Ventas</div>
+      <div class="nav-item" onclick="navigate('movimientos')"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Historial</div>
+      <div class="nav-item" onclick="navigate('ajustes')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg> Ajustes</div>
+    </nav>
+    <div style="position:absolute; bottom:30px; left:20px; right:20px; border-top:1px solid var(--border); padding-top:20px;">
+      <div class="nav-item" onclick="fbLogout()" style="opacity:0.5">🚪 Cerrar Sesión</div>
+    </div>
+  </aside>
 
-        <!-- PANEL -->
-        <section class="view active" id="view-panel">
-            <h1>Hola de nuevo, Robert 👋</h1>
-            <div class="report-grid">
-                <div class="report-stat"><div class="stat-label">Productos</div><div class="stat-val-big" id="stat-products">0</div></div>
-                <div class="report-stat"><div class="stat-label">Inversión</div><div class="stat-val-big" id="stat-investment">$0.00</div></div>
-                <div class="report-stat"><div class="stat-label">Ganancia</div><div class="stat-val-big" style="color:var(--success)" id="stat-potential">$0.00</div></div>
-            </div>
-        </section>
-    </main>
+  <!-- NAVEGACIÓN MÓVIL (Barra Inferior) -->
+  <nav class="bottom-nav">
+    <div class="bnav-item active" onclick="navigate('panel')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Panel</div>
+    <div class="bnav-item" onclick="navigate('productos')"><svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>Prods</div>
+    <div class="bnav-item" onclick="navigate('ventas')"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Ventas</div>
+    <div class="bnav-item" onclick="navigate('ajustes')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Ajustes</div>
+  </nav>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <main class="content">
+    <section class="view active" id="view-panel">
+      <h1>Hola de nuevo, Robert 👋</h1>
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-label">Stock Total</span><span class="stat-value" id="st-products">0</span></div>
+        <div class="stat-card"><span class="stat-label">Inversión</span><span class="stat-value" id="st-investment">$0.00</span></div>
+        <div class="stat-card"><span class="stat-label">Ganancia Potencial</span><span class="stat-value" id="st-gain" style="color:var(--success)">$0.00</span></div>
+      </div>
+      <h3>Productos con bajo stock</h3>
+      <div id="low-stock-list" style="color:var(--muted)">Todo bien por ahora.</div>
+    </section>
 
-    <script>
-        const config = {
-            apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
-            authDomain: "gestor-de-inventario-853d8.firebaseapp.com",
-            projectId: "gestor-de-inventario-853d8",
-            storageBucket: "gestor-de-inventario-853d8.firebasestorage.app",
-            messagingSenderId: "980977651129",
-            appId: "1:980977651129:web:791dd31e9b2825c4d57a68"
-        };
-        firebase.initializeApp(config);
-        const db = firebase.firestore();
-        let products = [];
+    <section class="view" id="view-productos">
+      <h1>Inventario</h1>
+      <table>
+        <thead><tr><th>Producto</th><th>Stock</th><th>Compra</th><th>Venta</th><th>Ganancia</th></tr></thead>
+        <tbody id="inventory-list"></tbody>
+      </table>
+    </section>
 
-        window.navigate = (view) => {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('view-' + view)?.classList.add('active');
-            event?.currentTarget?.classList.add('active');
-        };
+    <section class="view" id="view-ventas">
+      <h1>Ventas del día</h1>
+      <div id="sale-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:15px;"></div>
+    </section>
 
-        function renderAll() {
-            document.getElementById('stat-products').textContent = products.length;
-            document.getElementById('inventory-list').innerHTML = products.map(p => `
-                <tr>
-                    <td><img src="${p.img || ''}" class="prod-img"></td>
-                    <td><strong>${p.name}</strong></td>
-                    <td>${p.stock}</td>
-                    <td>$${p.buyPrice}</td>
-                    <td>$${p.sellPrice}</td>
-                    <td class="gain-text">$${(p.sellPrice - p.buyPrice).toFixed(2)}</td>
-                </tr>
-            `).join('');
-        }
+    <section class="view" id="view-ajustes">
+      <h1>Configuración</h1>
+      <div class="stat-card" style="text-align:left; max-width:460px;">
+        <label>Nombre de la tienda</label><br>
+        <input type="text" id="set-name" class="login-input" value="TALARA">
+        <button class="btn-orange" onclick="alert('Ajustes guardados')">Guardar Cambios</button>
+      </div>
+    </section>
+  </main>
 
-        function showLogin() {
-            if(document.getElementById('login-screen')) return;
-            const ui = `
-            <div id="login-screen">
-                <div class="login-card">
-                    <h2>KIRO</h2>
-                    <p style="color:var(--muted); font-size:12px; margin-bottom:25px;">Dulces & Pulseras</p>
-                    <div id="log-err" style="color:var(--danger); font-size:12px; margin-bottom:10px; display:none;"></div>
-                    <input id="em" class="login-input" placeholder="Tu correo Gmail">
-                    <input id="pw" type="password" class="login-input" placeholder="Contraseña de esta App">
-                    <button id="btn-entrar" onclick="L()" class="btn-login">Entrar</button>
-                    <p style="margin-top:20px; font-size:13px; color:var(--muted);">
-                        ¿Primera vez? <span style="color:var(--accent); cursor:pointer;" onclick="toggleReg(true)">Crear cuenta</span>
-                    </p>
-                </div>
-            </div>`;
-            document.body.insertAdjacentHTML('beforeend', ui);
-        }
+  <!-- FIREBASE LIBRARIES (Importadas directo para que no fallen) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-        window.toggleReg = (show) => {
-            const card = document.querySelector('.login-card');
-            if(show) {
-                card.innerHTML = `
-                <h2>Crear Cuenta</h2>
-                <p style="color:var(--muted); font-size:11px; margin-bottom:20px;">Usa tu Gmail y crea una contraseña para esta app.</p>
-                <input id="reg-name" class="login-input" placeholder="Tu nombre completo">
-                <input id="em" class="login-input" placeholder="Correo Gmail">
-                <input id="pw" type="password" class="login-input" placeholder="Nueva contraseña (mín. 6 carac.)">
-                <button onclick="R()" class="btn-login">Crear cuenta</button>
-                <p style="margin-top:20px; font-size:13px; color:var(--muted);" onclick="location.reload()">Regresar al login</p>`;
-            }
-        };
+  <script>
+    const config = {
+      apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
+      authDomain: "gestor-de-inventario-853d8.firebaseapp.com",
+      projectId: "gestor-de-inventario-853d8",
+      storageBucket: "gestor-de-inventario-853d8.firebasestorage.app",
+      messagingSenderId: "980977651129",
+      appId: "1:980977651129:web:791dd31e9b2825c4d57a68"
+    };
+    firebase.initializeApp(config);
+    const db = firebase.firestore();
+    let products = [];
 
-        window.L = () => {
-            const b = document.getElementById('btn-entrar'); b.innerText = "Entrando...";
-            firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value)
-            .catch(e => { alert("Error: " + e.message); b.innerText = "Entrar"; });
-        };
+    window.navigate = (v) => {
+      if(v === 'ajustes' && prompt("Pass:") !== 'T4L4R4') return;
+      document.querySelectorAll('.view').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item, .bnav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('view-' + v)?.classList.add('active');
+      document.querySelectorAll(`[onclick="navigate('${v}')"]`).forEach(el => el.classList.add('active'));
+      if(v === 'ventas') renderSales();
+    };
 
-        window.R = () => {
-            const email = document.getElementById('em').value;
-            const pass = document.getElementById('pw').value;
-            const name = document.getElementById('reg-name').value;
-            firebase.auth().createUserWithEmailAndPassword(email, pass).then(cred => {
-                return db.collection('users').doc(cred.user.uid).set({ id: cred.user.uid, name, email, role: 'Admin', createdAt: new Date().toISOString() });
-            }).catch(e => alert(e.message));
-        };
+    function renderAll() {
+      document.getElementById('st-products').innerText = products.length;
+      document.getElementById('inventory-list').innerHTML = products.map(p => `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td><span style="background:#252525; padding:4px 8px; border-radius:6px;">${p.stock}</span></td>
+          <td>$${p.buyPrice}</td><td>$${p.sellPrice}</td>
+          <td class="gain-text">$${(p.sellPrice - p.buyPrice).toFixed(2)}</td>
+        </tr>
+      `).join('');
+    }
 
-        firebase.auth().onAuthStateChanged(user => {
-            document.getElementById('splash').style.opacity = '0';
-            setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
-            if (user) {
-                document.getElementById('login-screen')?.remove();
-                db.collection('products').onSnapshot(snap => {
-                    products = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    renderAll();
-                });
-            } else { showLogin(); }
+    function renderSales() {
+      document.getElementById('sale-grid').innerHTML = products.filter(p => p.stock > 0).map(p => `
+        <div class="stat-card" style="cursor:pointer;" onclick="makeSale('${p.id}')">
+          <div style="font-weight:600;">${p.name}</div>
+          <div style="color:var(--orange); font-weight:700;">$${p.sellPrice}</div>
+        </div>
+      `).join('');
+    }
+
+    window.makeSale = async (id) => {
+      const p = products.find(x => x.id === id);
+      if(confirm(`Vender ${p.name}?`)) {
+        await db.collection('products').doc(id).update({ stock: p.stock - 1 });
+        await db.collection('movements').add({
+          productId: id, productName: p.name, type: 'out', qty: 1, 
+          price: p.sellPrice, profit: (p.sellPrice - p.buyPrice), date: new Date().toISOString()
         });
+      }
+    };
 
-        window.fbLogout = () => firebase.auth().signOut().then(() => location.reload());
-    </script>
+    firebase.auth().onAuthStateChanged(user => {
+      document.getElementById('splash').style.opacity = '0';
+      setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
+      if (user) {
+        document.getElementById('login-screen')?.remove();
+        db.collection('products').onSnapshot(snap => {
+          products = snap.docs.map(d => ({id: d.id, ...d.data()}));
+          renderAll();
+        });
+      } else { showLogin(); }
+    });
+
+    function showLogin() {
+      if(document.getElementById('login-screen')) return;
+      const ui = `<div id="login-screen"><div class="login-card"><h2>KIRO</h2><p style="color:var(--muted); font-size:12px; margin-bottom:25px;">Inventario Seguro</p><input id="em" class="login-input" placeholder="Correo Gmail"><input id="pw" type="password" class="login-input" placeholder="Contraseña"><button onclick="L()" class="btn-orange">Entrar</button><p style="margin-top:20px; font-size:13px; color:var(--muted);">¿Primera vez? <span style="color:var(--orange); cursor:pointer;" onclick="toggleReg()">Crear cuenta</span></p></div></div>`;
+      document.body.insertAdjacentHTML('beforeend', ui);
+    }
+
+    window.toggleReg = () => {
+      const c = document.querySelector('.login-card');
+      c.innerHTML = `<h2>Crear Cuenta</h2><input id="rn" class="login-input" placeholder="Tu nombre"><input id="em" class="login-input" placeholder="Correo Gmail"><input id="pw" type="password" class="login-input" placeholder="Contraseña"><button onclick="R()" class="btn-orange">Crear</button><p onclick="location.reload()" style="margin-top:20px; cursor:pointer; font-size:13px;">Regresar</p>`;
+    };
+
+    window.L = () => firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value).catch(e => alert(e.message));
+    window.R = () => {
+      const email = document.getElementById('em').value;
+      firebase.auth().createUserWithEmailAndPassword(email, document.getElementById('pw').value).then(cred => {
+        return db.collection('users').doc(cred.user.uid).set({ id: cred.user.uid, name: document.getElementById('rn').value, email, role: 'Admin' });
+      }).catch(e => alert(e.message));
+    };
+
+    window.fbLogout = () => firebase.auth().signOut().then(() => location.reload());
+  </script>
 </body>
 </html>
