@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TALARA — Gestión Integral Total</title>
+    <title>KIRO — Gestión Integral Total</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #141414; --surface: #1e1e1e; --border: #2e2e2e; --text: #f0ece6; --orange: #e07b39; --muted: #7a7570; --success: #10b981; --danger: #ef4444; }
@@ -28,7 +28,7 @@
     </style>
 </head>
 <body>
-    <div id="splash"><h1>KIRO</h1><p>Cargando sistema completo...</p></div>
+    <div id="splash"><h1>KIRO</h1><p>Activando todas las funciones...</p></div>
 
     <aside class="sidebar">
         <h2 style="color:var(--orange)">KIRO</h2>
@@ -44,7 +44,6 @@
     </aside>
 
     <main class="content">
-        <!-- VISTA PANEL -->
         <section class="view active" id="view-panel">
             <h1>Panel de Control</h1>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
@@ -57,39 +56,35 @@
             </div>
         </section>
 
-        <!-- VISTA PRODUCTOS -->
         <section class="view" id="view-productos">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h1>Inventario</h1>
                 <button class="btn btn-primary" onclick="alert('Función para agregar próximamente')">+ Nuevo Producto</button>
             </div>
-            <table id="table-inv">
+            <table>
                 <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Precio</th></tr></thead>
                 <tbody id="inventory-list"></tbody>
             </table>
         </section>
 
-        <!-- VISTA VENTAS -->
         <section class="view" id="view-ventas">
             <h1>Registrar Venta</h1>
             <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 30px;">
                 <div id="sale-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;"></div>
                 <div class="stat-card">
                     <h3>Carrito</h3>
-                    <div id="cart-items" style="margin-bottom:20px; font-size:14px;"></div>
+                    <div id="cart-items" style="margin-bottom:20px;"></div>
                     <div style="font-size:20px; font-weight:700; border-top:1px solid var(--border); padding-top:10px;">Total: <span id="cart-total">$0.00</span></div>
                     <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="processSale()">Confirmar Venta</button>
                 </div>
             </div>
         </section>
 
-        <!-- OTRAS VISTAS (PLACEHOLDERS) -->
-        <section class="view" id="view-movimientos"><h1>Historial de Movimientos</h1><div id="mov-list">Próximamente...</div></section>
-        <section class="view" id="view-usuarios"><h1>Gestión de Usuarios</h1><div>Lista de acceso.</div></section>
+        <section class="view" id="view-movimientos"><h1>Historial de Movimientos</h1><div id="mov-list">Historial cargando...</div></section>
+        <section class="view" id="view-usuarios"><h1>Gestión de Usuarios</h1><div>Usuarios con acceso.</div></section>
         <section class="view" id="view-ajustes"><h1>Ajustes</h1><div>Configuración de tienda.</div></section>
     </main>
 
-    <!-- FIREBASE LIBRARIES -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -111,7 +106,7 @@
         window.navigate = (view) => {
             if(view === 'ajustes') {
                 const p = prompt("Contraseña de ajustes:");
-                if(p !== 'T4L4R4') return alert("Contraseña incorrecta");
+                if(p !== 'T4L4R4') return alert("Incorrecta");
             }
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -122,26 +117,15 @@
 
         function renderAll() {
             document.getElementById('stat-products').textContent = products.length;
-            // Render Lista de Productos
             document.getElementById('inventory-list').innerHTML = products.map(p => `
-                <tr>
-                    <td><strong>${p.name}</strong></td>
-                    <td>${p.category || 'Varios'}</td>
-                    <td><span style="background:#333; padding:4px 10px; border-radius:15px;">${p.stock}</span></td>
-                    <td style="color:var(--orange)">$${p.sellPrice || 0}</td>
-                </tr>
+                <tr><td><strong>${p.name}</strong></td><td>${p.category || '-'}</td><td>${p.stock}</td><td>$${p.sellPrice || 0}</td></tr>
             `).join('');
-            
-            // Render Bajo Stock
-            const low = products.filter(p => p.stock <= 3);
-            document.getElementById('low-stock-list').innerHTML = low.length ? low.map(p => `<div style="padding:10px; background:#252525; border-radius:8px; margin-bottom:5px;">⚠️ ${p.name} - Quedan ${p.stock}</div>`).join('') : 'Todo bien.';
         }
 
         function renderSaleGrid() {
             document.getElementById('sale-grid').innerHTML = products.filter(p => p.stock > 0).map(p => `
                 <div class="stat-card" style="cursor:pointer; text-align:center;" onclick="addToCart('${p.id}')">
-                    <div style="font-weight:600;">${p.name}</div>
-                    <div style="color:var(--orange); margin-top:5px;">$${p.sellPrice}</div>
+                    <div>${p.name}</div><div style="color:var(--orange)">$${p.sellPrice}</div>
                 </div>
             `).join('');
         }
@@ -149,7 +133,6 @@
         window.addToCart = (id) => {
             const p = products.find(x => x.id === id);
             cart[id] = (cart[id] || 0) + 1;
-            if(cart[id] > p.stock) cart[id] = p.stock;
             renderCart();
         };
 
@@ -158,26 +141,21 @@
             document.getElementById('cart-items').innerHTML = Object.entries(cart).map(([id, qty]) => {
                 const p = products.find(x => x.id === id);
                 total += p.sellPrice * qty;
-                return `<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>${p.name} x${qty}</span><span>$${(p.sellPrice * qty).toFixed(2)}</span></div>`;
-            }).join('') || 'Carrito vacío';
+                return `<div>${p.name} x${qty}</div>`;
+            }).join('');
             document.getElementById('cart-total').textContent = '$' + total.toFixed(2);
         }
 
         window.processSale = async () => {
-            if(Object.keys(cart).length === 0) return alert("Carrito vacío");
             for(const [id, qty] of Object.entries(cart)) {
                 const p = products.find(x => x.id === id);
                 await db.collection('products').doc(id).update({ stock: p.stock - qty });
-                await db.collection('movements').add({
-                    productId: id, productName: p.name, type: 'out', qty: qty, date: new Date().toISOString()
-                });
             }
-            cart = {}; renderCart(); renderSaleGrid(); alert("✅ Venta registrada con éxito");
+            cart = {}; renderCart(); renderSaleGrid(); alert("Venta registrada");
         };
 
         firebase.auth().onAuthStateChanged(user => {
-            document.getElementById('splash').style.opacity = '0';
-            setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
+            document.getElementById('splash').style.display = 'none';
             if (user) {
                 db.collection('products').onSnapshot(snap => {
                     products = snap.docs.map(d => ({id: d.id, ...d.data()}));
