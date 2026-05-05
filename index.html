@@ -3,42 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario Kiro — ESTABLE</title>
+    <title>KIRO — Sistema de Inventario</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #141414; --surface: #1e1e1e; --orange: #e07b39; --text: #f0ece6; --border: #2e2e2e; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; }
-        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; }
-        .content { margin-left: 220px; padding: 30px; }
-        .nav-item { padding: 12px; cursor: pointer; border-radius: 8px; color: #7a7570; }
-        .nav-item.active { background: var(--orange); color: white; }
-        .view { display: none; } .view.active { display: block; }
-        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: inline-block; min-width: 150px; margin-right: 15px; }
-        #splash { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; justify-content: center; align-items: center; }
-        @media (max-width: 768px) { .sidebar { display: none; } .content { margin-left: 0; } }
+        :root { --bg: #141414; --surface: #1e1e1e; --orange: #e07b39; --text: #f0ece6; --border: #2e2e2e; --muted: #7a7570; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; z-index: 100; }
+        .content { margin-left: 220px; padding: 40px; min-height: 100vh; }
+        .nav-item { padding: 12px 16px; cursor: pointer; border-radius: 8px; color: var(--muted); margin-bottom: 8px; transition: 0.2s; }
+        .nav-item:hover { background: #252525; color: var(--text); }
+        .nav-item.active { background: var(--orange); color: white; font-weight: 600; }
+        .view { display: none; } .view.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 25px; border-radius: 15px; display: inline-block; min-width: 180px; margin-right: 20px; }
+        .stat-value { display: block; font-size: 32px; font-weight: 700; color: var(--orange); margin-top: 10px; }
+        #splash { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.5s; }
+        .btn-primary { background: var(--orange); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        input { background: #252525; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 15px; }
+        @media (max-width: 768px) { .sidebar { display: none; } .content { margin-left: 0; padding: 20px; } }
     </style>
 </head>
 <body>
-    <div id="splash"><h1>CARGANDO KIRO...</h1></div>
+    <div id="splash">
+        <h1 style="color:var(--orange); font-size: 40px; margin-bottom: 10px;">KIRO</h1>
+        <p id="splash-status">Iniciando sistema...</p>
+    </div>
+
     <aside class="sidebar">
-        <h2 style="color:var(--orange)">KIRO</h2>
-        <div class="nav-item active" onclick="navigate('panel')">📊 Panel</div>
+        <h2 style="color:var(--orange); margin-bottom: 30px;">KIRO</h2>
+        <div class="nav-item active" onclick="navigate('panel')">📊 Panel General</div>
         <div class="nav-item" onclick="navigate('productos')">📦 Productos</div>
-        <div onclick="fbLogout()" style="margin-top:20px; cursor:pointer; opacity:0.5; padding: 10px;">Cerrar Sesión</div>
+        <div style="position:absolute; bottom:30px; left:20px; right:20px;">
+            <div class="nav-item" onclick="fbLogout()" style="opacity:0.6">🚪 Cerrar Sesión</div>
+        </div>
     </aside>
+
     <main class="content">
         <section class="view active" id="view-panel">
-            <h1>Panel</h1>
-            <div class="stat-grid">
-                <div class="stat-card">Productos: <span id="stat-products">0</span></div>
+            <h1>Bienvenido, Robert</h1>
+            <div class="stat-card">
+                <span style="color:var(--muted)">Total Productos</span>
+                <span class="stat-value" id="stat-products">0</span>
+            </div>
+            <div style="margin-top: 40px; color: var(--muted);">Lista de stock bajo aparecerá aquí.</div>
+        </section>
+
+        <section class="view" id="view-productos">
+            <h1>Inventario de Productos</h1>
+            <div id="inventory-list" style="background:var(--surface); border-radius:15px; padding:10px; border:1px solid var(--border);">
+                Cargando base de datos...
             </div>
         </section>
-        <section class="view" id="view-productos">
-            <h1>Productos</h1>
-            <div id="inventory-body" style="background:var(--surface); padding:20px; border-radius:12px;"> Cargando... </div>
-        </section>
     </main>
-    <script src="firebase_v3.js"></script>
-    <script src="app_v3.js"></script>
+
+    <!-- FIREBASE LIBRARIES -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const config = {
+            apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
+            authDomain: "gestor-de-inventario-853d8.firebaseapp.com",
+            projectId: "gestor-de-inventario-853d8",
+            storageBucket: "gestor-de-inventario-853d8.firebasestorage.app",
+            messagingSenderId: "980977651129",
+            appId: "1:980977651129:web:791dd31e9b2825c4d57a68"
+        };
+
+        let products = [];
+        firebase.initializeApp(config);
+
+        // NAVEGACIÓN
+        window.navigate = (view) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('view-' + view).classList.add('active');
+            event?.target?.classList.add('active');
+        };
+
+        // LOGIN UI
+        function showLogin() {
+            if(document.getElementById('login-screen')) return;
+            const ui = `<div id="login-screen" style="position:fixed;inset:0;background:#141414;display:flex;justify-content:center;align-items:center;z-index:9999;"><div style="background:#1e1e1e;padding:40px;border-radius:20px;text-align:center;width:320px;border:1px solid #2e2e2e;"><h2>Entrar a KIRO</h2><input id="em" placeholder="Correo Gmail"><input id="pw" type="password" placeholder="Contraseña de la App"><button onclick="L()" class="btn-primary" style="width:100%">Entrar al Sistema</button></div></div>`;
+            document.body.insertAdjacentHTML('beforeend', ui);
+        }
+
+        window.L = () => {
+            const e = document.getElementById('em').value;
+            const p = document.getElementById('pw').value;
+            firebase.auth().signInWithEmailAndPassword(e, p).catch(err => alert("Error: " + err.message));
+        };
+
+        window.fbLogout = () => firebase.auth().signOut().then(() => location.reload());
+
+        // CARGA DE DATOS
+        firebase.auth().onAuthStateChanged(user => {
+            document.getElementById('splash').style.opacity = '0';
+            setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
+
+            if (!user) {
+                showLogin();
+            } else {
+                document.getElementById('login-screen')?.remove();
+                firebase.firestore().collection('products').onSnapshot(snap => {
+                    products = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    document.getElementById('stat-products').textContent = products.length;
+                    document.getElementById('inventory-list').innerHTML = products.map(p => `
+                        <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
+                            <span><strong>${p.name}</strong></span>
+                            <span style="color:var(--orange)">Stock: ${p.stock}</span>
+                        </div>
+                    `).join('') || '<div style="padding:20px">No hay productos aún.</div>';
+                });
+            }
+        });
+    </script>
 </body>
 </html>
