@@ -1,6 +1,5 @@
-// ── Firebase — Sincronización completa en tiempo real ─────────────────────
-
-const FIREBASE_CONFIG = {
+// ── Firebase Config ───────────────────────────────────────────────────────────
+var FIREBASE_CONFIG = {
   apiKey:            "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
   authDomain:        "gestor-de-inventario-853d8.firebaseapp.com",
   projectId:         "gestor-de-inventario-853d8",
@@ -9,306 +8,157 @@ const FIREBASE_CONFIG = {
   appId:             "1:980977651129:web:791dd31e9b2825c4d57a68"
 };
 
-let db     = null;
-let fbAuth = null;
-let _fb    = null;
-let _fa    = null;
-let _listeners = [];
+var _fbAuth = null;
+var _fbDb   = null;
+var _fbCbs  = {};
+var _unsubs = [];
 
-// ── Inicializa Firebase ────────────────────────────────────────────────────
-async function initFirebase() {
-  try {
-    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    _fb = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    _fa = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+var FB_SCRIPTS = [
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js'
+];
 
-    const app = initializeApp(FIREBASE_CONFIG);
-    db     = _fb.getFirestore(app);
-    fbAuth = _fa.getAuth(app);
-
-    showSyncStatus('connecting');
-
-    _fa.onAuthStateChanged(fbAuth, user => {
-      document.body.style.visibility = 'visible';
-      if (user) { onUserSignedIn(user); }
-      else      { stopListeners(); hideSplash(); showLoginScreen(); }
-    });
-
-    return true;
-  } catch (err) {
-    console.error('[Firebase]', err);
-    showSyncStatus('error');
-    return false;
-  }
+function loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+    var s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
-// ── Usuario autenticado ────────────────────────────────────────────────────
-async function onUserSignedIn(fbUser) {
-  showSyncStatus('connecting');
-  try {
-    const snap = await _fb.getDocs(
-      _fb.query(_fb.collection(db, 'users'), _fb.where('email', '==', fbUser.email))
-    );
-    if (snap.empty) {
-      const allUsers = await _fb.getDocs(_fb.collection(db, 'users'));
-      const me = {
-        id:    fbUser.uid,
-        name:  fbUser.displayName || fbUser.email.split('@')[0],
-        email: fbUser.email,
-        role:  allUsers.empty ? 'Admin' : 'Usuario',
-        date:  new Date().toISOString()
+function showLoginUI() {
+  document.body.insertAdjacentHTML('beforeend',
+    '<div id="login-screen" style="position:fixed;inset:0;background:#141414;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Inter,sans-serif">' +
+    '<div style="background:#1e1e1e;border:1px solid #2e2e2e;border-radius:12px;padding:32px;width:100%;max-width:360px;margin:16px">' +
+    '<h2 style="color:#f0ece6;margin:0 0 4px;font-size:22px">TALARA</h2>' +
+    '<p style="color:#7a7570;margin:0 0 24px;font-size:13px">Gestor de Inventario</p>' +
+    '<div id="login-error" style="display:none;background:#c0392b22;color:#e74c3c;border:1px solid #c0392b44;border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:13px"></div>' +
+    '<input id="login-email" type="email" placeholder="Correo electrónico (Gmail)" autocomplete="email" style="width:100%;box-sizing:border-box;padding:11px 14px;background:#252525;border:1px solid #2e2e2e;border-radius:8px;color:#f0ece6;font-size:15px;margin-bottom:12px;outline:none">' +
+    '<input id="login-pass" type="password" placeholder="Contraseña (solo para esta app)" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:11px 14px;background:#252525;border:1px solid #2e2e2e;border-radius:8px;color:#f0ece6;font-size:15px;margin-bottom:8px;outline:none">' +
+    '<p style="color:#7a7570;font-size:11px;margin:0 0 16px">⚠️ Esta contraseña es exclusiva para esta app, no uses tu contraseña de Gmail.</p>' +
+    '<button id="login-btn" style="width:100%;padding:12px;background:#e07b39;border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px">Iniciar sesión</button>' +
+    '<button id="register-btn" style="width:100%;padding:12px;background:transparent;border:1px solid #2e2e2e;border-radius:8px;color:#f0ece6;font-size:14px;cursor:pointer">Crear cuenta nueva</button>' +
+    '<p style="color:#7a7570;font-size:11px;text-align:center;margin:12px 0 0">El primer usuario registrado será Admin automáticamente.</p>' +
+    '</div></div>');
+
+  var errEl   = document.getElementById('login-error');
+  var emailEl = document.getElementById('login-email');
+  var passEl  = document.getElementById('login-pass');
+  var loginBtn= document.getElementById('login-btn');
+  var regBtn  = document.getElementById('register-btn');
+
+  function showError(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+
+  loginBtn.addEventListener('click', function() {
+    var email = emailEl.value.trim(), pass = passEl.value;
+    if (!email || !pass) { showError('Completa todos los campos'); return; }
+    loginBtn.textContent = 'Entrando...'; loginBtn.disabled = true;
+    _fbAuth.signInWithEmailAndPassword(email, pass).catch(function(e) {
+      loginBtn.textContent = 'Iniciar sesión'; loginBtn.disabled = false;
+      var msgs = {
+        'auth/user-not-found':'Correo no registrado',
+        'auth/wrong-password':'Contraseña incorrecta',
+        'auth/invalid-credential':'Credenciales inválidas',
+        'auth/too-many-requests':'Demasiados intentos. Espera un momento.',
+        'auth/invalid-email':'Correo inválido'
       };
-      await fbSet('users', me);
-    }
-
-    const pSnap = await _fb.getDocs(_fb.collection(db, 'products'));
-    if (pSnap.empty) {
-      for (const p of SEED_PRODUCTS) await fbSet('products', p);
-    }
-
-    startListeners(fbUser);
-    hideLoginScreen();
-    showSyncStatus('online');
-    if (typeof hideSplash === 'function') hideSplash();
-
-  } catch (err) {
-    console.error('[onUserSignedIn]', err);
-    showSyncStatus('error');
-  }
-}
-
-// ── Escuchas en tiempo real ────────────────────────────────────────────────
-function startListeners(fbUser) {
-  stopListeners();
-
-  _listeners.push(
-    _fb.onSnapshot(_fb.collection(db, 'products'), snap => {
-      products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderAll();
-      const vv = document.getElementById('view-ventas');
-      if (vv && !vv.classList.contains('hidden')) renderSaleProductList();
-    })
-  );
-
-  _listeners.push(
-    _fb.onSnapshot(_fb.collection(db, 'movements'), snap => {
-      movements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderAll();
-    })
-  );
-
-  _listeners.push(
-    _fb.onSnapshot(_fb.collection(db, 'users'), snap => {
-      users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const me = users.find(u => u.email === fbUser.email);
-      if (me) {
-        activeUserId = me.id;
-        window._currentUserRole = me.role;
-        localStorage.setItem('inv_active_user', me.id);
-      }
-      renderAll();
-    })
-  );
-
-  const settingsDocRef = _fb.doc(db, 'settings', fbUser.uid);
-  _listeners.push(
-    _fb.onSnapshot(settingsDocRef, snap => {
-      if (snap.exists()) {
-        const data = snap.data();
-        localStorage.setItem('inv_settings_' + fbUser.uid, JSON.stringify(data));
-        activeUserId = fbUser.uid;
-        applySettings({ ...DEFAULTS, ...data });
-        const va = document.getElementById('view-ajustes');
-        if (va && !va.classList.contains('hidden')) loadSettingsUI();
-      }
-    })
-  );
-
-  setTimeout(() => {
-    applySettings();
-    loadSettingsUI();
-    navigate('panel');
-  }, 600);
-}
-
-function stopListeners() {
-  _listeners.forEach(u => u());
-  _listeners = [];
-}
-
-// ── Guardar ajustes en Firestore ───────────────────────────────────────────
-async function fbSaveSettings(userId, data) {
-  if (!db || !_fb) return;
-  await _fb.setDoc(_fb.doc(db, 'settings', userId), data, { merge: true });
-}
-
-// ── CRUD Firestore ─────────────────────────────────────────────────────────
-async function fbSet(colName, item) {
-  if (!db || !_fb) return;
-  const { id, ...data } = item;
-  await _fb.setDoc(_fb.doc(db, colName, id), data);
-}
-
-async function fbDelete(colName, id) {
-  if (!db || !_fb) return;
-  await _fb.deleteDoc(_fb.doc(db, colName, id));
-}
-
-// ── Auth ───────────────────────────────────────────────────────────────────
-async function fbSignIn(email, password) {
-  return _fa.signInWithEmailAndPassword(fbAuth, email, password);
-}
-async function fbSignUp(email, password) {
-  return _fa.createUserWithEmailAndPassword(fbAuth, email, password);
-}
-async function fbSignOut() {
-  stopListeners();
-  await _fa.signOut(fbAuth);
-}
-
-// ── Pantalla de Login ──────────────────────────────────────────────────────
-function showLoginScreen() {
-  let el = document.getElementById('login-screen');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'login-screen';
-    el.innerHTML = `
-      <div class="login-box">
-        <div class="login-brand">
-          <span class="brand-title">Inventario</span>
-          <span class="brand-sub">Dulces &amp; Pulseras</span>
-        </div>
-        <div id="login-error" class="login-error hidden"></div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label>Tu correo Gmail</label>
-          <input type="email" id="login-email" placeholder="tucorreo@gmail.com" autocomplete="email" />
-        </div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label>Contraseña de esta app</label>
-          <input type="password" id="login-password" placeholder="Ingresa tu contraseña" autocomplete="current-password" />
-        </div>
-        <button class="btn-primary" id="login-btn" style="width:100%">Entrar</button>
-        <p class="login-hint">¿Primera vez? <a href="#" id="show-register">Crear cuenta</a></p>
-        <div id="register-section" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-          <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.5">
-            Usa tu correo Gmail y crea una contraseña exclusiva para esta app.<br>
-            <strong style="color:var(--orange)">No es tu contraseña de Gmail.</strong>
-          </p>
-          <div class="form-group" style="margin-bottom:12px">
-            <label>Tu nombre completo</label>
-            <input type="text" id="reg-name" placeholder="Ej: Roberto Falfán" />
-          </div>
-          <div class="form-group" style="margin-bottom:12px">
-            <label>Nueva contraseña para esta app</label>
-            <input type="password" id="reg-password2" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-          </div>
-          <button class="btn-primary" id="register-btn" style="width:100%">Crear cuenta</button>
-        </div>
-        <p style="font-size:0.7rem;color:var(--muted);text-align:center;margin-top:16px;line-height:1.4">
-          Tu contraseña de Gmail <strong>no se comparte</strong> con esta app.
-        </p>
-      </div>`;
-    document.body.appendChild(el);
-
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('login-email').value.trim();
-      const pass  = document.getElementById('login-password').value;
-      if (!email || !pass) { loginErr('Completa todos los campos.'); return; }
-      const btn = document.getElementById('login-btn');
-      btn.textContent = 'Entrando…'; btn.disabled = true;
-      try {
-        await fbSignIn(email, pass);
-      } catch(e) {
-        btn.textContent = 'Entrar'; btn.disabled = false;
-        loginErr(authMsg(e.code));
-      }
+      showError(msgs[e.code] || e.message);
     });
+  });
 
-    document.getElementById('show-register').addEventListener('click', e => {
-      e.preventDefault();
-      const s = document.getElementById('register-section');
-      s.style.display = s.style.display === 'none' ? 'block' : 'none';
-      document.getElementById('show-register').textContent =
-        s.style.display === 'none' ? 'Crear cuenta' : 'Cancelar';
-    });
-
-    document.getElementById('register-btn').addEventListener('click', async () => {
-      const email = document.getElementById('login-email').value.trim();
-      const pass  = document.getElementById('reg-password2').value;
-      const name  = document.getElementById('reg-name').value.trim();
-      if (!email || !pass || !name) { loginErr('Completa todos los campos.'); return; }
-      if (pass.length < 6) { loginErr('La contraseña debe tener mínimo 6 caracteres.'); return; }
-      const btn = document.getElementById('register-btn');
-      btn.textContent = 'Creando cuenta…'; btn.disabled = true;
-      try {
-        const cred    = await fbSignUp(email, pass);
-        const allSnap = await _fb.getDocs(_fb.collection(db, 'users'));
-        const role    = allSnap.empty ? 'Admin' : 'Usuario';
-        await fbSet('users', {
-          id: cred.user.uid, name, email, role, date: new Date().toISOString()
+  regBtn.addEventListener('click', function() {
+    var email = emailEl.value.trim(), pass = passEl.value;
+    if (!email || !pass) { showError('Completa todos los campos'); return; }
+    if (pass.length < 6) { showError('La contraseña debe tener al menos 6 caracteres'); return; }
+    regBtn.textContent = 'Creando cuenta...'; regBtn.disabled = true;
+    _fbAuth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
+      var uid = cred.user.uid;
+      return _fbDb.collection('users').get().then(function(snap) {
+        var role = snap.empty ? 'Admin' : 'Usuario';
+        return _fbDb.collection('users').doc(uid).set({
+          id:uid, name:email.split('@')[0], email:email,
+          role:role, createdAt:new Date().toISOString()
         });
-      } catch(e) {
-        btn.textContent = 'Crear cuenta'; btn.disabled = false;
-        loginErr(authMsg(e.code));
+      });
+    }).catch(function(e) {
+      regBtn.textContent = 'Crear cuenta nueva'; regBtn.disabled = false;
+      var msgs = {
+        'auth/email-already-in-use':'Ese correo ya está registrado',
+        'auth/weak-password':'Contraseña muy débil (mínimo 6 caracteres)',
+        'auth/invalid-email':'Correo inválido',
+        'auth/permission-denied':'Error de permisos. Verifica las reglas de Firestore.'
+      };
+      showError(msgs[e.code] || e.message);
+    });
+  });
+
+  [emailEl, passEl].forEach(function(el) {
+    el.addEventListener('keydown', function(e) { if (e.key === 'Enter') loginBtn.click(); });
+  });
+
+  if (typeof hideSplash === 'function') hideSplash();
+  document.body.style.visibility = 'visible';
+}
+
+function removeLoginUI() {
+  var el = document.getElementById('login-screen');
+  if (el) el.remove();
+}
+
+function initFirebase(callbacks) {
+  _fbCbs = callbacks || {};
+  var p = Promise.resolve();
+  FB_SCRIPTS.forEach(function(src) { p = p.then(function() { return loadScript(src); }); });
+  p.then(function() {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    _fbAuth = firebase.auth();
+    _fbDb   = firebase.firestore();
+
+    _fbAuth.onAuthStateChanged(function(user) {
+      if (!user) {
+        _unsubs.forEach(function(fn){ fn(); }); _unsubs = [];
+        removeLoginUI();
+        showLoginUI();
+        return;
       }
+      removeLoginUI();
+      ['products','movements','users'].forEach(function(col) {
+        var unsub = _fbDb.collection(col).onSnapshot(function(snap) {
+          var data = snap.docs.map(function(d){ return d.data(); });
+          if (_fbCbs.onData) _fbCbs.onData(col, data);
+        }, function(err) { console.warn('Firestore '+col+':', err.message); });
+        _unsubs.push(unsub);
+      });
+      _fbDb.collection('settings').doc(user.uid).get().then(function(doc) {
+        if (doc.exists && _fbCbs.onSettings) _fbCbs.onSettings(user.uid, doc.data());
+      }).catch(function(){});
+      if (_fbCbs.onUser) _fbCbs.onUser(user);
     });
-
-    document.getElementById('login-password').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('login-btn').click();
-    });
-  }
-  el.style.display = 'flex';
+  }).catch(function(err) {
+    console.error('Firebase load error:', err);
+    if (typeof hideSplash === 'function') hideSplash();
+  });
 }
 
-function hideLoginScreen() {
-  const el = document.getElementById('login-screen');
-  if (el) el.style.display = 'none';
+function fbSaveItem(col, item) {
+  if (!_fbDb) return Promise.resolve();
+  return _fbDb.collection(col).doc(item.id).set(item);
 }
-
-function loginErr(msg) {
-  const el = document.getElementById('login-error');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.remove('hidden');
+function fbDeleteItem(col, id) {
+  if (!_fbDb) return Promise.resolve();
+  return _fbDb.collection(col).doc(id).delete();
 }
-
-function authMsg(code) {
-  return ({
-    'auth/user-not-found':       'No existe cuenta con ese correo.',
-    'auth/wrong-password':       'Contraseña incorrecta.',
-    'auth/invalid-credential':   'Correo o contraseña incorrectos.',
-    'auth/email-already-in-use': 'Ese correo ya está registrado.',
-    'auth/weak-password':        'Contraseña muy débil (mínimo 6 caracteres).',
-    'auth/invalid-email':        'Correo inválido.',
-    'auth/too-many-requests':    'Demasiados intentos. Espera un momento.',
-  })[code] || ('Error: ' + code);
+function fbSaveSettings(uid, settings) {
+  if (!_fbDb) return Promise.resolve();
+  var safe = Object.assign({}, settings);
+  if (safe.logoData        && safe.logoData.length        > 133000) delete safe.logoData;
+  if (safe.logoMobileData  && safe.logoMobileData.length  > 133000) delete safe.logoMobileData;
+  delete safe.bgData;
+  return _fbDb.collection('settings').doc(uid).set(safe);
 }
-
-// ── Indicador de estado ────────────────────────────────────────────────────
-function showSyncStatus(state) {
-  let el = document.getElementById('sync-status');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'sync-status';
-    el.style.cssText = `position:fixed;bottom:calc(var(--bnav-h,0px) + 8px);left:50%;
-      transform:translateX(-50%);padding:5px 14px;border-radius:20px;font-size:0.72rem;
-      font-weight:600;z-index:300;pointer-events:none;transition:opacity 0.5s`;
-    document.body.appendChild(el);
-  }
-  const [t, bg, c] = ({
-    connecting: ['⟳ Conectando…', '#1e3a5f', '#60a5fa'],
-    online:     ['● Sincronizado', '#14532d', '#4ade80'],
-    error:      ['⚠ Sin conexión', '#450a0a', '#f87171'],
-    saving:     ['↑ Guardando…',   '#1e3a5f', '#60a5fa'],
-    local:      ['💾 Modo local',  '#374151', '#9ca3af'],
-  })[state] || ['', '#000', '#fff'];
-  el.textContent = t;
-  el.style.background = bg;
-  el.style.color = c;
-  el.style.opacity = '1';
-  if (state === 'online' || state === 'saving') {
-    setTimeout(() => { el.style.opacity = '0'; }, 2500);
-  }
+function fbLogout() {
+  if (!_fbAuth) return;
+  _fbAuth.signOut();
 }
-
-function showSyncBadge(s) { showSyncStatus(s); }
