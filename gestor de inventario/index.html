@@ -3,41 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario Kiro — Dulces y Pulseras</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Inventario Kiro — ESTABLE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #141414; --surface: #1e1e1e; --border: #2e2e2e; --text: #f0ece6; --orange: #e07b39; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; visibility: hidden; }
-        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; z-index: 100; }
-        .content { margin-left: 240px; padding: 20px; }
-        .view { display: none; }
-        .view.active { display: block; }
-        .nav-item { padding: 12px; cursor: pointer; border-radius: 8px; color: #7a7570; }
+        :root { --bg: #141414; --surface: #1e1e1e; --orange: #e07b39; --text: #f0ece6; --border: #2e2e2e; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; }
+        .content { margin-left: 220px; padding: 30px; }
+        .nav-item { padding: 12px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; color: #7a7570; }
         .nav-item.active { background: var(--orange); color: white; }
-        #splash { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .view { display: none; } .view.active { display: block; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: inline-block; min-width: 150px; margin-right: 15px; }
+        #splash { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; justify-content: center; align-items: center; }
         @media (max-width: 768px) { .sidebar { display: none; } .content { margin-left: 0; } }
     </style>
 </head>
 <body>
-    <div id="splash">
-        <h1 style="color:var(--orange)">TALARA</h1>
-        <p>Cargando sistema...</p>
-    </div>
+    <div id="splash"><h1>CARGANDO KIRO...</h1></div>
     <aside class="sidebar">
         <h2 style="color:var(--orange)">KIRO</h2>
-        <nav>
-            <div class="nav-item active" onclick="navigate('panel')">📊 Panel</div>
-            <div class="nav-item" onclick="navigate('productos')">📦 Productos</div>
-            <div class="nav-item" onclick="navigate('ventas')">💰 Ventas</div>
-            <div class="nav-item" onclick="navigate('movimientos')">🔄 Movimientos</div>
-        </nav>
-        <div style="position:absolute; bottom:20px;"><div class="nav-item" onclick="fbLogout()">🚪 Salir</div></div>
+        <div class="nav-item active" onclick="navigate('panel')">📊 Panel</div>
+        <div class="nav-item" onclick="navigate('productos')">📦 Productos</div>
+        <div onclick="fbLogout()" style="margin-top:20px; cursor:pointer; opacity:0.5;">Cerrar Sesión</div>
     </aside>
     <main class="content">
-        <section class="view active" id="view-panel"><h1>Panel</h1><div id="stat-products">0</div></section>
-        <section class="view" id="view-productos"><h1>Productos</h1><div id="inventory-body"></div></section>
+        <section class="view active" id="view-panel">
+            <h1>Panel</h1>
+            <div class="stat-card">Productos: <span id="stat-products">0</span></div>
+        </section>
+        <section class="view" id="view-productos">
+            <h1>Productos</h1>
+            <div id="inventory-body"> Cargando... </div>
+        </section>
     </main>
-    <script src="firebase.js"></script>
-    <script src="app.js"></script>
+    <script src="firebase_v3.js"></script>
+    <script src="app_v3.js"></script>
 </body>
 </html>
