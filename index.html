@@ -10,7 +10,7 @@
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; }
         .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; }
         .content { margin-left: 220px; padding: 30px; }
-        .nav-item { padding: 12px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; color: #7a7570; }
+        .nav-item { padding: 12px; cursor: pointer; border-radius: 8px; color: #7a7570; }
         .nav-item.active { background: var(--orange); color: white; }
         .view { display: none; } .view.active { display: block; }
         .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: inline-block; min-width: 150px; margin-right: 15px; }
@@ -24,16 +24,18 @@
         <h2 style="color:var(--orange)">KIRO</h2>
         <div class="nav-item active" onclick="navigate('panel')">📊 Panel</div>
         <div class="nav-item" onclick="navigate('productos')">📦 Productos</div>
-        <div onclick="fbLogout()" style="margin-top:20px; cursor:pointer; opacity:0.5;">Cerrar Sesión</div>
+        <div onclick="fbLogout()" style="margin-top:20px; cursor:pointer; opacity:0.5; padding: 10px;">Cerrar Sesión</div>
     </aside>
     <main class="content">
         <section class="view active" id="view-panel">
             <h1>Panel</h1>
-            <div class="stat-card">Productos: <span id="stat-products">0</span></div>
+            <div class="stat-grid">
+                <div class="stat-card">Productos: <span id="stat-products">0</span></div>
+            </div>
         </section>
         <section class="view" id="view-productos">
             <h1>Productos</h1>
-            <div id="inventory-body"> Cargando... </div>
+            <div id="inventory-body" style="background:var(--surface); padding:20px; border-radius:12px;"> Cargando... </div>
         </section>
     </main>
     <script src="firebase_v3.js"></script>
