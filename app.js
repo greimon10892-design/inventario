@@ -187,7 +187,7 @@ function compressImage(file, maxPx, q) {
 }
 
 // ── Modal movimiento ──────────────────────────────────────────────────────────
-function openMovModal(pid, type) {
+function openMovModal(pid, type) { /* fixed */
   if (currentRole==='Solo lectura'){ alert('Sin permisos'); return; }
   _movPid=pid; _movType=type;
   var p=products.find(function(x){ return x.id===pid; }); if(!p) return;
@@ -624,3 +624,35 @@ if(typeof initFirebase==='function'){
   hideSplash();
 }
 // v20260505
+
+// ── Fix: override modal open/close con display correcto ──────────────────────
+function openMovModal(pid, type) {
+  if (currentRole==='Solo lectura'){ alert('Sin permisos'); return; }
+  _movPid=pid; _movType=type;
+  var p=products.find(function(x){ return x.id===pid; }); if(!p) return;
+  var o=document.getElementById('modal-overlay'); if(!o) return;
+  function se(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+  function sv(id,v){ var e=document.getElementById(id); if(e) e.value=v; }
+  se('mov-title', type==='in'?'Registrar Entrada':'Registrar Salida');
+  se('mov-product-info', p.name);
+  se('mov-stock', p.stock);
+  sv('mov-price', type==='out'?p.sellPrice:p.buyPrice);
+  sv('mov-qty', 1);
+  var q=document.getElementById('mov-qty'); if(q) q.max=type==='out'?p.stock:9999;
+  o.style.display='flex';
+}
+function closeMovModal() {
+  var o=document.getElementById('modal-overlay'); 
+  if(o){ o.style.display='none'; }
+}
+function openBulkModal() {
+  var o=document.getElementById('bulk-overlay'); 
+  if(o){ o.style.display='flex'; }
+}
+function closeBulkModal() {
+  var o=document.getElementById('bulk-overlay'); 
+  if(o){ o.style.display='none'; }
+  _bulkOk=[];
+  var bf=document.getElementById('bulk-file'); if(bf) bf.value='';
+  var bp=document.getElementById('bulk-preview'); if(bp) bp.classList.add('hidden');
+}
