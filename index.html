@@ -3,73 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIRO — Sistema Premium</title>
+    <title>KIRO — Gestión Empresarial Total</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0;
-            --text: #1e293b; --muted: #64748b; --orange: #e07b39;
-            --success: #10b981; --danger: #ef4444; --primary: #6366f1;
+            --bg: #141414; --surface: #1e1e1e; --border: #2e2e2e;
+            --text: #f0ece6; --muted: #7a7570; --orange: #e07b39;
+            --success: #10b981; --danger: #ef4444; --accent: #e07b39;
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; min-height: 100vh; transition: 0.3s; }
         
-        /* Sidebar (Escritorio) */
-        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 1000; }
+        /* SIDEBAR (Foto 1) */
+        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 1000; box-sizing: border-box; }
         .content { margin-left: 260px; flex: 1; padding: 40px; padding-bottom: 100px; width: 100%; box-sizing: border-box; }
-        
         .nav-item { padding: 12px 16px; cursor: pointer; border-radius: 12px; color: var(--muted); margin-bottom: 6px; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-weight: 500; }
-        .nav-item:hover { background: #f1f5f9; color: var(--text); }
-        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        .nav-item:hover { background: #252525; color: var(--text); }
+        .nav-item.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(224, 123, 57, 0.3); }
 
-        /* Barra Inferior (Móvil) */
-        .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); height: 70px; grid-template-columns: repeat(5, 1fr); z-index: 2000; padding: 5px; }
-        .bnav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); cursor: pointer; }
-        .bnav-item.active { color: var(--primary); font-weight: 700; }
-        .bnav-item span { font-size: 20px; margin-bottom: 4px; }
+        /* REPORTE DIARIO (Foto 1) */
+        .report-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 30px 0; }
+        .report-stat { border-left: 2px solid var(--border); padding-left: 20px; }
+        .stat-val-big { font-size: 24px; font-weight: 700; color: var(--accent); margin-top: 5px; }
 
-        /* Diseño de la primera foto */
-        .view { display: none; } .view.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 20px; text-align: center; }
-        .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
-        .stat-value { font-size: 24px; font-weight: 700; margin-top: 5px; color: var(--primary); }
+        /* TABLA PRODUCTOS (Foto 3) */
+        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background: #252525; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gain-text { color: var(--success); font-weight: 600; }
+        .prod-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #333; }
 
-        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; margin-top: 20px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
-        th { background: #f8fafc; color: var(--muted); font-weight: 600; }
+        /* AJUSTES (Foto 6) */
+        .settings-card { background: var(--surface); border: 1px solid var(--border); padding: 25px; border-radius: 20px; margin-bottom: 20px; }
+        .color-dot { width: 25px; height: 25px; border-radius: 50%; display: inline-block; cursor: pointer; margin-right: 10px; border: 2px solid transparent; }
+        .color-dot.active { border-color: white; transform: scale(1.2); }
 
-        /* Reportes detallados */
-        .report-section { background: var(--surface); padding: 30px; border-radius: 20px; border: 1px solid var(--border); margin-top: 20px; }
-        .tab-bar { display: flex; gap: 20px; border-bottom: 2px solid var(--border); margin-bottom: 30px; }
-        .tab { padding: 10px 5px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 3px solid transparent; }
-        .tab.active { color: var(--primary); border-color: var(--primary); }
+        /* MÓVIL */
+        .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); height: 70px; grid-template-columns: repeat(5, 1fr); z-index: 2000; }
+        .bnav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); }
+        .bnav-item.active { color: var(--accent); }
 
+        .view { display: none; } .view.active { display: block; }
         #splash { position: fixed; inset: 0; background: #141414; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; transition: 0.5s; }
+        .hidden { display: none !important; }
 
         @media (max-width: 900px) {
             .sidebar { display: none; }
-            .content { margin-left: 0; padding: 20px; padding-bottom: 90px; }
+            .content { margin-left: 0; padding: 20px; padding-bottom: 100px; }
             .bottom-nav { display: grid; }
+            .report-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
-    <div id="splash"><h1>KIRO</h1><p>Restaurando versión completa...</p></div>
+    <div id="splash"><h1>KIRO</h1><p>Restaurando Interfaz Premium...</p></div>
 
-    <!-- NAVEGACIÓN ESCRITORIO -->
     <aside class="sidebar">
-        <h2 style="color:var(--primary); margin-bottom:40px;">TALARA</h2>
+        <div style="margin-bottom: 40px;"><h2 id="side-title" style="color:var(--accent); margin:0;">TALARA</h2><p id="side-sub" style="margin:0; font-size:11px; color:var(--muted);">DULCES & PULSERAS</p></div>
         <div class="nav-item active" onclick="navigate('panel')">📊 Panel</div>
         <div class="nav-item" onclick="navigate('productos')">📦 Productos</div>
-        <div class="nav-item" onclick="navigate('ventas')">💰 Ventas</div>
         <div class="nav-item" onclick="navigate('movimientos')">🔄 Movimientos</div>
+        <div class="nav-item" onclick="navigate('nuevo')">➕ Nuevo Producto</div>
         <div class="nav-item" onclick="navigate('usuarios')">👥 Usuarios</div>
-        <div class="nav-item" onclick="navigate('ajustes')">⚙️ Ajustes</div>
-        <div style="position:absolute; bottom:30px; left:20px;" onclick="fbLogout()">🚪 Salir</div>
+        <div class="nav-item" onclick="navigate('ventas')">💰 Ventas</div>
+        <div class="nav-item" style="margin-top:20px;" onclick="navigate('ajustes')">⚙️ Ajustes</div>
+        <div style="position:absolute; bottom:30px; left:20px;" onclick="fbLogout()">🚪 Cerrar Sesión</div>
     </aside>
 
-    <!-- NAVEGACIÓN MÓVIL -->
     <nav class="bottom-nav">
         <div class="bnav-item active" onclick="navigate('panel')"><span>📊</span>Panel</div>
         <div class="bnav-item" onclick="navigate('productos')"><span>📦</span>Prods</div>
@@ -81,55 +80,51 @@
     <main class="content">
         <!-- VISTA PANEL -->
         <section class="view active" id="view-panel">
-            <h1>Hola, Robert 👋</h1>
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-label">Stock Total</div><div class="stat-value" id="stat-products">0</div></div>
-                <div class="stat-card"><div class="stat-label">Inversión</div><div class="stat-value" id="stat-investment">$0.00</div></div>
-                <div class="stat-card"><div class="stat-label">Ganancia</div><div class="stat-value" style="color:var(--success)" id="stat-gain">$0.00</div></div>
+            <h1>Panel de Control</h1>
+            <div class="report-grid">
+                <div class="report-stat"><div class="stat-label">Stock Total</div><div class="stat-val-big" id="stat-products">0</div></div>
+                <div class="report-stat"><div class="stat-label">Inversión</div><div class="stat-val-big" id="stat-investment">$0.00</div></div>
+                <div class="report-stat"><div class="stat-label">Ganancia Potencial</div><div class="stat-val-big" style="color:var(--success)" id="stat-potential">$0.00</div></div>
             </div>
-            <h3>Productos con Bajo Stock</h3>
-            <div id="low-stock-list">Todo al día.</div>
         </section>
 
-        <!-- VISTA PRODUCTOS -->
+        <!-- PRODUCTOS (Foto 3) -->
         <section class="view" id="view-productos">
-            <div style="display:flex; justify-content:space-between;"><h1>Inventario</h1><button class="btn-primary" style="padding:10px; border-radius:10px;" onclick="alert('Usa el modal para agregar')">+ Nuevo</button></div>
+            <h1>Inventario</h1>
             <table>
-                <thead><tr><th>Producto</th><th>Stock</th><th>Precio</th></tr></thead>
+                <thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Compra</th><th>Venta</th><th>Ganancia</th><th></th></tr></thead>
                 <tbody id="inventory-list"></tbody>
             </table>
         </section>
 
-        <!-- VISTA VENTAS (ESTILO PRIMERA FOTO) -->
+        <!-- VENTAS (Foto 1) -->
         <section class="view" id="view-ventas">
-            <div class="tab-bar">
-                <div class="tab active" onclick="setVentaTab('vender')">Vender</div>
-                <div class="tab" onclick="setVentaTab('diario')">Reporte Diario</div>
-                <div class="tab" onclick="setVentaTab('mensual')">Reporte Mensual</div>
+            <h1>Ventas y Reportes</h1>
+            <input type="date" id="rep-date" style="background:#252525; border:1px solid #333; color:white; padding:10px; border-radius:8px;">
+            <div class="report-grid">
+                <div class="report-stat"><div class="stat-label">Productos Vendidos</div><div class="stat-val-big" id="rs-qty">0</div></div>
+                <div class="report-stat"><div class="stat-label">Total Vendido</div><div class="stat-val-big" id="rs-total">$0.00</div></div>
+                <div class="report-stat"><div class="stat-label">Ganancia</div><div class="stat-val-big" style="color:var(--success)" id="rs-gain">$0.00</div></div>
             </div>
-            
-            <div id="venta-pos">
-                <h3>Selecciona para vender</h3>
-                <div id="sale-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;"></div>
-            </div>
-
-            <div id="venta-reporte" class="report-section" style="display:none;">
-                <input type="date" id="rep-date"> <button onclick="generateReport()">Generar</button>
-                <div class="stats-grid" style="margin-top:20px;">
-                    <div class="stat-card"><div class="stat-label">Vendido</div><div class="stat-value" id="rep-sold">$0.00</div></div>
-                    <div class="stat-card"><div class="stat-label">Ganancia</div><div class="stat-value" id="rep-gain">$0.00</div></div>
-                </div>
-                <table id="rep-table"><thead><tr><th>Producto</th><th>Total</th></tr></thead><tbody id="rep-body"></tbody></table>
-            </div>
+            <table id="table-report"><thead><tr><th>Producto</th><th>Uds.</th><th>Total</th><th>Ganancia</th></tr></thead><tbody id="report-body"></tbody></table>
         </section>
 
-        <!-- VISTA AJUSTES -->
+        <!-- AJUSTES (Foto 6) -->
         <section class="view" id="view-ajustes">
             <h1>Configuración</h1>
-            <div class="stat-card" style="text-align:left; max-width:400px;">
-                <label>Nombre de la tienda</label><br>
-                <input type="text" id="set-name" value="TALARA" style="width:100%; padding:10px; margin-top:10px;">
-                <button style="margin-top:20px;" onclick="alert('Guardado')">Guardar Cambios</button>
+            <div class="settings-card">
+                <h3>Identidad</h3>
+                <label class="stat-label">Nombre de la tienda</label><br>
+                <input type="text" id="set-name" style="width:100%; padding:10px; margin:10px 0; background:#252525; border:1px solid #333; color:white;">
+                <br>
+                <label class="stat-label">Color de acento</label><br>
+                <div style="margin-top:10px;">
+                    <div class="color-dot" style="background:#e07b39" onclick="setAccent('#e07b39')"></div>
+                    <div class="color-dot" style="background:#6366f1" onclick="setAccent('#6366f1')"></div>
+                    <div class="color-dot" style="background:#10b981" onclick="setAccent('#10b981')"></div>
+                    <div class="color-dot" style="background:#ef4444" onclick="setAccent('#ef4444')"></div>
+                </div>
+                <button class="nav-item active" style="margin-top:20px; border:none;" onclick="saveSettings()">Guardar Todo</button>
             </div>
         </section>
     </main>
@@ -154,53 +149,37 @@
         let movements = [];
 
         window.navigate = (view) => {
-            if(view === 'ajustes' && prompt("Pass:") !== 'T4L4R4') return;
+            if(view === 'ajustes') { if(prompt("Password:") !== 'T4L4R4') return; }
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item, .bnav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + view)?.classList.add('active');
-            // Activar item en sidebar y bottom nav
             document.querySelectorAll(`[onclick="navigate('${view}')"]`).forEach(el => el.classList.add('active'));
-            if(view === 'ventas') renderSaleGrid();
         };
 
-        window.setVentaTab = (tab) => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('venta-pos').style.display = tab === 'vender' ? 'block' : 'none';
-            document.getElementById('venta-reporte').style.display = tab === 'diario' ? 'block' : 'none';
+        window.setAccent = (color) => {
+            document.documentElement.style.setProperty('--accent', color);
+            localStorage.setItem('kiro_accent', color);
         };
 
         function renderAll() {
+            // Render Productos (Foto 3)
+            document.getElementById('inventory-list').innerHTML = products.map(p => `
+                <tr>
+                    <td><img src="${p.img || ''}" class="prod-img"></td>
+                    <td><strong>${p.name}</strong></td>
+                    <td><span style="font-size:10px; background:#252525; padding:4px 8px; border-radius:6px;">${p.category}</span></td>
+                    <td>${p.stock}</td>
+                    <td>$${p.buyPrice}</td>
+                    <td>$${p.sellPrice}</td>
+                    <td class="gain-text">$${(p.sellPrice - p.buyPrice).toFixed(2)}</td>
+                    <td><button onclick="editP('${p.id}')" style="background:none; border:none; cursor:pointer;">✏️</button></td>
+                </tr>
+            `).join('');
+            
             document.getElementById('stat-products').textContent = products.length;
             const inv = products.reduce((s, p) => s + (p.buyPrice * p.stock), 0);
-            const pot = products.reduce((s, p) => s + ((p.sellPrice - p.buyPrice) * p.stock), 0);
             document.getElementById('stat-investment').textContent = '$' + inv.toFixed(2);
-            document.getElementById('stat-gain').textContent = '$' + pot.toFixed(2);
-
-            document.getElementById('inventory-list').innerHTML = products.map(p => `
-                <tr><td><strong>${p.name}</strong></td><td>${p.stock}</td><td>$${p.sellPrice}</td></tr>
-            `).join('');
         }
-
-        function renderSaleGrid() {
-            document.getElementById('sale-grid').innerHTML = products.filter(p => p.stock > 0).map(p => `
-                <div class="stat-card" style="cursor:pointer;" onclick="quickSale('${p.id}')">
-                    <div style="font-weight:600; font-size:12px;">${p.name}</div>
-                    <div style="color:var(--primary);">$${p.sellPrice}</div>
-                </div>
-            `).join('');
-        }
-
-        window.quickSale = async (id) => {
-            const p = products.find(x => x.id === id);
-            if(confirm(`Vender ${p.name}?`)) {
-                await db.collection('products').doc(id).update({ stock: p.stock - 1 });
-                await db.collection('movements').add({
-                    productId: id, productName: p.name, type: 'out', qty: 1, 
-                    price: p.sellPrice, profit: (p.sellPrice - p.buyPrice), date: new Date().toISOString()
-                });
-            }
-        };
 
         firebase.auth().onAuthStateChanged(user => {
             document.getElementById('splash').style.opacity = '0';
@@ -211,10 +190,22 @@
                     renderAll();
                 });
                 db.collection('movements').onSnapshot(snap => { movements = snap.docs.map(d => d.data()); });
+            } else {
+                showLogin();
             }
         });
 
+        function showLogin() {
+            const ui = `<div id="login-screen" style="position:fixed;inset:0;background:#141414;display:flex;justify-content:center;align-items:center;z-index:9999;"><div style="background:#1e1e1e;padding:40px;border-radius:20px;text-align:center;width:320px;border:1px solid #2e2e2e;"><h2>KIRO</h2><input id="em" placeholder="Correo Gmail" style="width:100%; padding:12px; margin-bottom:10px; background:#252525; border:1px solid #333; color:white;"><input id="pw" type="password" placeholder="Contraseña" style="width:100%; padding:12px; margin-bottom:20px; background:#252525; border:1px solid #333; color:white;"><button onclick="L()" style="width:100%; padding:12px; background:var(--accent); border:none; color:white; font-weight:700; border-radius:10px; cursor:pointer;">Entrar</button></div></div>`;
+            document.body.insertAdjacentHTML('beforeend', ui);
+        }
+
+        window.L = () => firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value).catch(e => alert(e.message));
         window.fbLogout = () => firebase.auth().signOut().then(() => location.reload());
+        
+        // Cargar color guardado
+        const savedAccent = localStorage.getItem('kiro_accent');
+        if(savedAccent) setAccent(savedAccent);
     </script>
 </body>
 </html>
