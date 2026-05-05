@@ -3,88 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIRO — Gestión Integral Total</title>
+    <title>KIRO — Sistema Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #141414; --surface: #1e1e1e; --border: #2e2e2e; --text: #f0ece6; --orange: #e07b39; --muted: #7a7570; --success: #10b981; --danger: #ef4444; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; min-height: 100vh; }
-        .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 25px; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
-        .content { margin-left: 240px; flex: 1; padding: 40px; }
-        .nav-item { padding: 12px 16px; cursor: pointer; border-radius: 10px; color: var(--muted); margin-bottom: 8px; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-        .nav-item:hover { background: #252525; color: var(--text); }
-        .nav-item.active { background: var(--orange); color: white; font-weight: 600; }
+        :root {
+            --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0;
+            --text: #1e293b; --muted: #64748b; --orange: #e07b39;
+            --success: #10b981; --danger: #ef4444; --primary: #6366f1;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; }
+        
+        /* Sidebar (Escritorio) */
+        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 1000; }
+        .content { margin-left: 260px; flex: 1; padding: 40px; padding-bottom: 100px; width: 100%; box-sizing: border-box; }
+        
+        .nav-item { padding: 12px 16px; cursor: pointer; border-radius: 12px; color: var(--muted); margin-bottom: 6px; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-weight: 500; }
+        .nav-item:hover { background: #f1f5f9; color: var(--text); }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+        /* Barra Inferior (Móvil) */
+        .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); height: 70px; grid-template-columns: repeat(5, 1fr); z-index: 2000; padding: 5px; }
+        .bnav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); cursor: pointer; }
+        .bnav-item.active { color: var(--primary); font-weight: 700; }
+        .bnav-item span { font-size: 20px; margin-bottom: 4px; }
+
+        /* Diseño de la primera foto */
         .view { display: none; } .view.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 16px; }
-        .stat-value { font-size: 28px; font-weight: 700; color: var(--orange); }
-        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-top: 20px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background: #252525; font-size: 12px; text-transform: uppercase; color: var(--muted); }
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .btn-primary { background: var(--orange); color: white; }
-        input, select { background: #252525; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 15px; }
-        #splash { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        @media (max-width: 768px) { .sidebar { display: none; } .content { margin-left: 0; padding: 20px; } }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: 20px; text-align: center; }
+        .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
+        .stat-value { font-size: 24px; font-weight: 700; margin-top: 5px; color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background: #f8fafc; color: var(--muted); font-weight: 600; }
+
+        /* Reportes detallados */
+        .report-section { background: var(--surface); padding: 30px; border-radius: 20px; border: 1px solid var(--border); margin-top: 20px; }
+        .tab-bar { display: flex; gap: 20px; border-bottom: 2px solid var(--border); margin-bottom: 30px; }
+        .tab { padding: 10px 5px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 3px solid transparent; }
+        .tab.active { color: var(--primary); border-color: var(--primary); }
+
+        #splash { position: fixed; inset: 0; background: #141414; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; transition: 0.5s; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .content { margin-left: 0; padding: 20px; padding-bottom: 90px; }
+            .bottom-nav { display: grid; }
+        }
     </style>
 </head>
 <body>
-    <div id="splash"><h1>KIRO</h1><p>Activando todas las funciones...</p></div>
+    <div id="splash"><h1>KIRO</h1><p>Restaurando versión completa...</p></div>
 
+    <!-- NAVEGACIÓN ESCRITORIO -->
     <aside class="sidebar">
-        <h2 style="color:var(--orange)">KIRO</h2>
+        <h2 style="color:var(--primary); margin-bottom:40px;">TALARA</h2>
         <div class="nav-item active" onclick="navigate('panel')">📊 Panel</div>
         <div class="nav-item" onclick="navigate('productos')">📦 Productos</div>
         <div class="nav-item" onclick="navigate('ventas')">💰 Ventas</div>
         <div class="nav-item" onclick="navigate('movimientos')">🔄 Movimientos</div>
         <div class="nav-item" onclick="navigate('usuarios')">👥 Usuarios</div>
         <div class="nav-item" onclick="navigate('ajustes')">⚙️ Ajustes</div>
-        <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px;">
-            <div class="nav-item" onclick="fbLogout()" style="opacity:0.5">🚪 Cerrar Sesión</div>
-        </div>
+        <div style="position:absolute; bottom:30px; left:20px;" onclick="fbLogout()">🚪 Salir</div>
     </aside>
 
+    <!-- NAVEGACIÓN MÓVIL -->
+    <nav class="bottom-nav">
+        <div class="bnav-item active" onclick="navigate('panel')"><span>📊</span>Panel</div>
+        <div class="bnav-item" onclick="navigate('productos')"><span>📦</span>Prods</div>
+        <div class="bnav-item" onclick="navigate('ventas')"><span>💰</span>Ventas</div>
+        <div class="bnav-item" onclick="navigate('movimientos')"><span>🔄</span>Movs</div>
+        <div class="bnav-item" onclick="navigate('ajustes')"><span>⚙️</span>Ajustes</div>
+    </nav>
+
     <main class="content">
+        <!-- VISTA PANEL -->
         <section class="view active" id="view-panel">
-            <h1>Panel de Control</h1>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div class="stat-card">Total Productos <div class="stat-value" id="stat-products">0</div></div>
-                <div class="stat-card">Vendido Hoy <div class="stat-value" id="stat-sold">$0.00</div></div>
+            <h1>Hola, Robert 👋</h1>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Stock Total</div><div class="stat-value" id="stat-products">0</div></div>
+                <div class="stat-card"><div class="stat-label">Inversión</div><div class="stat-value" id="stat-investment">$0.00</div></div>
+                <div class="stat-card"><div class="stat-label">Ganancia</div><div class="stat-value" style="color:var(--success)" id="stat-gain">$0.00</div></div>
             </div>
-            <div id="low-stock-box" style="margin-top:40px;">
-                <h3>Productos con Bajo Stock</h3>
-                <div id="low-stock-list" style="color:var(--muted)">Todo al día.</div>
-            </div>
+            <h3>Productos con Bajo Stock</h3>
+            <div id="low-stock-list">Todo al día.</div>
         </section>
 
+        <!-- VISTA PRODUCTOS -->
         <section class="view" id="view-productos">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h1>Inventario</h1>
-                <button class="btn btn-primary" onclick="alert('Función para agregar próximamente')">+ Nuevo Producto</button>
-            </div>
+            <div style="display:flex; justify-content:space-between;"><h1>Inventario</h1><button class="btn-primary" style="padding:10px; border-radius:10px;" onclick="alert('Usa el modal para agregar')">+ Nuevo</button></div>
             <table>
-                <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Precio</th></tr></thead>
+                <thead><tr><th>Producto</th><th>Stock</th><th>Precio</th></tr></thead>
                 <tbody id="inventory-list"></tbody>
             </table>
         </section>
 
+        <!-- VISTA VENTAS (ESTILO PRIMERA FOTO) -->
         <section class="view" id="view-ventas">
-            <h1>Registrar Venta</h1>
-            <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 30px;">
-                <div id="sale-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;"></div>
-                <div class="stat-card">
-                    <h3>Carrito</h3>
-                    <div id="cart-items" style="margin-bottom:20px;"></div>
-                    <div style="font-size:20px; font-weight:700; border-top:1px solid var(--border); padding-top:10px;">Total: <span id="cart-total">$0.00</span></div>
-                    <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="processSale()">Confirmar Venta</button>
+            <div class="tab-bar">
+                <div class="tab active" onclick="setVentaTab('vender')">Vender</div>
+                <div class="tab" onclick="setVentaTab('diario')">Reporte Diario</div>
+                <div class="tab" onclick="setVentaTab('mensual')">Reporte Mensual</div>
+            </div>
+            
+            <div id="venta-pos">
+                <h3>Selecciona para vender</h3>
+                <div id="sale-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;"></div>
+            </div>
+
+            <div id="venta-reporte" class="report-section" style="display:none;">
+                <input type="date" id="rep-date"> <button onclick="generateReport()">Generar</button>
+                <div class="stats-grid" style="margin-top:20px;">
+                    <div class="stat-card"><div class="stat-label">Vendido</div><div class="stat-value" id="rep-sold">$0.00</div></div>
+                    <div class="stat-card"><div class="stat-label">Ganancia</div><div class="stat-value" id="rep-gain">$0.00</div></div>
                 </div>
+                <table id="rep-table"><thead><tr><th>Producto</th><th>Total</th></tr></thead><tbody id="rep-body"></tbody></table>
             </div>
         </section>
 
-        <section class="view" id="view-movimientos"><h1>Historial de Movimientos</h1><div id="mov-list">Historial cargando...</div></section>
-        <section class="view" id="view-usuarios"><h1>Gestión de Usuarios</h1><div>Usuarios con acceso.</div></section>
-        <section class="view" id="view-ajustes"><h1>Ajustes</h1><div>Configuración de tienda.</div></section>
+        <!-- VISTA AJUSTES -->
+        <section class="view" id="view-ajustes">
+            <h1>Configuración</h1>
+            <div class="stat-card" style="text-align:left; max-width:400px;">
+                <label>Nombre de la tienda</label><br>
+                <input type="text" id="set-name" value="TALARA" style="width:100%; padding:10px; margin-top:10px;">
+                <button style="margin-top:20px;" onclick="alert('Guardado')">Guardar Cambios</button>
+            </div>
+        </section>
     </main>
 
+    <!-- FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -101,66 +151,66 @@
         firebase.initializeApp(config);
         const db = firebase.firestore();
         let products = [];
-        let cart = {};
+        let movements = [];
 
         window.navigate = (view) => {
-            if(view === 'ajustes') {
-                const p = prompt("Contraseña de ajustes:");
-                if(p !== 'T4L4R4') return alert("Incorrecta");
-            }
+            if(view === 'ajustes' && prompt("Pass:") !== 'T4L4R4') return;
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-item, .bnav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + view)?.classList.add('active');
-            event?.currentTarget?.classList.add('active');
+            // Activar item en sidebar y bottom nav
+            document.querySelectorAll(`[onclick="navigate('${view}')"]`).forEach(el => el.classList.add('active'));
             if(view === 'ventas') renderSaleGrid();
+        };
+
+        window.setVentaTab = (tab) => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('venta-pos').style.display = tab === 'vender' ? 'block' : 'none';
+            document.getElementById('venta-reporte').style.display = tab === 'diario' ? 'block' : 'none';
         };
 
         function renderAll() {
             document.getElementById('stat-products').textContent = products.length;
+            const inv = products.reduce((s, p) => s + (p.buyPrice * p.stock), 0);
+            const pot = products.reduce((s, p) => s + ((p.sellPrice - p.buyPrice) * p.stock), 0);
+            document.getElementById('stat-investment').textContent = '$' + inv.toFixed(2);
+            document.getElementById('stat-gain').textContent = '$' + pot.toFixed(2);
+
             document.getElementById('inventory-list').innerHTML = products.map(p => `
-                <tr><td><strong>${p.name}</strong></td><td>${p.category || '-'}</td><td>${p.stock}</td><td>$${p.sellPrice || 0}</td></tr>
+                <tr><td><strong>${p.name}</strong></td><td>${p.stock}</td><td>$${p.sellPrice}</td></tr>
             `).join('');
         }
 
         function renderSaleGrid() {
             document.getElementById('sale-grid').innerHTML = products.filter(p => p.stock > 0).map(p => `
-                <div class="stat-card" style="cursor:pointer; text-align:center;" onclick="addToCart('${p.id}')">
-                    <div>${p.name}</div><div style="color:var(--orange)">$${p.sellPrice}</div>
+                <div class="stat-card" style="cursor:pointer;" onclick="quickSale('${p.id}')">
+                    <div style="font-weight:600; font-size:12px;">${p.name}</div>
+                    <div style="color:var(--primary);">$${p.sellPrice}</div>
                 </div>
             `).join('');
         }
 
-        window.addToCart = (id) => {
+        window.quickSale = async (id) => {
             const p = products.find(x => x.id === id);
-            cart[id] = (cart[id] || 0) + 1;
-            renderCart();
-        };
-
-        function renderCart() {
-            let total = 0;
-            document.getElementById('cart-items').innerHTML = Object.entries(cart).map(([id, qty]) => {
-                const p = products.find(x => x.id === id);
-                total += p.sellPrice * qty;
-                return `<div>${p.name} x${qty}</div>`;
-            }).join('');
-            document.getElementById('cart-total').textContent = '$' + total.toFixed(2);
-        }
-
-        window.processSale = async () => {
-            for(const [id, qty] of Object.entries(cart)) {
-                const p = products.find(x => x.id === id);
-                await db.collection('products').doc(id).update({ stock: p.stock - qty });
+            if(confirm(`Vender ${p.name}?`)) {
+                await db.collection('products').doc(id).update({ stock: p.stock - 1 });
+                await db.collection('movements').add({
+                    productId: id, productName: p.name, type: 'out', qty: 1, 
+                    price: p.sellPrice, profit: (p.sellPrice - p.buyPrice), date: new Date().toISOString()
+                });
             }
-            cart = {}; renderCart(); renderSaleGrid(); alert("Venta registrada");
         };
 
         firebase.auth().onAuthStateChanged(user => {
-            document.getElementById('splash').style.display = 'none';
+            document.getElementById('splash').style.opacity = '0';
+            setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
             if (user) {
                 db.collection('products').onSnapshot(snap => {
                     products = snap.docs.map(d => ({id: d.id, ...d.data()}));
                     renderAll();
                 });
+                db.collection('movements').onSnapshot(snap => { movements = snap.docs.map(d => d.data()); });
             }
         });
 
