@@ -1,10 +1,15 @@
-const CACHE_NAME = 'talara-v25';
+const CACHE_NAME = 'kiro-v26';
 
 self.addEventListener('install', e => self.skipWaiting());
-self.addEventListener('activate', e => self.clients.claim());
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => {
+    if (k !== CACHE_NAME) return caches.delete(k);
+  }))));
+  self.clients.claim();
+});
 
 self.addEventListener('fetch', event => {
-  // Ignorar errores de Chrome Extensions y solo procesar lo necesario
+  // REPARACIÓN: Solo procesar peticiones HTTP GET para evitar errores en la consola
   if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) return;
 
   event.respondWith(
