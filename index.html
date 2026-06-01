@@ -1,522 +1,854 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#141414">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="google-site-verification" content="imWmWPXuYGfsmeox20zJP0h-HEHXwH7_dVnTTXbyl9w">
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-R2P986CFLS"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-R2P986CFLS');
-  </script>
-  <title>TALARA — Inventario</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <link rel="icon" type="image/png" href="icono-192.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#e07b39" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Inventario" />
+  <meta name="application-name" content="Inventario" />
+
+  <title>Inventario — Dulces & Pulseras</title>
+  <link rel="stylesheet" href="styles.css?v=10" />
   <style>
-    /* ── Splash ── */
+    /* ── Splash screen ── */
     #splash {
-      position: fixed; inset: 0; background: #141414;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 10000; transition: opacity 0.4s;
+      position: fixed;
+      inset: 0;
+      background: #141414;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 20px;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #splash.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #splash-logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 22px;
+      object-fit: contain;
+      display: none;
+      animation: splashPop 0.6s cubic-bezier(.34,1.56,.64,1) both;
     }
     #splash-icon {
-      width: 80px; height: 80px; border-radius: 20px;
-      background: #e07b39; display: flex; align-items: center;
-      justify-content: center; font-size: 36px; font-weight: 700;
-      color: #fff; margin-bottom: 16px;
-      animation: splash-pop 0.5s ease;
+      width: 100px;
+      height: 100px;
+      border-radius: 22px;
+      background: #e07b39;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      animation: splashPop 0.6s cubic-bezier(.34,1.56,.64,1) both;
+      letter-spacing: -2px;
     }
-    @keyframes splash-pop {
-      0%   { transform: scale(0.7); opacity: 0; }
-      80%  { transform: scale(1.08); }
-      100% { transform: scale(1); opacity: 1; }
+    #splash-name {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f0ece6;
+      letter-spacing: -0.03em;
+      animation: splashFade 0.5s 0.3s both;
     }
-    #splash-store-name { color: #f0ece6; font-size: 22px; font-weight: 700; }
-    #splash-subtitle   { color: #7a7570; font-size: 13px; margin-top: 4px; }
-    .splash-dots { display: flex; gap: 6px; margin-top: 24px; }
-    .splash-dots span {
-      width: 8px; height: 8px; border-radius: 50%; background: #e07b39;
-      animation: dot-pulse 1.2s infinite;
+    #splash-sub {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.82rem;
+      color: #7a7570;
+      animation: splashFade 0.5s 0.45s both;
+      margin-top: -12px;
     }
-    .splash-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes dot-pulse {
-      0%,80%,100% { opacity: 0.3; transform: scale(0.8); }
-      40%          { opacity: 1;   transform: scale(1); }
+    #splash-dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      animation: splashFade 0.5s 0.6s both;
+    }
+    #splash-dots span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e07b39;
+      animation: splashDot 1.2s infinite ease-in-out;
+    }
+    #splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+    #splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes splashPop {
+      0%   { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes splashFade {
+      0%   { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes splashDot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%            { transform: scale(1);   opacity: 1; }
     }
   </style>
 </head>
-<body style="visibility:hidden">
+<body>
 
-  <!-- Splash Screen -->
+  <!-- ── Splash Screen ───────────────────────────────────────────────── -->
   <div id="splash">
-    <div id="splash-icon"><span id="splash-logo-text">T</span></div>
-    <div id="splash-store-name">TALARA</div>
-    <div id="splash-subtitle">Dulces &amp; Pulseras</div>
-    <div class="splash-dots"><span></span><span></span><span></span></div>
+    <img id="splash-logo" src="" alt="Logo" />
+    <div id="splash-icon">I</div>
+    <div id="splash-name">Inventario</div>
+    <div id="splash-sub">Dulces &amp; Pulseras</div>
+    <div id="splash-dots">
+      <span></span><span></span><span></span>
+    </div>
   </div>
 
-  <!-- Sidebar (desktop) -->
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img id="sidebar-logo" src="" alt="" style="display:none;width:40px;height:40px;border-radius:8px;object-fit:cover;margin-bottom:8px">
-      <div id="sidebar-store-name"  class="brand-name">TALARA</div>
-      <div id="sidebar-store-subtitle" class="brand-sub">Dulces &amp; Pulseras</div>
+      <img id="sidebar-logo" src="" alt="Logo" class="hidden" style="width:48px;height:48px;object-fit:contain;border-radius:10px;margin-bottom:6px" />
+      <span class="brand-title">Inventario</span>
+      <span class="brand-sub">Dulces &amp; Pulseras</span>
     </div>
+
     <nav class="sidebar-nav">
-      <div class="nav-item" data-view="panel">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <a href="#" class="nav-item" data-view="panel">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Panel
-      </div>
-      <div class="nav-item" data-view="products">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      </a>
+      <a href="#" class="nav-item" data-view="productos">
+        <svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
         Productos
-      </div>
-      <div class="nav-item" data-view="history">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </a>
+      <a href="#" class="nav-item" data-view="movimientos">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         Movimientos
-      </div>
-      <div class="nav-item write-only" data-view="new-product">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </a>
+      <a href="#" class="nav-item" data-view="agregar">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         Nuevo Producto
-      </div>
-      <div class="nav-item" data-view="users">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </a>
+      <a href="#" class="nav-item" data-view="usuarios">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Usuarios
-      </div>
-      <div class="nav-item" data-view="sales">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </a>
+      <a href="#" class="nav-item" data-view="ventas">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Ventas
-      </div>
-      <div class="nav-item" data-view="reports">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Reportes
-      </div>
+      </a>
     </nav>
+
     <div class="sidebar-footer">
-      <div class="nav-item" data-view="settings">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <a href="#" class="nav-item" data-view="ajustes" style="width:100%;margin:0">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
         Ajustes
-      </div>
-      <div id="sidebar-user-info" style="font-size:11px;color:var(--muted);padding:4px 14px 2px">Admin</div>
-      <div class="nav-item" id="logout-btn" style="color:var(--muted)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </a>
+      <button class="sidebar-logout" id="btn-logout">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Cerrar sesión
-      </div>
-      <div style="font-size:11px;color:var(--muted);padding:8px 14px">© 2026 Gestor de Inventario</div>
+      </button>
+      <div class="sidebar-copy" id="sidebar-user-info">© 2026 Gestor de Inventario</div>
     </div>
   </aside>
 
-  <!-- Mobile header -->
-  <div id="mobile-header" style="display:none;position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;align-items:center;gap:10px;">
-    <img id="mobile-logo" src="" alt="" style="display:none;width:32px;height:32px;border-radius:6px;object-fit:cover;">
-    <span id="mobile-store-name" style="font-weight:700;font-size:16px">TALARA</span>
-    <span id="mobile-user-info" style="font-size:11px;color:var(--muted);margin-left:auto"></span>
-  </div>
-
-  <!-- Main Content -->
+  <!-- ── Content ─────────────────────────────────────────────────────── -->
   <main class="content">
 
-    <!-- Toast -->
-    <div id="toast" class="toast"></div>
+    <!-- Header móvil (solo visible en pantallas pequeñas) -->
+    <div class="mobile-header">
+      <img id="mobile-logo" src="" alt="" class="mobile-logo hidden" />
+      <div>
+        <span class="mobile-brand-title" id="mobile-brand-title">Inventario</span>
+        <span class="mobile-brand-sub" id="mobile-brand-sub">Dulces &amp; Pulseras</span>
+      </div>
+    </div>
 
-    <!-- ── PANEL ── -->
-    <div id="view-panel" class="view active">
+    <!-- Panel -->
+    <section class="view" id="view-panel">
       <div class="page-header">
         <h1>Panel</h1>
-        <p class="muted">Resumen general del inventario</p>
+        <p>Resumen general del inventario</p>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">PRODUCTOS</div><div class="stat-value" id="stat-products">0</div></div>
-        <div class="stat-card admin-only"><div class="stat-label">INVERSIÓN TOTAL</div><div class="stat-value" id="stat-investment">$0.00</div></div>
-        <div class="stat-card admin-only highlight"><div class="stat-label">GANANCIA POTENCIAL</div><div class="stat-value" id="stat-gain">$0.00</div></div>
-        <div class="stat-card admin-only"><div class="stat-label">TOTAL VENDIDO</div><div class="stat-value" id="stat-sold">$0.00</div></div>
-      </div>
-      <div class="section-box" style="margin-top:24px">
-        <div class="section-title">PRODUCTOS CON BAJO STOCK</div>
-        <div id="low-stock-list"></div>
-      </div>
-    </div>
 
-    <!-- ── PRODUCTS ── -->
-    <div id="view-products" class="view">
-      <div class="page-header" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div><h1>Productos</h1><p class="muted">Inventario completo</p></div>
-        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-primary write-only" onclick="showProductForm()">+ Nuevo</button>
-          <button class="btn-secondary write-only" id="bulk-import-btn">⬆ Carga masiva</button>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Productos</span>
+          <span class="stat-value" id="total-products">0</span>
+        </div>
+        <div class="stat-card" id="card-inversion">
+          <span class="stat-label">Inversión Total</span>
+          <span class="stat-value" id="total-inversion">$0.00</span>
+        </div>
+        <div class="stat-card accent" id="card-ganancia">
+          <span class="stat-label">Ganancia Potencial</span>
+          <span class="stat-value" id="total-ganancia">$0.00</span>
+        </div>
+        <div class="stat-card" id="card-vendido">
+          <span class="stat-label">Total Vendido</span>
+          <span class="stat-value" id="total-vendido">$0.00</span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <input id="search-products" placeholder="Buscar producto..." class="input-field" style="flex:1;min-width:140px">
-        <select id="filter-cat" class="input-field">
+
+      <!-- Quick inventory preview -->
+      <div class="section-box">
+        <div class="section-box-header">
+          <span>Productos con bajo stock</span>
+        </div>
+        <div id="low-stock-list"></div>
+      </div>
+    </section>
+
+    <!-- Productos -->
+    <section class="view hidden" id="view-productos">
+      <div class="page-header">
+        <h1>Productos</h1>
+        <p>Gestiona tu catálogo de dulces y pulseras</p>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="search" placeholder="Buscar producto…" />
+        <select id="filter-category">
           <option value="">Todas las categorías</option>
-          <option value="dulces">🍬 Dulces</option>
-          <option value="pulseras">📿 Pulseras</option>
+          <option value="dulce">Dulces Típicos</option>
+          <option value="pulsera">Pulseras Artesanales</option>
+        </select>
+        <label class="btn-upload" for="bulk-file" title="Carga masiva CSV">⬆ Carga masiva</label>
+        <input type="file" id="bulk-file" accept=".csv,.txt" style="display:none" />
+      </div>
+
+      <div class="section-box">
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+              <th>P. Compra</th>
+              <th>P. Venta</th>
+              <th class="col-gain-header">Ganancia/u</th>
+              <th id="th-acciones"></th>
+            </tr>
+          </thead>
+          <tbody id="inventory-body"></tbody>
+        </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Movimientos -->
+    <section class="view hidden" id="view-movimientos">
+      <div class="page-header">
+        <h1>Movimientos</h1>
+        <p>Historial de entradas y salidas</p>
+      </div>
+
+      <div class="toolbar">
+        <select id="filter-mov-type">
+          <option value="">Todos los movimientos</option>
+          <option value="entrada">Entradas</option>
+          <option value="salida">Salidas</option>
         </select>
       </div>
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead><tr>
-            <th style="width:44px"></th>
-            <th>Producto</th><th>Categoría</th><th>Stock</th>
-            <th>Compra</th><th>Venta</th>
-            <th class="admin-only">Ganancia/u</th>
-            <th>Acciones</th>
-          </tr></thead>
-          <tbody id="inventory-body"><tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Cargando...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
 
-    <!-- ── NEW PRODUCT ── -->
-    <div id="view-new-product" class="view">
+      <div class="section-box">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Total</th>
+                <th class="col-mov-gain-header">Ganancia</th>
+              </tr>
+            </thead>
+            <tbody id="mov-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nuevo Producto -->
+    <section class="view hidden" id="view-agregar">
       <div class="page-header">
         <h1 id="form-title">Nuevo Producto</h1>
+        <p>Agrega o edita un producto del inventario</p>
       </div>
-      <div class="section-box" style="max-width:560px">
+
+      <div class="section-box" style="max-width:620px">
         <form id="product-form">
-          <div class="form-group">
-            <label>Nombre del producto *</label>
-            <input id="f-name" class="input-field" placeholder="Ej: Mazapán de cacahuate" required>
+          <input type="hidden" id="edit-id" />
+
+          <!-- Imágenes del producto (hasta 3) -->
+          <div class="product-img-upload">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px" id="img-previews-row">
+              <!-- Foto 1 -->
+              <div class="img-slot" id="img-slot-0">
+                <div class="product-img-preview-wrap">
+                  <img id="f-img-preview-0" src="" alt="" class="product-img-preview hidden" />
+                  <div id="f-img-placeholder-0" class="product-img-placeholder">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Foto 1</span>
+                  </div>
+                </div>
+                <div class="product-img-actions" style="margin-top:4px">
+                  <label class="btn-upload" for="f-img-0" style="font-size:0.72rem;padding:5px 10px">📷</label>
+                  <input type="file" id="f-img-0" accept="image/*" style="display:none" data-slot="0"/>
+                  <button type="button" class="btn-ghost-sm" id="f-img-remove-0" style="display:none;font-size:0.72rem;padding:5px 8px" data-slot="0">✕</button>
+                </div>
+              </div>
+              <!-- Foto 2 -->
+              <div class="img-slot" id="img-slot-1">
+                <div class="product-img-preview-wrap">
+                  <img id="f-img-preview-1" src="" alt="" class="product-img-preview hidden" />
+                  <div id="f-img-placeholder-1" class="product-img-placeholder">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Foto 2</span>
+                  </div>
+                </div>
+                <div class="product-img-actions" style="margin-top:4px">
+                  <label class="btn-upload" for="f-img-1" style="font-size:0.72rem;padding:5px 10px">📷</label>
+                  <input type="file" id="f-img-1" accept="image/*" style="display:none" data-slot="1"/>
+                  <button type="button" class="btn-ghost-sm" id="f-img-remove-1" style="display:none;font-size:0.72rem;padding:5px 8px" data-slot="1">✕</button>
+                </div>
+              </div>
+              <!-- Foto 3 -->
+              <div class="img-slot" id="img-slot-2">
+                <div class="product-img-preview-wrap">
+                  <img id="f-img-preview-2" src="" alt="" class="product-img-preview hidden" />
+                  <div id="f-img-placeholder-2" class="product-img-placeholder">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Foto 3</span>
+                  </div>
+                </div>
+                <div class="product-img-actions" style="margin-top:4px">
+                  <label class="btn-upload" for="f-img-2" style="font-size:0.72rem;padding:5px 10px">📷</label>
+                  <input type="file" id="f-img-2" accept="image/*" style="display:none" data-slot="2"/>
+                  <button type="button" class="btn-ghost-sm" id="f-img-remove-2" style="display:none;font-size:0.72rem;padding:5px 8px" data-slot="2">✕</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Categoría *</label>
-            <select id="f-category" class="input-field" required>
-              <option value="">Seleccionar...</option>
-              <option value="dulces">🍬 Dulces Típicos</option>
-              <option value="pulseras">📿 Pulseras Artesanales</option>
-            </select>
-          </div>
-          <div class="form-row">
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="f-name" placeholder="Ej: Mazapán de rosa" required />
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="f-category" required>
+                <option value="dulce">Dulce Típico</option>
+                <option value="pulsera">Pulsera Artesanal</option>
+              </select>
+            </div>
             <div class="form-group">
               <label>Stock inicial</label>
-              <input id="f-stock" type="number" min="0" class="input-field" value="0">
+              <input type="number" id="f-stock" min="0" value="0" required />
             </div>
             <div class="form-group">
-              <label>Precio de compra *</label>
-              <input id="f-buy" type="number" step="0.01" min="0" class="input-field" placeholder="0.00">
+              <label>Precio de Compra ($)</label>
+              <input type="number" id="f-buy" min="0" step="0.01" value="0" required />
             </div>
             <div class="form-group">
-              <label>Precio de venta *</label>
-              <input id="f-sell" type="number" step="0.01" min="0" class="input-field" placeholder="0.00">
+              <label>Precio de Venta ($)</label>
+              <input type="number" id="f-sell" min="0" step="0.01" value="0" required />
             </div>
-          </div>
-          <div class="form-group">
-            <label>Descripción</label>
-            <input id="f-desc" class="input-field" placeholder="Descripción breve del producto">
-          </div>
-          <div class="form-group">
-            <label>Foto 1 (principal)</label>
-            <input id="f-img" type="file" accept="image/*" class="input-field">
-            <img id="img-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:8px">
-          </div>
-          <div class="form-group">
-            <label>Foto 2</label>
-            <input id="f-img2" type="file" accept="image/*" class="input-field">
-            <img id="img2-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:8px">
-          </div>
-          <div class="form-group">
-            <label>Foto 3</label>
-            <input id="f-img3" type="file" accept="image/*" class="input-field">
-            <img id="img3-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:8px">
+            <div class="form-group">
+              <label>Descripción</label>
+              <input type="text" id="f-desc" placeholder="Notas opcionales" />
+            </div>
           </div>
           <div class="form-actions">
-            <button type="button" class="btn-secondary" onclick="navigate('products')">Cancelar</button>
-            <button type="submit" id="form-btn" class="btn-primary">Guardar Producto</button>
+            <button type="submit" class="btn-primary">Guardar Producto</button>
+            <button type="button" class="btn-ghost" id="cancel-edit" style="display:none">Cancelar</button>
           </div>
         </form>
       </div>
-    </div>
+    </section>
 
-    <!-- ── HISTORY ── -->
-    <div id="view-history" class="view">
-      <div class="page-header"><h1>Movimientos</h1><p class="muted">Historial de entradas y salidas</p></div>
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead><tr>
-            <th>Fecha</th><th>Producto</th><th>Tipo</th>
-            <th>Cant</th><th>Precio</th>
-            <th class="admin-only">Ganancia</th><th>Nota</th>
-          </tr></thead>
-          <tbody id="movements-body"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Sin movimientos</td></tr></tbody>
-        </table>
+    <!-- Usuarios -->
+    <section class="view hidden" id="view-usuarios">
+      <div class="page-header">
+        <h1>Usuarios</h1>
+        <p>Gestiona quién tiene acceso a la aplicación</p>
       </div>
-    </div>
 
-    <!-- ── SALES ── -->
-    <div id="view-sales" class="view">
-      <div class="page-header"><h1>Ventas</h1><p class="muted">Registrar venta rápida</p></div>
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <input id="sale-search" placeholder="Buscar producto..." class="input-field" style="flex:1;min-width:140px">
-        <select id="sale-cat-filter" class="input-field">
-          <option value="">Todas las categorías</option>
-          <option value="dulces">🍬 Dulces</option>
-          <option value="pulseras">📿 Pulseras</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
-        <div id="sale-product-list" style="flex:1;min-width:280px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px"></div>
-        <div class="section-box" style="width:260px;flex-shrink:0;position:sticky;top:80px">
-          <div class="section-title">VENTA ACTUAL</div>
-          <div id="cart-items" style="min-height:60px;margin-bottom:12px"></div>
-          <div style="border-top:1px solid var(--border);padding-top:10px">
-            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px">
-              <span>Total</span><strong id="cart-total">$0.00</strong>
+      <!-- Agregar usuario -->
+      <div class="section-box" style="max-width:620px;margin-bottom:20px">
+        <div class="section-box-header">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:middle;margin-right:6px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Agregar Usuario
+        </div>
+        <form id="user-form" style="padding:20px">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="u-name" placeholder="Nombre completo" required />
             </div>
-            <div class="admin-only" style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:12px">
-              <span>Ganancia</span><span id="cart-gain">$0.00</span>
+            <div class="form-group">
+              <label>Correo electrónico</label>
+              <input type="email" id="u-email" placeholder="ejemplo@correo.com" required />
             </div>
-            <button id="confirm-sale-btn" class="btn-primary" style="width:100%" disabled>Confirmar venta</button>
+            <div class="form-group">
+              <label>Rol</label>
+              <select id="u-role">
+                <option value="Admin">Admin</option>
+                <option value="Usuario">Usuario</option>
+                <option value="Solo lectura">Solo lectura</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:16px">
+            <button type="submit" class="btn-primary">Agregar Usuario</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de usuarios -->
+      <div class="section-box" style="max-width:620px">
+        <div class="section-box-header">
+          <span id="user-count-label">0 usuarios con acceso</span>
+        </div>
+        <div id="user-list"></div>
+      </div>
+    </section>
+
+    <!-- Ajustes -->
+    <section class="view hidden" id="view-ajustes">
+      <div class="page-header">
+        <h1>Ajustes</h1>
+        <p>Personaliza la apariencia y configuración de la aplicación</p>
+      </div>
+
+      <!-- Sesión activa -->
+      <div class="settings-group" style="max-width:720px">
+        <div class="settings-group-title">Sesión activa</div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Usuario</span>
+            <span class="settings-desc">Los ajustes se guardan por separado para cada usuario</span>
+          </div>
+          <div class="settings-control">
+            <select id="s-active-user" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:0.875rem;min-width:180px"></select>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ── REPORTS ── -->
-    <div id="view-reports" class="view">
-      <div class="page-header"><h1>Reportes</h1></div>
-      <div class="section-box" style="margin-bottom:24px">
-        <div class="section-title">REPORTE DIARIO</div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-          <label>Fecha:</label>
-          <input id="r-date" type="date" class="input-field" style="width:auto">
-          <button class="btn-secondary" onclick="generateDailyReport()">Generar</button>
-        </div>
-        <div id="daily-report"></div>
-      </div>
-      <div class="section-box">
-        <div class="section-title">REPORTE MENSUAL</div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-          <label>Mes:</label>
-          <select id="r-month" class="input-field" style="width:auto">
-            <option value="1">Enero</option><option value="2">Febrero</option>
-            <option value="3">Marzo</option><option value="4">Abril</option>
-            <option value="5">Mayo</option><option value="6">Junio</option>
-            <option value="7">Julio</option><option value="8">Agosto</option>
-            <option value="9">Septiembre</option><option value="10">Octubre</option>
-            <option value="11">Noviembre</option><option value="12">Diciembre</option>
-          </select>
-          <input id="r-year" type="number" class="input-field" style="width:90px" value="2026">
-          <button class="btn-secondary" onclick="generateMonthlyReport()">Generar</button>
-        </div>
-        <div id="monthly-report"></div>
-      </div>
-    </div>
+      <!-- Identidad -->
+      <div class="settings-group">
+        <div class="settings-group-title">Identidad</div>
 
-    <!-- ── USERS ── -->
-    <div id="view-users" class="view">
-      <div class="page-header"><h1>Usuarios</h1><p class="muted">Gestión de accesos y roles</p></div>
-      <div class="section-box">
-        <div id="users-list"></div>
-      </div>
-    </div>
-
-    <!-- ── SETTINGS ── -->
-    <div id="view-settings" class="view">
-      <div class="page-header"><h1>Ajustes</h1><p class="muted">Personaliza tu inventario</p></div>
-      <div class="section-box" style="max-width:600px;margin-bottom:16px">
-        <div class="section-title">IDENTIDAD</div>
-        <div class="form-group">
-          <label>Nombre de la tienda</label>
-          <input id="set-store-name" class="input-field" placeholder="TALARA">
-        </div>
-        <div class="form-group">
-          <label>Subtítulo</label>
-          <input id="set-store-subtitle" class="input-field" placeholder="Dulces &amp; Pulseras">
-        </div>
-        <div class="form-group">
-          <label>Logotipo Web (sidebar)</label>
-          <input id="logo-upload" type="file" accept="image/*" class="input-field">
-          <img id="logo-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:8px">
-        </div>
-        <div class="form-group">
-          <label>Logotipo Móvil (header)</label>
-          <input id="logo-mobile-upload" type="file" accept="image/*" class="input-field">
-          <img id="logo-mobile-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:8px">
-        </div>
-      </div>
-      <div class="section-box" style="max-width:600px;margin-bottom:16px">
-        <div class="section-title">APARIENCIA</div>
-        <div class="form-group">
-          <label>Tema</label>
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <button class="theme-btn" data-theme="dark"  style="padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer">🌙 Oscuro</button>
-            <button class="theme-btn" data-theme="light" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer">☀️ Claro</button>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Nombre de la tienda</span>
+            <span class="settings-desc">Aparece en el sidebar y título de la página</span>
+          </div>
+          <div class="settings-control">
+            <input type="text" id="s-storename" placeholder="Mi Tienda" />
           </div>
         </div>
-        <div class="form-group">
-          <label>Color de acento</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-            <button class="accent-btn" data-color="#e07b39" style="width:32px;height:32px;border-radius:50%;background:#e07b39;border:2px solid transparent;cursor:pointer"></button>
-            <button class="accent-btn" data-color="#4a9e6f" style="width:32px;height:32px;border-radius:50%;background:#4a9e6f;border:2px solid transparent;cursor:pointer"></button>
-            <button class="accent-btn" data-color="#3b82f6" style="width:32px;height:32px;border-radius:50%;background:#3b82f6;border:2px solid transparent;cursor:pointer"></button>
-            <button class="accent-btn" data-color="#8b5cf6" style="width:32px;height:32px;border-radius:50%;background:#8b5cf6;border:2px solid transparent;cursor:pointer"></button>
-            <button class="accent-btn" data-color="#e74c3c" style="width:32px;height:32px;border-radius:50%;background:#e74c3c;border:2px solid transparent;cursor:pointer"></button>
-            <button class="accent-btn" data-color="#f59e0b" style="width:32px;height:32px;border-radius:50%;background:#f59e0b;border:2px solid transparent;cursor:pointer"></button>
-            <input id="set-accent" type="color" value="#e07b39" style="width:32px;height:32px;border:none;border-radius:50%;cursor:pointer;padding:0">
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Subtítulo</span>
+            <span class="settings-desc">Texto debajo del nombre</span>
+          </div>
+          <div class="settings-control">
+            <input type="text" id="s-subtitle" placeholder="Dulces & Pulseras" />
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Logotipo Web</span>
+            <span class="settings-desc">Aparece en el sidebar (escritorio)</span>
+          </div>
+          <div class="settings-control">
+            <div class="logo-preview-wrap">
+              <img id="logo-preview" src="" alt="" class="logo-preview hidden" />
+              <label class="btn-upload" for="s-logo">Subir imagen</label>
+              <input type="file" id="s-logo" accept="image/*" style="display:none" />
+              <button class="btn-ghost-sm" id="remove-logo" style="display:none">Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Logotipo Móvil</span>
+            <span class="settings-desc">Aparece en el header del celular</span>
+          </div>
+          <div class="settings-control">
+            <div class="logo-preview-wrap">
+              <img id="logo-mobile-preview" src="" alt="" class="logo-preview hidden" />
+              <label class="btn-upload" for="s-logo-mobile">Subir imagen</label>
+              <input type="file" id="s-logo-mobile" accept="image/*" style="display:none" />
+              <button class="btn-ghost-sm" id="remove-logo-mobile" style="display:none">Quitar</button>
+            </div>
           </div>
         </div>
       </div>
-      <div class="section-box" style="max-width:600px;margin-bottom:16px">
-        <div class="section-title">DATOS</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="export-data-btn" class="btn-secondary">⬇ Exportar JSON</button>
-          <button id="reset-data-btn"  class="btn-secondary" style="color:#e74c3c">🗑 Restablecer todo</button>
+
+      <!-- Apariencia -->
+      <div class="settings-group">
+        <div class="settings-group-title">Apariencia</div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Tema</span>
+            <span class="settings-desc">Modo oscuro o claro</span>
+          </div>
+          <div class="settings-control">
+            <div class="theme-toggle">
+              <button class="theme-btn active" data-theme="dark">Oscuro</button>
+              <button class="theme-btn" data-theme="light">Claro</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Color de acento</span>
+            <span class="settings-desc">Color principal de botones y elementos activos</span>
+          </div>
+          <div class="settings-control">
+            <div class="color-swatches" id="color-swatches">
+              <button class="swatch active" data-color="#e07b39" style="background:#e07b39" title="Naranja"></button>
+              <button class="swatch" data-color="#6366f1" style="background:#6366f1" title="Índigo"></button>
+              <button class="swatch" data-color="#10b981" style="background:#10b981" title="Verde"></button>
+              <button class="swatch" data-color="#ef4444" style="background:#ef4444" title="Rojo"></button>
+              <button class="swatch" data-color="#f59e0b" style="background:#f59e0b" title="Ámbar"></button>
+              <button class="swatch" data-color="#ec4899" style="background:#ec4899" title="Rosa"></button>
+              <button class="swatch" data-color="#06b6d4" style="background:#06b6d4" title="Cian"></button>
+              <label class="swatch swatch-custom" title="Color personalizado">
+                <input type="color" id="s-custom-color" value="#e07b39" />
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Imagen de fondo</span>
+            <span class="settings-desc">Fondo del área de contenido (PNG, JPG)</span>
+          </div>
+          <div class="settings-control">
+            <div class="logo-preview-wrap">
+              <img id="bg-preview" src="" alt="" class="logo-preview hidden" style="width:80px;height:50px;object-fit:cover;border-radius:6px" />
+              <label class="btn-upload" for="s-bg">Subir imagen</label>
+              <input type="file" id="s-bg" accept="image/*" style="display:none" />
+              <button class="btn-ghost-sm" id="remove-bg" style="display:none">Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Opacidad del fondo</span>
+            <span class="settings-desc">Transparencia de la imagen de fondo</span>
+          </div>
+          <div class="settings-control" style="gap:10px;display:flex;align-items:center">
+            <input type="range" id="s-bg-opacity" min="5" max="40" value="15" style="flex:1;accent-color:var(--orange)" />
+            <span id="s-bg-opacity-val" style="color:var(--muted);font-size:0.82rem;min-width:32px">15%</span>
+          </div>
         </div>
       </div>
-      <div style="padding:16px 0">
-        <button id="save-settings-btn" class="btn-primary" style="padding:12px 32px;font-size:15px">💾 Guardar cambios</button>
-      </div>
-    </div>
 
-  </main><!-- /content -->
-
-  <!-- Movement Modal -->
-  <div id="modal-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:360px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h3 id="mov-title" style="margin:0">Movimiento</h3>
-        <button id="mov-close" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">✕</button>
+      <!-- Privilegios -->
+      <div class="settings-group">
+        <div class="settings-group-title">Privilegios por Rol</div>
+        <div class="priv-table">
+          <div class="priv-header">
+            <span>Permiso</span><span>Admin</span><span>Usuario</span><span>Solo lectura</span>
+          </div>
+          <div class="priv-row">
+            <span>Ver inventario</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+          </div>
+          <div class="priv-row">
+            <span>Agregar productos</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Registrar movimientos</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Eliminar productos</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Gestionar usuarios</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Cambiar ajustes</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+        </div>
       </div>
-      <div id="mov-product-info" style="font-weight:600;margin-bottom:4px"></div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Stock actual: <span id="mov-stock">0</span></div>
+
+      <!-- Datos -->
+      <div class="settings-group">
+        <div class="settings-group-title">Datos</div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Exportar datos</span>
+            <span class="settings-desc">Descarga todos los datos en formato JSON</span>
+          </div>
+          <div class="settings-control">
+            <button class="btn-ghost-sm" id="btn-export">Exportar JSON</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Restablecer</span>
+            <span class="settings-desc">Borra todos los datos y restaura los valores iniciales</span>
+          </div>
+          <div class="settings-control">
+            <button class="btn-ghost-sm danger" id="btn-reset">Restablecer todo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guardar -->
+      <div class="settings-save-bar">
+        <div class="settings-save-info" id="settings-save-info"></div>
+        <button class="btn-primary" id="btn-save-settings">Guardar cambios</button>
+      </div>
+
+    </section>
+
+    <!-- Ventas -->
+    <section class="view hidden" id="view-ventas">
+      <div class="page-header">
+        <h1>Ventas</h1>
+        <p>Registra ventas y consulta reportes</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="report-tabs">
+        <button class="rtab active" data-rtab="vender">Vender</button>
+        <button class="rtab" data-rtab="diario">Reporte Diario</button>
+        <button class="rtab" data-rtab="mensual">Reporte Mensual</button>
+      </div>
+
+      <!-- ── Vender ── -->
+      <div class="rtab-content active" id="rtab-vender">
+        <div class="sale-layout">
+
+          <!-- Lista de productos -->
+          <div class="sale-product-panel">
+            <div class="sale-search-bar">
+              <input type="text" id="sale-search" placeholder="Buscar producto…" />
+              <div class="sale-cat-filter">
+                <button class="scat-btn active" data-cat="">Todos</button>
+                <button class="scat-btn" data-cat="dulce">🍬 Dulces</button>
+                <button class="scat-btn" data-cat="pulsera">📿 Pulseras</button>
+              </div>
+            </div>
+            <div id="sale-product-list"></div>
+          </div>
+
+          <!-- Carrito / resumen -->
+          <div class="sale-cart-panel">
+            <div class="sale-cart-header">
+              <span>Venta actual</span>
+              <button class="btn-ghost-sm" id="cart-clear">Limpiar</button>
+            </div>
+            <div id="cart-items">
+              <div class="empty-state" style="padding:32px">Sin productos agregados</div>
+            </div>
+            <div class="cart-footer">
+              <div class="cart-total-row">
+                <span>Total</span>
+                <span id="cart-total">$0.00</span>
+              </div>
+              <div class="cart-total-row cart-gain-row" style="color:var(--success)">
+                <span>Ganancia</span>
+                <span id="cart-gain">$0.00</span>
+              </div>
+              <button class="btn-primary" id="btn-confirm-sale" style="width:100%;margin-top:12px" disabled>
+                Confirmar venta
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Diario ── -->
+      <div class="rtab-content hidden" id="rtab-diario">
+        <div class="toolbar">
+          <input type="date" id="r-date" />
+          <button class="btn-primary" id="btn-gen-daily">Generar reporte</button>
+        </div>
+        <div id="report-daily-out"></div>
+      </div>
+
+      <!-- ── Mensual ── -->
+      <div class="rtab-content hidden" id="rtab-mensual">
+        <div class="toolbar">
+          <select id="r-month"></select>
+          <select id="r-year"></select>
+          <button class="btn-primary" id="btn-gen-monthly">Generar reporte</button>
+        </div>
+        <div id="report-monthly-out"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Modal ───────────────────────────────────────────────────────── -->
+  <div id="modal-overlay" class="hidden">
+    <div class="modal">
+      <h3 id="modal-title">Registrar movimiento</h3>
       <form id="mov-form">
+        <input type="hidden" id="m-product-id" />
+        <div class="form-group">
+          <label>Producto</label>
+          <input type="text" id="m-product-name" readonly />
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="m-type">
+            <option value="entrada">Entrada (compra / restock)</option>
+            <option value="salida">Salida (venta)</option>
+          </select>
+        </div>
         <div class="form-group">
           <label>Cantidad</label>
-          <input id="mov-qty" type="number" min="1" value="1" class="input-field" required>
+          <input type="number" id="m-qty" min="1" value="1" required />
         </div>
         <div class="form-group">
-          <label>Precio unitario</label>
-          <input id="mov-price" type="number" step="0.01" min="0" class="input-field" required>
+          <label id="m-price-label">Precio Unitario ($)</label>
+          <input type="number" id="m-price" min="0" step="0.01" required />
         </div>
-        <div class="form-group">
-          <label>Nota (opcional)</label>
-          <input id="mov-note" class="input-field" placeholder="Ej: Venta a cliente">
-        </div>
-        <div style="display:flex;gap:8px;margin-top:16px">
-          <button type="button" class="btn-secondary" id="mov-cancel" style="flex:1" onclick="closeMovModal()">Cancelar</button>
-          <button type="submit" class="btn-primary" style="flex:1">Confirmar</button>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Registrar</button>
+          <button type="button" class="btn-ghost" id="close-modal">Cancelar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Bulk Import Modal -->
-  <div id="bulk-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:640px;max-height:85vh;overflow-y:auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h3 style="margin:0">Carga Masiva de Productos</h3>
-        <button id="bulk-close" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">✕</button>
-      </div>
-      <p class="muted" style="margin-bottom:12px">Sube un archivo CSV con tus productos. <button id="download-template" class="btn-secondary" style="padding:4px 10px;font-size:12px">⬇ Descargar plantilla</button></p>
-      <input id="bulk-file" type="file" accept=".csv" class="input-field" style="margin-bottom:12px">
-      <div id="bulk-preview" class="hidden">
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr><th>Nombre</th><th>Categoría</th><th>Stock</th><th>Compra</th><th>Venta</th><th>Estado</th></tr></thead>
-            <tbody id="bulk-tbody"></tbody>
-          </table>
-        </div>
-        <button id="bulk-confirm" class="btn-primary" style="margin-top:12px">✓ Importar válidos</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom Nav (mobile) -->
+  <!-- ── Bottom nav (mobile) ────────────────────────────────────────── -->
   <nav class="bottom-nav">
-    <div class="bnav-item" data-view="panel">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      <span>Panel</span>
+    <div class="bottom-nav-inner">
+      <button class="bnav-item" data-view="panel">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Panel
+      </button>
+      <button class="bnav-item" data-view="productos">
+        <svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        Productos
+      </button>
+      <button class="bnav-item" data-view="ventas">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Ventas
+      </button>
+      <button class="bnav-item" data-view="movimientos">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Historial
+      </button>
+      <button class="bnav-item bnav-more" id="bnav-more-btn">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+        Más
+      </button>
     </div>
-    <div class="bnav-item" data-view="products">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-      <span>Productos</span>
-    </div>
-    <div class="bnav-item" data-view="sales">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      <span>Ventas</span>
-    </div>
-    <div class="bnav-item" data-view="history">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      <span>Historial</span>
-    </div>
-    <div class="bnav-item" id="bnav-more">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-      <span>Más</span>
+    <!-- Menú "Más" desplegable -->
+    <div class="bnav-more-menu hidden" id="bnav-more-menu">
+      <div class="bnav-user-info" id="bnav-user-info"></div>
+      <button class="bnav-more-item" data-view="agregar">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Nuevo Producto
+      </button>
+      <button class="bnav-more-item" data-view="usuarios">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Usuarios
+      </button>
+      <button class="bnav-more-item" data-view="ajustes">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Ajustes
+      </button>
+      <button class="bnav-more-item" id="bnav-logout-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión
+      </button>
     </div>
   </nav>
 
-  <!-- More menu -->
-  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:500;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
-    <div id="mobile-user-info" style="font-size:11px;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--border);margin-bottom:4px"></div>
-    <div class="bnav-item write-only" data-view="new-product" style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:6px;cursor:pointer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nuevo Producto
-    </div>
-    <div class="bnav-item" data-view="reports" style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:6px;cursor:pointer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Reportes
-    </div>
-    <div class="bnav-item" data-view="users" style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:6px;cursor:pointer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-      Usuarios
-    </div>
-    <div class="bnav-item" data-view="settings" style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:6px;cursor:pointer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Ajustes
-    </div>
-    <div id="logout-btn-mobile" style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:6px;cursor:pointer;color:var(--muted);border-top:1px solid var(--border);margin-top:4px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Cerrar sesión
+  <!-- ── Modal Carga Masiva ──────────────────────────────────────────── -->
+  <div id="bulk-overlay" class="hidden">
+    <div class="modal bulk-modal">
+      <div class="bulk-header">
+        <h3>Carga masiva de productos</h3>
+        <button class="btn-icon" id="bulk-close">✕</button>
+      </div>
+
+      <div class="bulk-instructions">
+        <p>El archivo CSV debe tener estas columnas en orden:</p>
+        <code>nombre, categoría (dulce/pulsera), stock, precio_compra, precio_venta, descripción</code>
+        <button class="btn-ghost-sm" id="bulk-download-template">⬇ Descargar plantilla</button>
+      </div>
+
+      <div id="bulk-preview-wrap" class="hidden">
+        <div class="bulk-preview-info">
+          <span id="bulk-count"></span>
+          <span id="bulk-errors" class="bulk-error-count"></span>
+        </div>
+        <div class="table-scroll" style="max-height:280px;overflow-y:auto">
+          <table id="bulk-preview-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Nombre</th><th>Categoría</th>
+                <th>Stock</th><th>P.Compra</th><th>P.Venta</th>
+                <th>Descripción</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="bulk-preview-body"></tbody>
+          </table>
+        </div>
+        <div class="form-actions" style="margin-top:16px">
+          <button class="btn-primary" id="bulk-confirm">Importar válidos</button>
+          <button class="btn-ghost" id="bulk-cancel">Cancelar</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="firebase.js?v=20"></script>
-  <script src="app.js?v=20"></script>
-  <script>
-    // More menu toggle
-    var moreBtn = document.getElementById('bnav-more');
-    var moreMenu = document.getElementById('more-menu');
-    if (moreBtn && moreMenu) {
-      moreMenu.style.display = 'none';
-      moreBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        moreMenu.style.display = moreMenu.style.display === 'none' ? 'block' : 'none';
-      });
-      document.addEventListener('click', function() { moreMenu.style.display = 'none'; });
-    }
-    // Mobile header show on small screens
-    if (window.innerWidth <= 768) {
-      var mh = document.getElementById('mobile-header');
-      if (mh) mh.style.display = 'flex';
-    }
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').then(function(reg) {
-        reg.addEventListener('updatefound', function() {
-          var newSW = reg.installing;
-          if (newSW) newSW.addEventListener('statechange', function() {
-            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-              newSW.postMessage({ type: 'SKIP_WAITING' });
-              location.reload();
-            }
-          });
-        });
-        reg.update();
-      });
-    }
-  </script>
+  <!-- Scripts - ELIMINÉ EL SERVICE WORKER PROBLEMÁTICO -->
+  <script type="module" src="app.js?v=11"></script>
 </body>
 </html>
