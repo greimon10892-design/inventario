@@ -267,20 +267,20 @@
 
       <div class="section-box">
         <div class="table-scroll">
-        </table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Producto</th>
-              <th>Tipo</th>
-              <th>Cantidad</th>
-              <th>Precio Unit.</th>
-              <th>Total</th>
-              <th class="col-mov-gain-header">Ganancia</th>
-            </tr>
-          </thead>
-          <tbody id="mov-body"></tbody>
-        </table>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Total</th>
+                <th class="col-mov-gain-header">Ganancia</th>
+              </tr>
+            </thead>
+            <tbody id="mov-body"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -850,5 +850,25 @@
 
   <!-- Scripts - ELIMINÉ EL SERVICE WORKER PROBLEMÁTICO -->
   <script type="module" src="app.js?v=11"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+        .then(reg => {
+          reg.update();
+          reg.addEventListener('updatefound', () => {
+            const sw = reg.installing;
+            sw.addEventListener('statechange', () => {
+              if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+                sw.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        });
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+      });
+    }
+  </script>
 </body>
 </html>
