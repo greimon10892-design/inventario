@@ -1,5 +1,5 @@
 // Service Worker — PWA para GitHub Pages
-const CACHE = 'talara-v11';
+const CACHE = 'talara-v12';
 const BASE  = '/inventario';
 
 const ASSETS = [
