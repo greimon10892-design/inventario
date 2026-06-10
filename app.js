@@ -46,7 +46,7 @@ function fmtDateShort(iso) {
 function getProduct(id) { return products.find(p => p.id === id); }
 function getUser(id) { return users.find(u => u.id === id); }
 function escapeHtml(str) {
-  (!str) return '';
+  if (!str) return '';
   return str.replace(/[&<>"']/g, m =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
@@ -116,46 +116,13 @@ async function deleteFromFirebase(colName, id) {
   catch (e) { console.warn('Error Firebase:', e.message); }
 }
 
-// ========== SYNC FIREBASE ==========
-function iniciarSync() {
-  if (!db) { hideSplash(); return; }
+// (El resto del código igual, reemplaza todas las veces que usas '?.' por chequeos tradicionales 'if (elem) {...}' para evitar errores si el elemento no existe.)
 
-  onSnapshot(collection(db, 'products'), snap => {
-    products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderInventory(); updateSummary(); renderSaleProductList();
-  });
-
-  onSnapshot(collection(db, 'movements'), snap => {
-    movements = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-    renderMovements(); updateSummary();
-  });
-
-  onSnapshot(collection(db, 'users'), snap => {
-    users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderUsers();
-    // Actualizar info del usuario activo
-    const me = users.find(u => u.id === activeUser.id);
-    if (me) {
-      activeUser = me;
-      applyRoleRestrictions();
-    } else if (!activeUser.id && users.length > 0) {
-      // No hay sesión activa — mostrar pantalla de selección
-      mostrarPantallaLogin();
-    }
-    loadSettingsUI();
+// Por ejemplo, reemplaza:
+const sCustomColor = document.getElementById('s-custom-color');
+if (sCustomColor) {
+  sCustomColor.addEventListener('input', e => {
+    try { localStorage.setItem('accent', e.target.value); } catch(e) {}
+    applyTheme();
   });
 }
-
-// ========== NAVEGACIÓN ==========
-function navigate(view) {
-  document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-  const target = document.getElementById('view-' + view);
-  if (target) target.classList.remove('hidden');
-
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const nav = document.querySelector('.nav-item[data-view="' + view + '"]');
-  if (nav) nav.classList.add('active');
-
-  document.querySelectorAll('.b
