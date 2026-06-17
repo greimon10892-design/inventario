@@ -85,13 +85,17 @@ function canViewGanancias(){ return isAdmin(); }
 
 function applyRoleRestrictions() {
   const role = activeUser.role;
-  // Ocultar Nav items según rol
-  document.querySelectorAll('[data-view="agregar"],[data-view="usuarios"]').forEach(el => {
-    el.style.display = role === 'Solo lectura' ? 'none' : '';
+  // Ocultar "Nuevo Producto" si no puede escribir
+  document.querySelectorAll('[data-view="agregar"]').forEach(el => {
+    el.style.display = canWrite() ? '' : 'none';
   });
-  // Botones de editar/eliminar productos
+  // "Usuarios" solo visible para Admin/SuperAdmin
+  document.querySelectorAll('[data-view="usuarios"]').forEach(el => {
+    el.style.display = isAdmin() ? '' : 'none';
+  });
+  // Botones de editar/eliminar productos — Admin y SuperAdmin
   document.querySelectorAll('.btn-edit-product,.btn-delete-product').forEach(btn => {
-    btn.style.display = role === 'Admin' ? '' : 'none';
+    btn.style.display = isAdmin() ? '' : 'none';
   });
   // Botones entrada/salida
   document.querySelectorAll('.btn-entrada-product,.btn-salida-product').forEach(btn => {
@@ -99,10 +103,21 @@ function applyRoleRestrictions() {
   });
   // Info usuario en sidebar
   const info = document.getElementById('sidebar-user-info');
-  if (info) info.textContent = activeUser.name + ' · ' + activeUser.role;
+  if (info) info.textContent = activeUser.name + ' · ' + (role === 'SuperAdmin' ? '⭐ SuperAdmin' : role);
   // Info usuario en nav móvil
   const bnavInfo = document.getElementById('bnav-user-info');
-  if (bnavInfo) bnavInfo.textContent = activeUser.name + ' · ' + activeUser.role;
+  if (bnavInfo) bnavInfo.textContent = activeUser.name + ' · ' + (role === 'SuperAdmin' ? '⭐ SuperAdmin' : role);
+  // Limitar opciones del selector de rol al crear usuario:
+  // solo un SuperAdmin puede otorgar Admin/SuperAdmin
+  const roleSelect = document.getElementById('u-role');
+  if (roleSelect) {
+    Array.from(roleSelect.options).forEach(opt => {
+      opt.disabled = ['SuperAdmin', 'Admin'].includes(opt.value) && !isSuperAdmin();
+    });
+    if (roleSelect.options[roleSelect.selectedIndex]?.disabled) {
+      roleSelect.value = 'Usuario';
+    }
+  }
 }
 
 // ========== FIREBASE: GUARDAR / ELIMINAR ==========
@@ -874,10 +889,16 @@ function renderUsers() {
   });
 
   container.innerHTML = users.map(u => {
-    const roleKey     = u.role === 'Admin' ? 'admin' : u.role === 'Usuario' ? 'usuario' : 'readonly';
+    const roleKey     = u.role === 'SuperAdmin' ? 'superadmin' : u.role === 'Admin' ? 'admin' : u.role === 'Usuario' ? 'usuario' : 'readonly';
+    const roleLabel   = u.role === 'SuperAdmin' ? '⭐ SuperAdmin' : u.role;
     const initials    = u.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const totalSales  = salesByUser[u.id] || 0;
     const isActive    = u.id === activeUser.id;
+    // Solo SuperAdmin puede borrar Admins/SuperAdmins. Admin puede borrar Usuario/Solo lectura.
+    const puedeBorrar = u.id !== activeUser.id && (
+      isSuperAdmin() ? u.role !== 'SuperAdmin' || users.filter(x => x.role === 'SuperAdmin').length > 1 :
+      canManageUsers() && !['Admin','SuperAdmin'].includes(u.role)
+    );
     var avatarHTML = u.avatar
       ? '<img src="' + u.avatar + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--orange)" />'
       : '<div class="user-avatar" style="' + (isActive ? 'background:var(--orange)' : '') + '">' + initials + '</div>';
@@ -888,8 +909,9 @@ function renderUsers() {
         '<div class="user-email">' + escapeHtml(u.email || '') + '</div>' +
         (totalSales > 0 ? '<div style="font-size:0.68rem;color:var(--success);margin-top:2px">Ventas: ' + fmt(totalSales) + '</div>' : '') +
       '</div>' +
-      '<span class="badge badge-' + roleKey + '">' + u.role + '</span>' +
-      (canManageUsers() && u.role !== 'Admin' ?
+      '<span class="badge badge-' + roleKey + '">' + roleLabel + '</span>' +
+      (isSuperAdmin() ? '<button class="btn-icon" title="Cambiar rol" onclick="window.cambiarRol(\'' + u.id + '\')" style="font-size:0.8rem">⭐</button>' : '') +
+      (puedeBorrar ?
         '<button class="btn-icon btn-danger" onclick="window.deleteUser(\'' + u.id + '\')">✕</button>' :
         '<span style="width:32px;display:inline-block"></span>') +
     '</div>';
@@ -917,6 +939,20 @@ window.cambiarPassword = async function(id) {
   showToast('🔑 Contraseña actualizada para ' + u.name, 'success');
 };
 
+window.cambiarRol = async function(id) {
+  if (!isSuperAdmin()) { showToast('Solo el SuperAdmin puede cambiar roles', 'error'); return; }
+  var u = users.find(function(x){ return x.id === id; });
+  if (!u) return;
+  if (u.role === 'SuperAdmin' && users.filter(function(x){ return x.role === 'SuperAdmin'; }).length <= 1) {
+    showToast('Debe existir al menos un SuperAdmin', 'error'); return;
+  }
+  var opciones = ['SuperAdmin', 'Admin', 'Usuario', 'Solo lectura'];
+  var nuevo = prompt('Nuevo rol para ' + u.name + '\\nOpciones: ' + opciones.join(' / '), u.role);
+  if (!nuevo || !opciones.includes(nuevo.trim())) { showToast('Rol inválido', 'error'); return; }
+  await saveToFirebase('users', Object.assign({}, u, { role: nuevo.trim() }));
+  showToast('Rol de ' + u.name + ' cambiado a ' + nuevo.trim(), 'success');
+};
+
 window.deleteUser = function(id) {
   if (!canManageUsers()) { showToast('Sin permiso', 'error'); return; }
   const u = users.find(x => x.id === id); if (!u) return;
@@ -934,6 +970,9 @@ document.getElementById('user-form')?.addEventListener('submit', async e => {
   const pass   = document.getElementById('u-password')?.value.trim() || '1234';
   const avatar = window._newUserAvatar || '';
   if (!name || !email) { alert('Completa todos los campos'); return; }
+  if (['SuperAdmin','Admin'].includes(role) && !isSuperAdmin()) {
+    showToast('Solo un SuperAdmin puede crear cuentas Admin o SuperAdmin', 'error'); return;
+  }
   if (users.find(u => u.email === email)) { alert('Ya existe un usuario con ese correo.'); return; }
   const u = { id: uid(), name, email, role, password: pass, avatar, date: new Date().toISOString() };
   window._newUserAvatar = '';
