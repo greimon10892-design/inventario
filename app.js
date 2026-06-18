@@ -213,7 +213,7 @@ window.abrirModalCrearAdmin = function() {
         '<input id="ca-web" type="url" placeholder="https://mitienda.github.io" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
       '<div style="display:flex;gap:10px">' +
         '<button id="ca-btn-crear" class="btn-primary" style="flex:1">Crear Admin</button>' +
-        '<button onclick="document.getElementById('modal-crear-admin').style.display='none'" class="btn-ghost" style="flex:1">Cancelar</button>' +
+       '<button onclick="document.getElementById(\'modal-crear-admin\').style.display=\'none\'" class="btn-ghost" style="flex:1">Cancelar</button>' +
       '</div>' +
     '</div>';
 
