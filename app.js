@@ -135,9 +135,143 @@ async function deleteFromFirebase(colName, id) {
   catch (e) { console.warn('Error Firebase:', e.message); }
 }
 
+
+// ========== PROYECTOS ==========
+let projects = [];
+let activeProjectId = null; // null = SuperAdmin ve todo
+
+function getActiveProjectId() {
+  if (isSuperAdmin()) return activeProjectId; // puede ver todos o filtrar
+  return activeUser.projectId || null;
+}
+
+function saveToFirebase(colName, item) {
+  if (!db) return Promise.resolve();
+  const { id, ...data } = item;
+  return setDoc(doc(db, colName, id), { ...data, updatedAt: serverTimestamp() })
+    .catch(e => console.warn('Firebase error:', e.message));
+}
+
+// Sincronizar proyectos
+function iniciarSyncProyectos() {
+  if (!db) return;
+  onSnapshot(collection(db, 'projects'), snap => {
+    projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderProjects();
+  });
+}
+
+function renderProjects() {
+  const sel = document.getElementById('s-project-filter');
+  if (!sel || !isSuperAdmin()) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos los proyectos</option>' +
+    projects.map(p => '<option value="' + p.id + '"' + (p.id === current ? ' selected' : '') + '>' + p.name + '</option>').join('');
+}
+
+// Filtrar productos/movimientos por proyecto
+function getProductsForView() {
+  const pid = getActiveProjectId();
+  if (!pid) return products; // SuperAdmin sin filtro ve todo
+  return products.filter(p => (p.projectId || 'default') === pid);
+}
+
+function getMovementsForView() {
+  const pid = getActiveProjectId();
+  if (!pid) return movements;
+  return movements.filter(m => (m.projectId || 'default') === pid);
+}
+
+// Modal crear Admin con proyecto
+window.abrirModalCrearAdmin = function() {
+  if (!isSuperAdmin()) { showToast('Solo SuperAdmin puede hacer esto', 'error'); return; }
+  let modal = document.getElementById('modal-crear-admin');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-crear-admin';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(modal);
+  }
+
+  const proyOptions = projects.map(p =>
+    '<option value="' + p.id + '">' + p.name + '</option>'
+  ).join('');
+
+  modal.innerHTML =
+    '<div style="background:var(--surface);border-radius:16px;padding:24px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4)">' +
+      '<h3 style="margin-bottom:16px;color:var(--text)">⭐ Crear Admin</h3>' +
+      '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">NOMBRE</label>' +
+        '<input id="ca-name" type="text" placeholder="Nombre completo" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
+      '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">CORREO</label>' +
+        '<input id="ca-email" type="email" placeholder="correo@ejemplo.com" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
+      '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">CONTRASEÑA</label>' +
+        '<input id="ca-pass" type="password" placeholder="Mínimo 4 caracteres" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
+      '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">PROYECTO</label>' +
+        '<select id="ca-proyecto-tipo" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;margin-bottom:8px">' +
+          '<option value="nuevo">➕ Crear nuevo proyecto</option>' +
+          '<option value="existente">📂 Asignar a proyecto existente</option>' +
+        '</select>' +
+        '<input id="ca-proyecto-nombre" placeholder="Nombre del nuevo proyecto" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" />' +
+        '<select id="ca-proyecto-existente" style="display:none;width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit">' +
+          proyOptions +
+        '</select>' +
+      '</div>' +
+      '<div style="margin-bottom:16px" id="ca-web-wrap"><label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">URL DEL SITIO WEB (opcional)</label>' +
+        '<input id="ca-web" type="url" placeholder="https://mitienda.github.io" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button id="ca-btn-crear" class="btn-primary" style="flex:1">Crear Admin</button>' +
+        '<button onclick="document.getElementById('modal-crear-admin').style.display='none'" class="btn-ghost" style="flex:1">Cancelar</button>' +
+      '</div>' +
+    '</div>';
+
+  modal.style.display = 'flex';
+
+  // Toggle tipo de proyecto
+  const tipoSel = modal.querySelector('#ca-proyecto-tipo');
+  const nombreInput = modal.querySelector('#ca-proyecto-nombre');
+  const existSel = modal.querySelector('#ca-proyecto-existente');
+  const webWrap = modal.querySelector('#ca-web-wrap');
+
+  tipoSel.addEventListener('change', () => {
+    const esNuevo = tipoSel.value === 'nuevo';
+    nombreInput.style.display = esNuevo ? 'block' : 'none';
+    existSel.style.display = esNuevo ? 'none' : 'block';
+    webWrap.style.display = esNuevo ? 'block' : 'none';
+  });
+
+  modal.querySelector('#ca-btn-crear').addEventListener('click', async () => {
+    const name  = modal.querySelector('#ca-name').value.trim();
+    const email = modal.querySelector('#ca-email').value.trim().toLowerCase();
+    const pass  = modal.querySelector('#ca-pass').value.trim();
+    const tipo  = tipoSel.value;
+
+    if (!name || !email || !pass) { showToast('Completa todos los campos', 'error'); return; }
+    if (pass.length < 4) { showToast('Contraseña muy corta', 'error'); return; }
+    if (users.find(u => u.email === email)) { showToast('Ya existe ese correo', 'error'); return; }
+
+    let projectId;
+    if (tipo === 'nuevo') {
+      const pNombre = nombreInput.value.trim() || name + ' Tienda';
+      const pWeb    = modal.querySelector('#ca-web').value.trim();
+      projectId = uid();
+      await saveToFirebase('projects', { id: projectId, name: pNombre, webUrl: pWeb, createdBy: activeUser.id, date: new Date().toISOString() });
+      showToast('✅ Proyecto "' + pNombre + '" creado', 'success');
+    } else {
+      projectId = existSel.value;
+      if (!projectId) { showToast('Selecciona un proyecto', 'error'); return; }
+    }
+
+    const newAdmin = { id: uid(), name, email, role: 'Admin', password: pass, projectId, date: new Date().toISOString(), avatar: '' };
+    await saveToFirebase('users', newAdmin);
+    modal.style.display = 'none';
+    showToast('✅ Admin "' + name + '" creado correctamente', 'success');
+  });
+};
+
 // ========== SYNC FIREBASE ==========
 function iniciarSync() {
   if (!db) { hideSplash(); return; }
+  iniciarSyncProyectos();
 
   onSnapshot(collection(db, 'products'), snap => {
     products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -194,15 +328,17 @@ window.navigate = navigate;
 
 // ========== PANEL ==========
 function updateSummary() {
-  document.getElementById('total-products').textContent = products.length;
-  const sold = movements.filter(m => m.type === 'salida').reduce((s, m) => s + (m.total || 0), 0);
+  const viewProds = getProductsForView();
+  const viewMovs  = getMovementsForView();
+  document.getElementById('total-products').textContent = viewProds.length;
+  const sold = viewMovs.filter(m => m.type === 'salida').reduce((s, m) => s + (m.total || 0), 0);
   document.getElementById('total-vendido').textContent = fmt(sold);
   // Ganancias solo para Admin y SuperAdmin
   const cardInv   = document.getElementById('card-inversion');
   const cardGain  = document.getElementById('card-ganancia');
   if (canViewGanancias()) {
-    const inv  = products.reduce((s, p) => s + (p.buyPrice  || 0) * (p.stock || 0), 0);
-    const gain = products.reduce((s, p) => s + ((p.sellPrice || 0) - (p.buyPrice || 0)) * (p.stock || 0), 0);
+    const inv  = viewProds.reduce((s, p) => s + (p.buyPrice  || 0) * (p.stock || 0), 0);
+    const gain = viewProds.reduce((s, p) => s + ((p.sellPrice || 0) - (p.buyPrice || 0)) * (p.stock || 0), 0);
     document.getElementById('total-inversion').textContent = fmt(inv);
     document.getElementById('total-ganancia').textContent  = fmt(gain);
     if (cardInv)  cardInv.style.display  = '';
@@ -212,7 +348,7 @@ function updateSummary() {
     if (cardGain) cardGain.style.display = 'none';
   }
 
-  const low = products.filter(p => (p.stock || 0) <= 5);
+  const low = getProductsForView().filter(p => (p.stock || 0) <= 5);
   const el  = document.getElementById('low-stock-list');
   if (el) {
     el.innerHTML = low.length === 0
@@ -232,10 +368,11 @@ function normalizeStr(str) {
 }
 
 function renderInventory() {
+  const allProducts = getProductsForView();
   const rawSearch = document.getElementById('search')?.value || '';
   const search = normalizeStr(rawSearch);
   const cat    = document.getElementById('filter-category')?.value || '';
-  const list   = products.filter(p => {
+  const list   = allProducts.filter(p => {
     const name = normalizeStr(p.name);
     const desc = normalizeStr(p.desc);
     const matchSearch = !search || name.includes(search) || desc.includes(search);
@@ -279,7 +416,8 @@ function renderInventory() {
 // ========== MOVIMIENTOS ==========
 function renderMovements() {
   const typeFilter = document.getElementById('filter-mov-type')?.value || '';
-  const list = movements.filter(m => !typeFilter || m.type === typeFilter || (typeFilter === 'salida' && m.type === 'gasto'));
+  const baseMovs = getMovementsForView();
+  const list = baseMovs.filter(m => !typeFilter || m.type === typeFilter || (typeFilter === 'salida' && m.type === 'gasto'));
   const tbody = document.getElementById('mov-body');
   if (!tbody) return;
   if (list.length === 0) {
@@ -447,7 +585,7 @@ document.getElementById('product-form')?.addEventListener('submit', async e => {
     await saveToFirebase('products', { ...ex, ...data, id: editId });
     showToast('Producto actualizado ✓', 'success');
   } else {
-    await saveToFirebase('products', { id: uid(), ...data });
+    await saveToFirebase('products', { id: uid(), ...data, projectId: getActiveProjectId() || 'default' });
     showToast('Producto agregado ✓', 'success');
   }
   document.getElementById('product-form').reset();
@@ -461,7 +599,7 @@ document.getElementById('product-form')?.addEventListener('submit', async e => {
 function renderSaleProductList() {
   const search = (document.getElementById('sale-search')?.value || '').toLowerCase();
   const cat    = document.querySelector('.scat-btn.active')?.dataset.cat || '';
-  const list   = products.filter(p =>
+  const list   = getProductsForView().filter(p =>
     (!cat || p.category === cat) && (!search || (p.name || '').toLowerCase().includes(search))
   );
   const container = document.getElementById('sale-product-list');
@@ -587,8 +725,9 @@ document.getElementById('btn-confirm-sale')?.addEventListener('click', async () 
     p.stock = (p.stock || 0) - qty;
     await saveToFirebase('products', p);
 
+    const pid = getActiveProjectId() || 'default';
     const mov = {
-      id: uid(), saleId,
+      id: uid(), saleId, projectId: pid,
       productId: p.id, productName: p.name,
       type: 'salida', qty, price: p.sellPrice || 0,
       total: (p.sellPrice || 0) * qty,
@@ -880,6 +1019,17 @@ function renderUsers() {
   const label     = document.getElementById('user-count-label');
   if (!container) return;
   if (label) label.textContent = users.length + ' usuario' + (users.length !== 1 ? 's' : '') + ' con acceso';
+  // Botón crear admin para SuperAdmin
+  const btnCrearAdmin = document.getElementById('btn-crear-admin-super');
+  if (isSuperAdmin() && !btnCrearAdmin) {
+    const btn = document.createElement('button');
+    btn.id = 'btn-crear-admin-super';
+    btn.className = 'btn-primary';
+    btn.style.cssText = 'margin-bottom:16px';
+    btn.textContent = '⭐ Crear Admin con Proyecto';
+    btn.onclick = window.abrirModalCrearAdmin;
+    container.parentElement.insertBefore(btn, container);
+  }
   if (users.length === 0) { container.innerHTML = '<div class="empty-state">Sin usuarios registrados.</div>'; return; }
 
   // Estadísticas de ventas por usuario
@@ -976,6 +1126,10 @@ document.getElementById('user-form')?.addEventListener('submit', async e => {
   if (users.find(u => u.email === email)) { alert('Ya existe un usuario con ese correo.'); return; }
   const u = { id: uid(), name, email, role, password: pass, avatar, date: new Date().toISOString() };
   window._newUserAvatar = '';
+  const avPrev = document.getElementById('u-avatar-preview');
+  const avRem  = document.getElementById('u-avatar-remove');
+  if (avPrev) { avPrev.src = ''; avPrev.style.display = 'none'; }
+  if (avRem)  avRem.style.display = 'none';
   await saveToFirebase('users', u);
   document.getElementById('user-form').reset();
   showToast('Usuario "' + name + '" agregado ✓', 'success');
@@ -1084,25 +1238,37 @@ function setupLogoUpload(inputId, previewId, removeId, storageKey, applyFn) {
 }
 
 document.querySelectorAll('.theme-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     try { localStorage.setItem('theme', btn.dataset.theme); } catch(e) {}
     applyTheme();
     document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    if (activeUser.id) {
+      activeUser.theme = btn.dataset.theme;
+      await saveToFirebase('users', activeUser);
+    }
   });
 });
 document.querySelectorAll('.swatch').forEach(sw => {
-  sw.addEventListener('click', () => {
+  sw.addEventListener('click', async () => {
     const color = sw.dataset.color; if (!color) return;
     try { localStorage.setItem('accent', color); } catch(e) {}
     applyTheme();
     document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
     sw.classList.add('active');
+    if (activeUser.id) {
+      activeUser.accent = color;
+      await saveToFirebase('users', activeUser);
+    }
   });
 });
-document.getElementById('s-custom-color')?.addEventListener('input', e => {
+document.getElementById('s-custom-color')?.addEventListener('input', async e => {
   try { localStorage.setItem('accent', e.target.value); } catch(e) {}
   applyTheme();
+  if (activeUser.id) {
+    activeUser.accent = e.target.value;
+    await saveToFirebase('users', activeUser);
+  }
 });
 
 // ========== REPORTES ==========
@@ -1121,7 +1287,8 @@ function initReportSelectors() {
 }
 
 function getSalesByRange(from, to) {
-  return movements.filter(m => { const d = new Date(m.date); return m.type === 'salida' && d >= from && d <= to; });
+  const base = getMovementsForView();
+  return base.filter(m => { const d = new Date(m.date); return m.type === 'salida' && d >= from && d <= to; });
 }
 
 function groupByProduct(sales) {
@@ -1479,6 +1646,10 @@ window.seleccionarUsuario = function(userId) {
   if (!u) return;
   activeUser = u;
   localStorage.setItem('active_user_id', userId);
+  // Aplicar tema y color propios de este usuario, si los tiene guardados
+  if (u.theme)  { try { localStorage.setItem('theme', u.theme); } catch(e) {} }
+  if (u.accent) { try { localStorage.setItem('accent', u.accent); } catch(e) {} }
+  applyTheme();
   const screen = document.getElementById('login-screen');
   if (screen) screen.style.display = 'none';
   applyRoleRestrictions();
@@ -1550,6 +1721,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (preview) { preview.src = ''; preview.classList.add('hidden'); }
     document.getElementById('remove-bg').style.display = 'none';
   });
+
+  // Setup avatar de usuario nuevo
+  (function() {
+    const input   = document.getElementById('u-avatar');
+    const preview = document.getElementById('u-avatar-preview');
+    const remBtn  = document.getElementById('u-avatar-remove');
+    if (!input) return;
+    input.addEventListener('change', async e => {
+      const file = e.target.files[0]; if (!file) return;
+      const b64 = await comprimirImagen(file, 200, 0.85);
+      window._newUserAvatar = b64;
+      if (preview) { preview.src = b64; preview.style.display = 'inline-block'; }
+      if (remBtn) remBtn.style.display = 'inline-block';
+    });
+    if (remBtn) {
+      remBtn.addEventListener('click', () => {
+        window._newUserAvatar = '';
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
+        remBtn.style.display = 'none'; input.value = '';
+      });
+    }
+  })();
 
   // Setup imágenes del formulario de productos
   [0, 1, 2].forEach(slot => {
