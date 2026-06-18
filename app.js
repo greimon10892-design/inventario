@@ -145,13 +145,6 @@ function getActiveProjectId() {
   return activeUser.projectId || null;
 }
 
-function saveToFirebase(colName, item) {
-  if (!db) return Promise.resolve();
-  const { id, ...data } = item;
-  return setDoc(doc(db, colName, id), { ...data, updatedAt: serverTimestamp() })
-    .catch(e => console.warn('Firebase error:', e.message));
-}
-
 // Sincronizar proyectos
 function iniciarSyncProyectos() {
   if (!db) return;
