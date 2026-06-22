@@ -155,11 +155,22 @@ function iniciarSyncProyectos() {
 }
 
 function renderProjects() {
+  const row = document.getElementById('s-project-filter-row');
   const sel = document.getElementById('s-project-filter');
-  if (!sel || !isSuperAdmin()) return;
-  const current = sel.value;
+  if (!sel || !row) return;
+  if (!isSuperAdmin()) { row.style.display = 'none'; return; }
+  row.style.display = '';
+  const current = sel.value || activeProjectId || '';
   sel.innerHTML = '<option value="">Todos los proyectos</option>' +
     projects.map(p => '<option value="' + p.id + '"' + (p.id === current ? ' selected' : '') + '>' + p.name + '</option>').join('');
+  if (!sel._wired) {
+    sel._wired = true;
+    sel.addEventListener('change', () => {
+      activeProjectId = sel.value || null;
+      renderInventory(); updateSummary(); renderSaleProductList(); renderMovements();
+      showToast(activeProjectId ? '📂 Viendo proyecto: ' + (projects.find(p => p.id === activeProjectId)?.name || '') : '🌐 Viendo todos los proyectos');
+    });
+  }
 }
 
 // Filtrar productos/movimientos por proyecto
@@ -213,11 +224,15 @@ window.abrirModalCrearAdmin = function() {
         '<input id="ca-web" type="url" placeholder="https://mitienda.github.io" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
       '<div style="display:flex;gap:10px">' +
         '<button id="ca-btn-crear" class="btn-primary" style="flex:1">Crear Admin</button>' +
-       '<button onclick="document.getElementById(\'modal-crear-admin\').style.display=\'none\'" class="btn-ghost" style="flex:1">Cancelar</button>' +
+        '<button id="ca-btn-cancelar" class="btn-ghost" style="flex:1">Cancelar</button>' +
       '</div>' +
     '</div>';
 
   modal.style.display = 'flex';
+
+  modal.querySelector('#ca-btn-cancelar').addEventListener('click', function() {
+    modal.style.display = 'none';
+  });
 
   // Toggle tipo de proyecto
   const tipoSel = modal.querySelector('#ca-proyecto-tipo');
@@ -904,9 +919,9 @@ window.abrirHistorialVentas = function() {
     document.body.appendChild(modal);
   }
 
-  // Agrupar movimientos por saleId
+  // Agrupar movimientos por saleId (filtrados por proyecto activo)
   var salesMap = {};
-  movements.filter(function(m){ return m.type === 'salida' && m.saleId; }).forEach(function(m) {
+  getMovementsForView().filter(function(m){ return m.type === 'salida' && m.saleId; }).forEach(function(m) {
     if (!salesMap[m.saleId]) salesMap[m.saleId] = { saleId: m.saleId, date: m.date, items: [], total: 0, userName: m.userName || '—' };
     salesMap[m.saleId].items.push(m);
     salesMap[m.saleId].total += m.total || 0;
@@ -1011,7 +1026,11 @@ function renderUsers() {
   const container = document.getElementById('user-list');
   const label     = document.getElementById('user-count-label');
   if (!container) return;
-  if (label) label.textContent = users.length + ' usuario' + (users.length !== 1 ? 's' : '') + ' con acceso';
+  // SuperAdmin ve a todos; un Admin/Usuario solo ve a quienes están en su mismo proyecto
+  const visibleUsers = isSuperAdmin()
+    ? users
+    : users.filter(u => (u.projectId || 'default') === (activeUser.projectId || 'default'));
+  if (label) label.textContent = visibleUsers.length + ' usuario' + (visibleUsers.length !== 1 ? 's' : '') + ' con acceso';
   // Botón crear admin para SuperAdmin
   const btnCrearAdmin = document.getElementById('btn-crear-admin-super');
   if (isSuperAdmin() && !btnCrearAdmin) {
@@ -1023,15 +1042,15 @@ function renderUsers() {
     btn.onclick = window.abrirModalCrearAdmin;
     container.parentElement.insertBefore(btn, container);
   }
-  if (users.length === 0) { container.innerHTML = '<div class="empty-state">Sin usuarios registrados.</div>'; return; }
+  if (visibleUsers.length === 0) { container.innerHTML = '<div class="empty-state">Sin usuarios registrados.</div>'; return; }
 
-  // Estadísticas de ventas por usuario
+  // Estadísticas de ventas por usuario (filtradas por proyecto)
   const salesByUser = {};
-  movements.filter(m => m.type === 'salida' && m.userId).forEach(m => {
+  getMovementsForView().filter(m => m.type === 'salida' && m.userId).forEach(m => {
     salesByUser[m.userId] = (salesByUser[m.userId] || 0) + (m.total || 0);
   });
 
-  container.innerHTML = users.map(u => {
+  container.innerHTML = visibleUsers.map(u => {
     const roleKey     = u.role === 'SuperAdmin' ? 'superadmin' : u.role === 'Admin' ? 'admin' : u.role === 'Usuario' ? 'usuario' : 'readonly';
     const roleLabel   = u.role === 'SuperAdmin' ? '⭐ SuperAdmin' : u.role;
     const initials    = u.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
@@ -1130,6 +1149,7 @@ document.getElementById('user-form')?.addEventListener('submit', async e => {
 
 // ========== AJUSTES ==========
 function loadSettingsUI() {
+  renderProjects();
   const name     = localStorage.getItem('store_name')     || 'Inventario';
   const subtitle = localStorage.getItem('store_subtitle') || 'Dulces & Pulseras';
   const el1 = document.getElementById('s-storename');
