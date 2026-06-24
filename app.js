@@ -1078,9 +1078,12 @@ function renderUsers() {
     const initials    = u.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const totalSales  = salesByUser[u.id] || 0;
     const isActive    = u.id === activeUser.id;
-    // Según tabla de privilegios: solo el SuperAdmin puede borrar usuarios (Admin puede crear/gestionar pero no borrar)
-    const puedeBorrar = u.id !== activeUser.id && isSuperAdmin() &&
-      (u.role !== 'SuperAdmin' || users.filter(x => x.role === 'SuperAdmin').length > 1);
+    // Según tabla de privilegios: SuperAdmin borra a cualquiera (salvo dejar el sistema sin SuperAdmin);
+    // Admin puede borrar Usuario/Solo lectura, pero no a otros Admin ni SuperAdmin
+    const puedeBorrar = u.id !== activeUser.id && (
+      isSuperAdmin() ? (u.role !== 'SuperAdmin' || users.filter(x => x.role === 'SuperAdmin').length > 1) :
+      isAdmin() && !['Admin','SuperAdmin'].includes(u.role)
+    );
     var avatarHTML = u.avatar
       ? '<img src="' + u.avatar + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--orange)" />'
       : '<div class="user-avatar" style="' + (isActive ? 'background:var(--orange)' : '') + '">' + initials + '</div>';
@@ -1136,10 +1139,16 @@ window.cambiarRol = async function(id) {
 };
 
 window.deleteUser = function(id) {
-  if (!isSuperAdmin()) { showToast('Solo el SuperAdmin puede borrar usuarios', 'error'); return; }
   const u = users.find(x => x.id === id); if (!u) return;
-  if (u.role === 'SuperAdmin' && users.filter(x => x.role === 'SuperAdmin').length <= 1) {
-    showToast('Debe existir al menos un SuperAdmin', 'error'); return;
+  if (u.id === activeUser.id) { showToast('No puedes eliminarte a ti mismo', 'error'); return; }
+  if (isSuperAdmin()) {
+    if (u.role === 'SuperAdmin' && users.filter(x => x.role === 'SuperAdmin').length <= 1) {
+      showToast('Debe existir al menos un SuperAdmin', 'error'); return;
+    }
+  } else if (isAdmin()) {
+    if (['Admin','SuperAdmin'].includes(u.role)) { showToast('No puedes borrar a otro Admin/SuperAdmin', 'error'); return; }
+  } else {
+    showToast('Sin permiso', 'error'); return;
   }
   if (!confirm('¿Eliminar a "' + u.name + '"?')) return;
   deleteFromFirebase('users', id);
