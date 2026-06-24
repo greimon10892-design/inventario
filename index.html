@@ -105,6 +105,10 @@
   </style>
   <style>
     .badge-superadmin { background: rgba(212,175,55,0.18); color: #d4af37; font-weight: 700; }
+    .priv-header, .priv-row { grid-template-columns: 1.4fr 0.9fr 0.7fr 0.8fr 0.9fr !important; }
+    @media (max-width: 640px) {
+      .priv-header, .priv-row { grid-template-columns: 1.1fr 0.7fr 0.6fr 0.6fr 0.7fr !important; font-size: 0.72rem; }
+    }
   </style>
 </head>
 <body>
@@ -597,21 +601,58 @@
         </div>
       </div>
 
+      <!-- Proyectos -->
+      <div class="settings-group" id="settings-proyectos-group" style="display:none">
+        <div class="settings-group-title">Proyectos</div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Crear proyecto nuevo</span>
+            <span class="settings-desc">Un proyecto en blanco, listo para su propio inventario y tienda — independiente del resto</span>
+          </div>
+          <div class="settings-control">
+            <button class="btn-ghost-sm" id="btn-crear-proyecto-blanco">➕ Crear proyecto</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Privilegios -->
       <div class="settings-group">
         <div class="settings-group-title">Privilegios por Rol</div>
         <div class="priv-table">
           <div class="priv-header">
-            <span>Permiso</span><span>Admin</span><span>Usuario</span><span>Solo lectura</span>
+            <span>Permiso</span><span>SuperAdmin</span><span>Admin</span><span>Usuario</span><span>Solo lectura</span>
+          </div>
+          <div class="priv-row">
+            <span>Proyecto nuevo</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Ver ganancias</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Borrar (usuarios)</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Ver inventario</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Agregar productos</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
@@ -620,10 +661,12 @@
             <span>Registrar movimientos</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Eliminar productos</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
             <span class="priv-check no">✕</span>
@@ -631,11 +674,13 @@
           <div class="priv-row">
             <span>Gestionar usuarios</span>
             <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
             <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Cambiar ajustes</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
             <span class="priv-check no">✕</span>

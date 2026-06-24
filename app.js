@@ -85,6 +85,11 @@ function canViewGanancias(){ return isAdmin(); }
 
 function applyRoleRestrictions() {
   const role = activeUser.role;
+  const soloLectura = role === 'Solo lectura';
+  // "Productos" y "Movimientos": Solo lectura no tiene acceso (según tabla de privilegios)
+  document.querySelectorAll('[data-view="productos"],[data-view="movimientos"]').forEach(el => {
+    el.style.display = soloLectura ? 'none' : '';
+  });
   // Ocultar "Nuevo Producto" si no puede escribir
   document.querySelectorAll('[data-view="agregar"]').forEach(el => {
     el.style.display = canWrite() ? '' : 'none';
@@ -93,13 +98,21 @@ function applyRoleRestrictions() {
   document.querySelectorAll('[data-view="usuarios"]').forEach(el => {
     el.style.display = isAdmin() ? '' : 'none';
   });
+  // "Ventas": Solo lectura tampoco registra movimientos/ventas
+  document.querySelectorAll('[data-view="ventas"]').forEach(el => {
+    el.style.display = soloLectura ? 'none' : '';
+  });
+  // "Ajustes": solo Admin/SuperAdmin pueden cambiar configuración
+  document.querySelectorAll('[data-view="ajustes"]').forEach(el => {
+    el.style.display = isAdmin() ? '' : 'none';
+  });
   // Botones de editar/eliminar productos — Admin y SuperAdmin
   document.querySelectorAll('.btn-edit-product,.btn-delete-product').forEach(btn => {
     btn.style.display = isAdmin() ? '' : 'none';
   });
   // Botones entrada/salida
   document.querySelectorAll('.btn-entrada-product,.btn-salida-product').forEach(btn => {
-    btn.style.display = role === 'Solo lectura' ? 'none' : '';
+    btn.style.display = canWrite() ? '' : 'none';
   });
   // Info usuario en sidebar
   const info = document.getElementById('sidebar-user-info');
@@ -117,6 +130,15 @@ function applyRoleRestrictions() {
     if (roleSelect.options[roleSelect.selectedIndex]?.disabled) {
       roleSelect.value = 'Usuario';
     }
+  }
+  // Si un Solo lectura quedó parado en una vista ahora oculta, lo regresamos al Panel
+  if (soloLectura) {
+    const restringidas = ['productos','movimientos','agregar','usuarios','ventas','ajustes'];
+    const vistaActual = restringidas.find(v => {
+      const el = document.getElementById('view-' + v);
+      return el && !el.classList.contains('hidden');
+    });
+    if (vistaActual) navigate('panel');
   }
 }
 
@@ -1056,11 +1078,9 @@ function renderUsers() {
     const initials    = u.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const totalSales  = salesByUser[u.id] || 0;
     const isActive    = u.id === activeUser.id;
-    // Solo SuperAdmin puede borrar Admins/SuperAdmins. Admin puede borrar Usuario/Solo lectura.
-    const puedeBorrar = u.id !== activeUser.id && (
-      isSuperAdmin() ? u.role !== 'SuperAdmin' || users.filter(x => x.role === 'SuperAdmin').length > 1 :
-      canManageUsers() && !['Admin','SuperAdmin'].includes(u.role)
-    );
+    // Según tabla de privilegios: solo el SuperAdmin puede borrar usuarios (Admin puede crear/gestionar pero no borrar)
+    const puedeBorrar = u.id !== activeUser.id && isSuperAdmin() &&
+      (u.role !== 'SuperAdmin' || users.filter(x => x.role === 'SuperAdmin').length > 1);
     var avatarHTML = u.avatar
       ? '<img src="' + u.avatar + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--orange)" />'
       : '<div class="user-avatar" style="' + (isActive ? 'background:var(--orange)' : '') + '">' + initials + '</div>';
@@ -1116,8 +1136,11 @@ window.cambiarRol = async function(id) {
 };
 
 window.deleteUser = function(id) {
-  if (!canManageUsers()) { showToast('Sin permiso', 'error'); return; }
+  if (!isSuperAdmin()) { showToast('Solo el SuperAdmin puede borrar usuarios', 'error'); return; }
   const u = users.find(x => x.id === id); if (!u) return;
+  if (u.role === 'SuperAdmin' && users.filter(x => x.role === 'SuperAdmin').length <= 1) {
+    showToast('Debe existir al menos un SuperAdmin', 'error'); return;
+  }
   if (!confirm('¿Eliminar a "' + u.name + '"?')) return;
   deleteFromFirebase('users', id);
   showToast('Usuario "' + u.name + '" eliminado');
@@ -1150,6 +1173,8 @@ document.getElementById('user-form')?.addEventListener('submit', async e => {
 // ========== AJUSTES ==========
 function loadSettingsUI() {
   renderProjects();
+  const grupoProyectos = document.getElementById('settings-proyectos-group');
+  if (grupoProyectos) grupoProyectos.style.display = isAdmin() ? '' : 'none';
   const name     = localStorage.getItem('store_name')     || 'Inventario';
   const subtitle = localStorage.getItem('store_subtitle') || 'Dulces & Pulseras';
   const el1 = document.getElementById('s-storename');
@@ -1182,6 +1207,7 @@ function loadSettingsUI() {
 }
 
 document.getElementById('btn-save-settings')?.addEventListener('click', () => {
+  if (!isAdmin()) { showToast('Sin permiso para cambiar ajustes', 'error'); return; }
   const name     = document.getElementById('s-storename')?.value || 'Inventario';
   const subtitle = document.getElementById('s-subtitle')?.value  || 'Dulces & Pulseras';
   try {
@@ -1679,6 +1705,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedUserId = localStorage.getItem('active_user_id');
   if (savedUserId) activeUser.id = savedUserId;
   // Si no hay usuario guardado, mostrar pantalla de login después de cargar Firebase
+
+  // Crear proyecto en blanco (Admin y SuperAdmin)
+  document.getElementById('btn-crear-proyecto-blanco')?.addEventListener('click', async () => {
+    if (!isAdmin()) { showToast('Sin permiso', 'error'); return; }
+    const nombre = prompt('Nombre del nuevo proyecto (tienda independiente):');
+    if (!nombre || !nombre.trim()) return;
+    const webUrl = prompt('URL del sitio web de este proyecto (opcional):') || '';
+    const newId = uid();
+    await saveToFirebase('projects', {
+      id: newId, name: nombre.trim(), webUrl: webUrl.trim(),
+      createdBy: activeUser.id, date: new Date().toISOString()
+    });
+    showToast('✅ Proyecto "' + nombre.trim() + '" creado — en blanco y listo para llenarse', 'success');
+  });
 
 
   applyTheme();
