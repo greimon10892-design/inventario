@@ -1053,6 +1053,29 @@ function renderUsers() {
     ? users
     : users.filter(u => (u.projectId || 'default') === (activeUser.projectId || 'default'));
   if (label) label.textContent = visibleUsers.length + ' usuario' + (visibleUsers.length !== 1 ? 's' : '') + ' con acceso';
+
+  // Si todavía no existe NINGÚN SuperAdmin en el sistema, mostrar botón de auto-conversión
+  const hayAlgunSuperAdmin = users.some(u => u.role === 'SuperAdmin');
+  const btnAutoPromo = document.getElementById('btn-auto-superadmin');
+  if (!hayAlgunSuperAdmin && isAdmin() && !btnAutoPromo) {
+    const aviso = document.createElement('div');
+    aviso.id = 'btn-auto-superadmin';
+    aviso.style.cssText = 'background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap';
+    aviso.innerHTML =
+      '<div><div style="font-weight:700;color:#d4af37;font-size:0.9rem">⭐ Aún no hay SuperAdmin</div>' +
+      '<div style="font-size:0.78rem;color:var(--muted);margin-top:2px">Conviértete en el primer SuperAdmin para gestionar Admins y proyectos</div></div>' +
+      '<button id="btn-auto-superadmin-confirm" class="btn-primary" style="white-space:nowrap">Convertirme en SuperAdmin</button>';
+    container.parentElement.insertBefore(aviso, container);
+    document.getElementById('btn-auto-superadmin-confirm').addEventListener('click', async () => {
+      if (!confirm('¿Convertirte en el primer SuperAdmin del sistema?')) return;
+      activeUser.role = 'SuperAdmin';
+      await saveToFirebase('users', activeUser);
+      showToast('⭐ Ahora eres SuperAdmin', 'success');
+    });
+  } else if (hayAlgunSuperAdmin && btnAutoPromo) {
+    btnAutoPromo.remove();
+  }
+
   // Botón crear admin para SuperAdmin
   const btnCrearAdmin = document.getElementById('btn-crear-admin-super');
   if (isSuperAdmin() && !btnCrearAdmin) {
@@ -1063,6 +1086,8 @@ function renderUsers() {
     btn.textContent = '⭐ Crear Admin con Proyecto';
     btn.onclick = window.abrirModalCrearAdmin;
     container.parentElement.insertBefore(btn, container);
+  } else if (!isSuperAdmin() && btnCrearAdmin) {
+    btnCrearAdmin.remove();
   }
   if (visibleUsers.length === 0) { container.innerHTML = '<div class="empty-state">Sin usuarios registrados.</div>'; return; }
 
