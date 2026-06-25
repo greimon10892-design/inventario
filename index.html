@@ -423,14 +423,17 @@
                 <option value="Solo lectura">Solo lectura</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="grid-column:1/-1">
               <label>Avatar (opcional)</label>
-              <div style="display:flex;align-items:center;gap:10px">
-                <img id="u-avatar-preview" src="" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:none;border:2px solid var(--orange)" />
-                <label class="btn-upload" for="u-avatar">Subir imagen</label>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                <img id="u-avatar-preview" src="" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;display:none;border:2px solid var(--orange)" />
+                <label class="btn-upload" for="u-avatar">Subir imagen propia</label>
                 <input type="file" id="u-avatar" accept="image/*" style="display:none" />
                 <button type="button" class="btn-ghost-sm" id="u-avatar-remove" style="display:none">Quitar</button>
               </div>
+              <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">O elige un avatar predefinido</div>
+              <div id="u-avatar-gallery" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+              <button type="button" class="btn-ghost-sm" id="u-avatar-regenerate">🔄 Generar más opciones</button>
             </div>
           </div>
           <div class="form-actions" style="margin-top:16px">
@@ -925,7 +928,7 @@
   </div>
 
   <!-- Scripts - ELIMINÉ EL SERVICE WORKER PROBLEMÁTICO -->
-  <script type="module" src="app.js?v=11"></script>
+  <script type="module" src="app.js?v=12"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })

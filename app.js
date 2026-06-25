@@ -1197,8 +1197,10 @@ document.getElementById('user-form')?.addEventListener('submit', async e => {
   window._newUserAvatar = '';
   const avPrev = document.getElementById('u-avatar-preview');
   const avRem  = document.getElementById('u-avatar-remove');
+  const avGal  = document.getElementById('u-avatar-gallery');
   if (avPrev) { avPrev.src = ''; avPrev.style.display = 'none'; }
   if (avRem)  avRem.style.display = 'none';
+  if (avGal)  avGal.querySelectorAll('img').forEach(i => i.style.borderColor = 'transparent');
   await saveToFirebase('users', u);
   document.getElementById('user-form').reset();
   showToast('Usuario "' + name + '" agregado ✓', 'success');
@@ -1814,21 +1816,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const input   = document.getElementById('u-avatar');
     const preview = document.getElementById('u-avatar-preview');
     const remBtn  = document.getElementById('u-avatar-remove');
+    const gallery = document.getElementById('u-avatar-gallery');
+    const regenBtn = document.getElementById('u-avatar-regenerate');
     if (!input) return;
+
     input.addEventListener('change', async e => {
       const file = e.target.files[0]; if (!file) return;
       const b64 = await comprimirImagen(file, 200, 0.85);
       window._newUserAvatar = b64;
       if (preview) { preview.src = b64; preview.style.display = 'inline-block'; }
       if (remBtn) remBtn.style.display = 'inline-block';
+      if (gallery) gallery.querySelectorAll('img').forEach(i => i.style.borderColor = 'transparent');
     });
     if (remBtn) {
       remBtn.addEventListener('click', () => {
         window._newUserAvatar = '';
         if (preview) { preview.src = ''; preview.style.display = 'none'; }
         remBtn.style.display = 'none'; input.value = '';
+        if (gallery) gallery.querySelectorAll('img').forEach(i => i.style.borderColor = 'transparent');
       });
     }
+
+    // Galería de avatares predefinidos (servicio público DiceBear, sin necesidad de subir nada)
+    function pintarGaleria() {
+      if (!gallery) return;
+      const estilos = ['avataaars', 'fun-emoji', 'bottts', 'adventurer'];
+      gallery.innerHTML = '';
+      for (let i = 0; i < 12; i++) {
+        const seed = Math.random().toString(36).slice(2, 8);
+        const estilo = estilos[i % estilos.length];
+        const url = 'https://api.dicebear.com/7.x/' + estilo + '/svg?seed=' + seed;
+        const img = document.createElement('img');
+        img.src = url;
+        img.dataset.url = url;
+        img.style.cssText = 'width:42px;height:42px;border-radius:50%;cursor:pointer;border:2px solid transparent;background:var(--surface2);transition:border-color 0.15s';
+        img.addEventListener('click', () => {
+          window._newUserAvatar = url;
+          if (preview) { preview.src = url; preview.style.display = 'inline-block'; }
+          if (remBtn) remBtn.style.display = 'inline-block';
+          gallery.querySelectorAll('img').forEach(i => i.style.borderColor = 'transparent');
+          img.style.borderColor = 'var(--orange)';
+          input.value = '';
+        });
+        gallery.appendChild(img);
+      }
+    }
+    pintarGaleria();
+    if (regenBtn) regenBtn.addEventListener('click', pintarGaleria);
   })();
 
   // Setup imágenes del formulario de productos
