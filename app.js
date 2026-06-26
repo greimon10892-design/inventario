@@ -1120,6 +1120,7 @@ function renderUsers() {
         (totalSales > 0 ? '<div style="font-size:0.68rem;color:var(--success);margin-top:2px">Ventas: ' + fmt(totalSales) + '</div>' : '') +
       '</div>' +
       '<span class="badge badge-' + roleKey + '">' + roleLabel + '</span>' +
+      ((isAdmin() || isActive) ? '<button class="btn-icon" title="Editar usuario" onclick="window.editarUsuario(\'' + u.id + '\')">✎</button>' : '') +
       (isSuperAdmin() ? '<button class="btn-icon" title="Cambiar rol" onclick="window.cambiarRol(\'' + u.id + '\')" style="font-size:0.8rem">⭐</button>' : '') +
       (puedeBorrar ?
         '<button class="btn-icon btn-danger" onclick="window.deleteUser(\'' + u.id + '\')">✕</button>' :
@@ -1161,6 +1162,106 @@ window.cambiarRol = async function(id) {
   if (!nuevo || !opciones.includes(nuevo.trim())) { showToast('Rol inválido', 'error'); return; }
   await saveToFirebase('users', Object.assign({}, u, { role: nuevo.trim() }));
   showToast('Rol de ' + u.name + ' cambiado a ' + nuevo.trim(), 'success');
+};
+
+window.editarUsuario = function(id) {
+  var u = users.find(function(x){ return x.id === id; });
+  if (!u) return;
+  if (!isAdmin() && u.id !== activeUser.id) { showToast('Sin permiso', 'error'); return; }
+
+  var modal = document.getElementById('modal-editar-usuario');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-editar-usuario';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(modal);
+  }
+
+  var avatarActual = u.avatar
+    ? '<img id="eu-avatar-preview" src="' + u.avatar + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--orange)" />'
+    : '<img id="eu-avatar-preview" src="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);display:none" />';
+
+  modal.innerHTML =
+    '<div style="background:var(--surface);border-radius:16px;padding:24px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.4)">' +
+      '<h3 style="margin-bottom:16px;color:var(--text)">✎ Editar Usuario</h3>' +
+      '<div style="margin-bottom:12px"><label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">NOMBRE</label>' +
+        '<input id="eu-name" type="text" value="' + escapeHtml(u.name) + '" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
+      '<div style="margin-bottom:14px"><label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">CORREO</label>' +
+        '<input id="eu-email" type="email" value="' + escapeHtml(u.email || '') + '" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" /></div>' +
+      '<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px">' +
+        avatarActual +
+        '<label class="btn-upload" for="eu-avatar-file">Subir imagen</label>' +
+        '<input type="file" id="eu-avatar-file" accept="image/*" style="display:none" />' +
+        '<button type="button" class="btn-ghost-sm" id="eu-avatar-remove">Quitar</button>' +
+      '</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">O elige un avatar predefinido</div>' +
+      '<div id="eu-avatar-gallery" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>' +
+      '<button type="button" class="btn-ghost-sm" id="eu-avatar-regenerate" style="margin-bottom:18px">🔄 Generar más opciones</button>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button id="eu-btn-guardar" class="btn-primary" style="flex:1">Guardar cambios</button>' +
+        '<button id="eu-btn-cancelar" class="btn-ghost" style="flex:1">Cancelar</button>' +
+      '</div>' +
+    '</div>';
+
+  modal.style.display = 'flex';
+  var avatarTemp = u.avatar || '';
+
+  modal.querySelector('#eu-btn-cancelar').addEventListener('click', function() { modal.style.display = 'none'; });
+
+  var fileInput  = modal.querySelector('#eu-avatar-file');
+  var preview    = modal.querySelector('#eu-avatar-preview');
+  var removeBtn  = modal.querySelector('#eu-avatar-remove');
+  var gallery    = modal.querySelector('#eu-avatar-gallery');
+  var regenBtn   = modal.querySelector('#eu-avatar-regenerate');
+
+  fileInput.addEventListener('change', async function(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var b64 = await comprimirImagen(file, 200, 0.85);
+    avatarTemp = b64;
+    preview.src = b64; preview.style.display = 'inline-block';
+    gallery.querySelectorAll('img').forEach(function(i){ i.style.borderColor = 'transparent'; });
+  });
+  removeBtn.addEventListener('click', function() {
+    avatarTemp = '';
+    preview.src = ''; preview.style.display = 'none';
+    fileInput.value = '';
+    gallery.querySelectorAll('img').forEach(function(i){ i.style.borderColor = 'transparent'; });
+  });
+
+  function pintarGaleriaEdit() {
+    var estilos = ['avataaars', 'fun-emoji', 'bottts', 'adventurer'];
+    gallery.innerHTML = '';
+    for (var i = 0; i < 12; i++) {
+      var seed = Math.random().toString(36).slice(2, 8);
+      var estilo = estilos[i % estilos.length];
+      var url = 'https://api.dicebear.com/7.x/' + estilo + '/svg?seed=' + seed;
+      var img = document.createElement('img');
+      img.src = url;
+      img.style.cssText = 'width:42px;height:42px;border-radius:50%;cursor:pointer;border:2px solid transparent;background:var(--surface2);transition:border-color 0.15s';
+      img.addEventListener('click', function() {
+        avatarTemp = this.src;
+        preview.src = this.src; preview.style.display = 'inline-block';
+        gallery.querySelectorAll('img').forEach(function(i){ i.style.borderColor = 'transparent'; });
+        this.style.borderColor = 'var(--orange)';
+        fileInput.value = '';
+      });
+      gallery.appendChild(img);
+    }
+  }
+  pintarGaleriaEdit();
+  regenBtn.addEventListener('click', pintarGaleriaEdit);
+
+  modal.querySelector('#eu-btn-guardar').addEventListener('click', async function() {
+    var nuevoNombre = modal.querySelector('#eu-name').value.trim();
+    var nuevoCorreo = modal.querySelector('#eu-email').value.trim().toLowerCase();
+    if (!nuevoNombre || !nuevoCorreo) { showToast('Completa todos los campos', 'error'); return; }
+    var correoEnUso = users.find(function(x){ return x.email === nuevoCorreo && x.id !== u.id; });
+    if (correoEnUso) { showToast('Ese correo ya está en uso', 'error'); return; }
+    await saveToFirebase('users', Object.assign({}, u, { name: nuevoNombre, email: nuevoCorreo, avatar: avatarTemp }));
+    if (u.id === activeUser.id) { activeUser.name = nuevoNombre; activeUser.email = nuevoCorreo; activeUser.avatar = avatarTemp; applyRoleRestrictions(); }
+    modal.style.display = 'none';
+    showToast('✅ Usuario actualizado', 'success');
+  });
 };
 
 window.deleteUser = function(id) {
