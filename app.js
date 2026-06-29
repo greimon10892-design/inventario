@@ -1197,6 +1197,11 @@ window.editarUsuario = function(id) {
       '<div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">O elige un avatar predefinido</div>' +
       '<div id="eu-avatar-gallery" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>' +
       '<button type="button" class="btn-ghost-sm" id="eu-avatar-regenerate" style="margin-bottom:18px">🔄 Generar más opciones</button>' +
+      '<div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">' +
+        '<label style="color:var(--muted);font-size:0.8rem;display:block;margin-bottom:6px">NUEVA CONTRASEÑA <span style="opacity:0.6">(deja vacío para no cambiarla)</span></label>' +
+        '<input id="eu-pass1" type="password" placeholder="Nueva contraseña" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;margin-bottom:8px" />' +
+        '<input id="eu-pass2" type="password" placeholder="Confirmar nueva contraseña" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit" />' +
+      '</div>' +
       '<div style="display:flex;gap:10px">' +
         '<button id="eu-btn-guardar" class="btn-primary" style="flex:1">Guardar cambios</button>' +
         '<button id="eu-btn-cancelar" class="btn-ghost" style="flex:1">Cancelar</button>' +
@@ -1254,13 +1259,21 @@ window.editarUsuario = function(id) {
   modal.querySelector('#eu-btn-guardar').addEventListener('click', async function() {
     var nuevoNombre = modal.querySelector('#eu-name').value.trim();
     var nuevoCorreo = modal.querySelector('#eu-email').value.trim().toLowerCase();
+    var pass1 = modal.querySelector('#eu-pass1').value;
+    var pass2 = modal.querySelector('#eu-pass2').value;
     if (!nuevoNombre || !nuevoCorreo) { showToast('Completa todos los campos', 'error'); return; }
     var correoEnUso = users.find(function(x){ return x.email === nuevoCorreo && x.id !== u.id; });
     if (correoEnUso) { showToast('Ese correo ya está en uso', 'error'); return; }
-    await saveToFirebase('users', Object.assign({}, u, { name: nuevoNombre, email: nuevoCorreo, avatar: avatarTemp }));
-    if (u.id === activeUser.id) { activeUser.name = nuevoNombre; activeUser.email = nuevoCorreo; activeUser.avatar = avatarTemp; applyRoleRestrictions(); }
+    var datosActualizados = { name: nuevoNombre, email: nuevoCorreo, avatar: avatarTemp };
+    if (pass1 || pass2) {
+      if (pass1.length < 4) { showToast('La contraseña debe tener mínimo 4 caracteres', 'error'); return; }
+      if (pass1 !== pass2) { showToast('Las contraseñas no coinciden', 'error'); return; }
+      datosActualizados.password = pass1;
+    }
+    await saveToFirebase('users', Object.assign({}, u, datosActualizados));
+    if (u.id === activeUser.id) { Object.assign(activeUser, datosActualizados); applyRoleRestrictions(); }
     modal.style.display = 'none';
-    showToast('✅ Usuario actualizado', 'success');
+    showToast('✅ Usuario actualizado' + (datosActualizados.password ? ' — contraseña cambiada' : ''), 'success');
   });
 };
 
