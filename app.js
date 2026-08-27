@@ -141,7 +141,7 @@ function iniciarSyncFirebase() {
     renderSaleProductList();
   }, err => console.warn('Error sync productos:', err.message));
 
-  // Escuchar movimientos — todos, sin límite
+  // Escuchar movimientos
   onSnapshot(collection(db, 'movements'), snap => {
     movements = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
@@ -149,6 +149,12 @@ function iniciarSyncFirebase() {
     renderMovements();
     updateSummary();
   }, err => console.warn('Error sync movimientos:', err.message));
+
+  // Escuchar usuarios — sincronización en tiempo real entre dispositivos
+  onSnapshot(collection(db, 'users'), snap => {
+    users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderUsers();
+  }, err => console.warn('Error sync usuarios:', err.message));
 }
 
 // ========== NAVEGACIÓN ==========
@@ -619,9 +625,15 @@ function renderUsers() {
 window.deleteUser = function(id) {
   const u = users.find(x => x.id === id); if (!u) return;
   if (!confirm(`¿Eliminar a "${u.name}"?`)) return;
-  users = users.filter(x => x.id !== id);
-  try { localStorage.setItem('users', JSON.stringify(users)); } catch(e) {}
-  renderUsers();
+  // Guardar en Firebase (se sincroniza en todos los dispositivos)
+  if (db) {
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js')
+      .then(({ deleteDoc, doc }) => deleteDoc(doc(db, 'users', id)))
+      .catch(e => console.warn('Error eliminando usuario:', e.message));
+  } else {
+    users = users.filter(x => x.id !== id);
+    renderUsers();
+  }
   showToast(`Usuario "${u.name}" eliminado`);
 };
 
@@ -633,9 +645,15 @@ document.getElementById('user-form')?.addEventListener('submit', e => {
   if (!name || !email) { alert('Completa todos los campos'); return; }
   if (users.find(u => u.email === email)) { alert('Ya existe un usuario con ese correo.'); return; }
   const u = { id: uid(), name, email, role, date: new Date().toISOString() };
-  users.push(u);
-  try { localStorage.setItem('users', JSON.stringify(users)); } catch(e) {}
-  renderUsers();
+  // Guardar en Firebase para sincronizar en todos los dispositivos
+  if (db) {
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js')
+      .then(({ setDoc, doc }) => setDoc(doc(db, 'users', u.id), u))
+      .catch(e => console.warn('Error guardando usuario:', e.message));
+  } else {
+    users.push(u);
+    renderUsers();
+  }
   document.getElementById('user-form').reset();
   showToast(`Usuario "${name}" agregado`);
 });
@@ -1298,14 +1316,9 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('movements');
   } catch(e) {}
 
-  // Cargar usuarios desde localStorage (son pocos, sin problema)
-  try {
-    const u = localStorage.getItem('users');
-    if (u) users = JSON.parse(u);
-    else users = [{ id: 'admin', name: 'Administrador', email: 'admin@inventario.com', role: 'Admin', date: new Date().toISOString() }];
-  } catch(e) {
-    users = [{ id: 'admin', name: 'Administrador', email: 'admin@inventario.com', role: 'Admin', date: new Date().toISOString() }];
-  }
+  // Usuarios: se cargan desde Firebase via onSnapshot (ver iniciarSyncFirebase)
+  // Fallback temporal mientras llega Firebase
+  users = [{ id: 'admin', name: 'Administrador', email: 'admin@inventario.com', role: 'Admin', date: new Date().toISOString() }];
 
   applyTheme();
   initReportSelectors();
