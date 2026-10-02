@@ -276,20 +276,62 @@
     <strong>TALARA</strong> &nbsp;·&nbsp; Hecho con <span class="heart">♥</span> amor
   </footer>
 
-  <script>
-    function loadStoreLogo(storageKey, elementId) {
-      try {
-        const raw = localStorage.getItem(storageKey);
-        if (!raw) return;
-        const s = JSON.parse(raw);
-        if (s.logoData) {
-          const el = document.getElementById(elementId);
-          if (el) el.innerHTML = `<img src="${s.logoData}" alt="Logo" style="width:80px;height:80px;object-fit:contain;border-radius:12px"/>`;
-        }
-      } catch(e) {}
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const FIREBASE_CONFIG = {
+      apiKey:            "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
+      authDomain:        "gestor-de-inventario-853d8.firebaseapp.com",
+      projectId:         "gestor-de-inventario-853d8",
+      storageBucket:     "gestor-de-inventario-853d8.firebasestorage.app",
+      messagingSenderId: "980977651129",
+      appId:             "1:980977651129:web:791dd31e9b2825c4d57a68"
+    };
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db  = getFirestore(app);
+
+    // Aplica logo, nombre y descripción a la card de la tienda en tiempo real
+    function applyStoreSettings(settings, logoElementId, cardTitleEl, defaultEmoji) {
+      const logoEl = document.getElementById(logoElementId);
+      if (!logoEl) return;
+      if (settings && settings.logoData) {
+        logoEl.innerHTML = `<img src="${settings.logoData}" alt="${settings.storeName || 'TALARA'}" style="width:80px;height:80px;object-fit:contain;border-radius:12px"/>`;
+      } else {
+        // Restaurar emoji original
+        logoEl.innerHTML = defaultEmoji;
+      }
+      if (cardTitleEl && settings && settings.storeName) {
+        cardTitleEl.textContent = settings.storeName;
+      }
     }
-    loadStoreLogo('talara_dulces_settings',   'logo-dulces');
-    loadStoreLogo('talara_pulseras_settings', 'logo-pulseras');
+
+    // Listener en tiempo real — dulces
+    onSnapshot(doc(db, 'tienda_settings', 'dulces'), snap => {
+      const data = snap.exists() ? snap.data() : null;
+      try { if (data) localStorage.setItem('talara_dulces_settings', JSON.stringify(data)); } catch(e) {}
+      const src = data || (() => { try { const r = localStorage.getItem('talara_dulces_settings'); return r ? JSON.parse(r) : null; } catch(e) { return null; } })();
+      applyStoreSettings(src, 'logo-dulces', document.querySelector('.store-card.dulces .card-title'), '🍬');
+    }, () => {
+      try {
+        const raw = localStorage.getItem('talara_dulces_settings');
+        if (raw) applyStoreSettings(JSON.parse(raw), 'logo-dulces', document.querySelector('.store-card.dulces .card-title'), '🍬');
+      } catch(e) {}
+    });
+
+    // Listener en tiempo real — pulseras
+    onSnapshot(doc(db, 'tienda_settings', 'pulseras'), snap => {
+      const data = snap.exists() ? snap.data() : null;
+      try { if (data) localStorage.setItem('talara_pulseras_settings', JSON.stringify(data)); } catch(e) {}
+      const src = data || (() => { try { const r = localStorage.getItem('talara_pulseras_settings'); return r ? JSON.parse(r) : null; } catch(e) { return null; } })();
+      applyStoreSettings(src, 'logo-pulseras', document.querySelector('.store-card.pulseras .card-title'), '📿');
+    }, () => {
+      try {
+        const raw = localStorage.getItem('talara_pulseras_settings');
+        if (raw) applyStoreSettings(JSON.parse(raw), 'logo-pulseras', document.querySelector('.store-card.pulseras .card-title'), '📿');
+      } catch(e) {}
+    });
   </script>
 
 </body>

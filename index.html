@@ -103,6 +103,13 @@
       40%            { transform: scale(1);   opacity: 1; }
     }
   </style>
+  <style>
+    .badge-superadmin { background: rgba(212,175,55,0.18); color: #d4af37; font-weight: 700; }
+    .priv-header, .priv-row { grid-template-columns: 1.4fr 0.9fr 0.7fr 0.8fr 0.9fr !important; }
+    @media (max-width: 640px) {
+      .priv-header, .priv-row { grid-template-columns: 1.1fr 0.7fr 0.6fr 0.6fr 0.7fr !important; font-size: 0.72rem; }
+    }
+  </style>
 </head>
 <body>
 
@@ -220,7 +227,7 @@
       </div>
 
       <div class="toolbar">
-        <input type="text" id="search" placeholder="Buscar producto…" />
+        <input type="text" id="search" placeholder="Buscar producto…" autocomplete="off" />
         <select id="filter-category">
           <option value="">Todas las categorías</option>
           <option value="dulce">Dulces Típicos</option>
@@ -238,9 +245,9 @@
               <th>Producto</th>
               <th>Categoría</th>
               <th>Stock</th>
-              <th>P. Compra</th>
+              <th id="th-buy-price" style="display:none">P. Compra</th>
               <th>P. Venta</th>
-              <th class="col-gain-header">Ganancia/u</th>
+              <th class="col-gain-header" id="th-gain-col" style="display:none">Ganancia/u</th>
               <th id="th-acciones"></th>
             </tr>
           </thead>
@@ -363,7 +370,7 @@
               <label>Stock inicial</label>
               <input type="number" id="f-stock" min="0" value="0" required />
             </div>
-            <div class="form-group">
+            <div class="form-group" id="form-group-buy-price">
               <label>Precio de Compra ($)</label>
               <input type="number" id="f-buy" min="0" step="0.01" value="0" required />
             </div>
@@ -410,10 +417,28 @@
             <div class="form-group">
               <label>Rol</label>
               <select id="u-role">
+                <option value="SuperAdmin">⭐ SuperAdmin</option>
                 <option value="Admin">Admin</option>
                 <option value="Usuario">Usuario</option>
                 <option value="Solo lectura">Solo lectura</option>
               </select>
+            </div>
+            <div class="form-group">
+              <label>Contraseña</label>
+              <input type="password" id="u-password" placeholder="Mínimo 4 caracteres" autocomplete="new-password" />
+              <span style="font-size:0.7rem;color:var(--muted);margin-top:4px;display:block">El usuario la usará para iniciar sesión. Por defecto: <strong style="color:var(--orange)">1234</strong></span>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Avatar (opcional)</label>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                <img id="u-avatar-preview" src="" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;display:none;border:2px solid var(--orange)" />
+                <label class="btn-upload" for="u-avatar">Subir imagen propia</label>
+                <input type="file" id="u-avatar" accept="image/*" style="display:none" />
+                <button type="button" class="btn-ghost-sm" id="u-avatar-remove" style="display:none">Quitar</button>
+              </div>
+              <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">O elige un avatar predefinido</div>
+              <div id="u-avatar-gallery" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+              <button type="button" class="btn-ghost-sm" id="u-avatar-regenerate">🔄 Generar más opciones</button>
             </div>
           </div>
           <div class="form-actions" style="margin-top:16px">
@@ -448,6 +473,17 @@
           </div>
           <div class="settings-control">
             <select id="s-active-user" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:0.875rem;min-width:180px"></select>
+          </div>
+        </div>
+        <div class="settings-row" id="s-project-filter-row" style="display:none">
+          <div class="settings-info">
+            <span class="settings-label">⭐ Ver proyecto (SuperAdmin)</span>
+            <span class="settings-desc">Filtra productos, ventas y reportes por proyecto. "Todos" muestra todo el sistema</span>
+          </div>
+          <div class="settings-control">
+            <select id="s-project-filter" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:0.875rem;min-width:180px">
+              <option value="">Todos los proyectos</option>
+            </select>
           </div>
         </div>
       </div>
@@ -573,21 +609,65 @@
         </div>
       </div>
 
+      <!-- Proyectos -->
+      <div class="settings-group" id="settings-proyectos-group" style="display:none">
+        <div class="settings-group-title">Proyectos</div>
+        <div class="settings-row">
+          <div class="settings-info">
+            <span class="settings-label">Crear proyecto nuevo</span>
+            <span class="settings-desc">Un proyecto en blanco, listo para su propio inventario y tienda — independiente del resto</span>
+          </div>
+          <div class="settings-control">
+            <button class="btn-ghost-sm" id="btn-crear-proyecto-blanco">➕ Crear proyecto</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Privilegios -->
       <div class="settings-group">
         <div class="settings-group-title">Privilegios por Rol</div>
         <div class="priv-table">
           <div class="priv-header">
-            <span>Permiso</span><span>Admin</span><span>Usuario</span><span>Solo lectura</span>
+            <span>Permiso</span><span>SuperAdmin</span><span>Admin</span><span>Usuario</span><span>Solo lectura</span>
+          </div>
+          <div class="priv-row">
+            <span>Crear un administrador</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Proyecto nuevo</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Ver ganancias</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
+          </div>
+          <div class="priv-row">
+            <span>Borrar</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
+            <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Ver inventario</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
+            <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Agregar productos</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
@@ -596,10 +676,12 @@
             <span>Registrar movimientos</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Eliminar productos</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
             <span class="priv-check no">✕</span>
@@ -607,11 +689,13 @@
           <div class="priv-row">
             <span>Gestionar usuarios</span>
             <span class="priv-check yes">✓</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
             <span class="priv-check no">✕</span>
           </div>
           <div class="priv-row">
             <span>Cambiar ajustes</span>
+            <span class="priv-check yes">✓</span>
             <span class="priv-check yes">✓</span>
             <span class="priv-check no">✕</span>
             <span class="priv-check no">✕</span>
@@ -671,7 +755,7 @@
           <!-- Lista de productos -->
           <div class="sale-product-panel">
             <div class="sale-search-bar">
-              <input type="text" id="sale-search" placeholder="Buscar producto…" />
+              <input type="text" id="sale-search" placeholder="Buscar producto…" autocomplete="off" />
               <div class="sale-cat-filter">
                 <button class="scat-btn active" data-cat="">Todos</button>
                 <button class="scat-btn" data-cat="dulce">🍬 Dulces</button>
@@ -751,7 +835,7 @@
           <label>Cantidad</label>
           <input type="number" id="m-qty" min="1" value="1" required />
         </div>
-        <div class="form-group">
+        <div class="form-group" id="modal-price-group">
           <label id="m-price-label">Precio Unitario ($)</label>
           <input type="number" id="m-price" min="0" step="0.01" required />
         </div>
@@ -849,7 +933,7 @@
   </div>
 
   <!-- Scripts - ELIMINÉ EL SERVICE WORKER PROBLEMÁTICO -->
-  <script type="module" src="app.js?v=11"></script>
+  <script type="module" src="app.js?v=13"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })

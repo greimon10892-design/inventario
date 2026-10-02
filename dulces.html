@@ -496,7 +496,7 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getFirestore, collection, onSnapshot, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
@@ -751,9 +751,17 @@
     };
     window.closeSettings = () => { document.getElementById('settings-panel').classList.remove('open'); document.getElementById('settings-overlay').classList.remove('open'); };
 
+    // Guarda inmediatamente en Firestore → todos los dispositivos reciben via onSnapshot
+    async function syncToFirestore() {
+      try {
+        await setDoc(doc(db, 'tienda_settings', 'dulces'), settings, { merge: true });
+      } catch(e) { console.warn('[sync dulces]', e); }
+    }
+
     window.livePreview = () => {
       settings.storeName = document.getElementById('s-store-name').value;
       applySettings(settings);
+      syncToFirestore();
     };
 
     window.setPrimary = (color, el) => {
@@ -762,6 +770,7 @@
       if (el) el.classList.add('active');
       document.getElementById('s-primary-custom').value = color;
       applySettings(settings);
+      syncToFirestore();
     };
 
     window.setPriceColor = (color, el) => {
@@ -770,6 +779,7 @@
       if (el) el.classList.add('active');
       document.getElementById('s-price-custom').value = color;
       applySettings(settings);
+      syncToFirestore();
     };
 
     window.setTheme = (theme, el) => {
@@ -777,6 +787,7 @@
       document.querySelectorAll('#theme-grid .theme-card').forEach(c => c.classList.remove('active'));
       if (el) el.classList.add('active');
       applySettings(settings);
+      syncToFirestore();
     };
 
     window.onLogoUpload = (e) => {
@@ -789,6 +800,7 @@
         prev.src = ev.target.result; prev.style.display = 'block';
         document.getElementById('s-logo-remove').style.display = 'inline-block';
         applySettings(settings);
+        syncToFirestore();
       };
       reader.readAsDataURL(file);
     };
@@ -800,6 +812,7 @@
       document.getElementById('s-logo-remove').style.display = 'none';
       document.getElementById('s-logo-upload').value = '';
       applySettings(settings);
+      syncToFirestore();
     };
 
     window.onBannerUpload = (e) => {
@@ -811,6 +824,7 @@
         const prev = document.getElementById('s-banner-preview');
         prev.src = ev.target.result; prev.style.display = 'block';
         applySettings(settings);
+        syncToFirestore();
       };
       reader.readAsDataURL(file);
     };
@@ -818,8 +832,7 @@
     window.saveSettings = () => {
       settings.storeName = document.getElementById('s-store-name').value;
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch(e) {}
-      // Sincroniza con Firestore para todos los dispositivos
-      setDoc(doc(db, 'tienda_settings', 'dulces'), settings, { merge: true }).catch(console.error);
+      syncToFirestore();
       applySettings(settings);
       showToast('✅ Configuración guardada');
       window.closeSettings();
@@ -828,7 +841,7 @@
     window.resetSettings = () => {
       settings = { ...DEFAULT_SETTINGS };
       try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
-      setDoc(doc(db, 'tienda_settings', 'dulces'), settings).catch(console.error);
+      syncToFirestore();
       applySettings(settings);
       syncSettingsUI();
       showToast('↺ Configuración restablecida');
@@ -842,26 +855,29 @@
       setTimeout(() => t.remove(), 2600);
     }
 
-    // Carga ajustes: primero Firestore, fallback a localStorage
-    async function loadSettings() {
-      try {
-        const snap = await getDoc(doc(db, 'tienda_settings', 'dulces'));
+    // Escucha en tiempo real los ajustes de la tienda desde Firestore
+    // Cualquier cambio desde otro dispositivo se aplica inmediatamente
+    let _settingsUnsub = null;
+    function startSettingsListener() {
+      if (_settingsUnsub) _settingsUnsub();
+      _settingsUnsub = onSnapshot(doc(db, 'tienda_settings', 'dulces'), snap => {
         if (snap.exists()) {
           settings = { ...DEFAULT_SETTINGS, ...snap.data() };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch(e) {}
         } else {
           const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+          if (raw) try { settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }; } catch(e) {}
         }
-      } catch(e) {
+        applySettings(settings);
+        syncSettingsUI();
+      }, err => {
+        // Fallback a localStorage si Firestore falla
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-      }
-      applySettings(settings);
-      syncSettingsUI();
+        if (raw) try { settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }; applySettings(settings); syncSettingsUI(); } catch(e) {}
+      });
     }
 
-    loadSettings();
+    startSettingsListener();
   </script>
 </body>
 </html>

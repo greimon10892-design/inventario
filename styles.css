@@ -131,6 +131,7 @@ body {
 
 /* ── Content ──────────────────────────────────────────────────────────── */
 .content {
+  position: relative;
   margin-left: var(--sidebar-w);
   flex: 1;
   padding: 36px 36px 48px;
@@ -138,6 +139,19 @@ body {
   min-width: 0;
   overflow-x: hidden;
 }
+
+/* Overlay semitransparente sobre imagen de fondo — controla opacidad */
+.content::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  left: var(--sidebar-w);
+  background: var(--bg);
+  opacity: var(--bg-overlay, 0);
+  pointer-events: none;
+  z-index: 0;
+}
+.content > * { position: relative; z-index: 1; }
 
 /* ── Views ────────────────────────────────────────────────────────────── */
 .view { display: block; }
