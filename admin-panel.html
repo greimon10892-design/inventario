@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Maestro — Gestor Multi-Tenant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2:#222;
+      --border:  #2e2e2e;
+      --text:    #f0ece6;
+      --muted:   #7a7570;
+      --orange:  #e07b39;
+      --green:   #22c55e;
+      --red:     #ef4444;
+    }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* ── LOGIN ── */
+    #master-login {
+      position:fixed; inset:0; background:var(--bg);
+      display:flex; align-items:center; justify-content:center; z-index:999; padding:20px;
+    }
+    #master-login.hidden { display:none; }
+    .login-box {
+      background:var(--surface); border:1px solid var(--border); border-radius:16px;
+      padding:36px 28px; width:100%; max-width:360px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.6);
+    }
+    .login-logo {
+      width:52px; height:52px; border-radius:12px; background:var(--orange);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; font-weight:900; color:#fff; margin:0 auto 16px;
+    }
+    .login-title { text-align:center; font-size:1.2rem; font-weight:800; margin-bottom:4px; }
+    .login-sub   { text-align:center; font-size:0.78rem; color:var(--muted); margin-bottom:24px; }
+    .login-error {
+      background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);
+      color:var(--red); border-radius:8px; padding:10px 14px;
+      font-size:0.82rem; margin-bottom:16px; display:none;
+    }
+    .field { margin-bottom:14px; }
+    .field label { font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px; }
+    .field input {
+      width:100%; padding:11px 13px; background:var(--bg); border:1px solid var(--border);
+      border-radius:8px; color:var(--text); font-family:inherit; font-size:0.95rem; outline:none;
+      transition:border-color .2s;
+    }
+    .field input:focus { border-color:var(--orange); }
+    .btn-primary {
+      width:100%; padding:13px; background:var(--orange); color:#fff; border:none;
+      border-radius:10px; font-size:0.95rem; font-weight:700; cursor:pointer;
+      font-family:inherit; transition:opacity .2s;
+    }
+    .btn-primary:hover { opacity:.88; }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* ── LAYOUT ── */
+    #app { display:none; flex-direction:column; min-height:100vh; }
+    #app.visible { display:flex; }
+
+    header {
+      background:var(--surface); border-bottom:1px solid var(--border);
+      padding:0 32px; height:60px; display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:100;
+    }
+    .header-brand { display:flex; align-items:center; gap:12px; }
+    .header-logo  { width:34px; height:34px; border-radius:8px; background:var(--orange); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; color:#fff; }
+    .header-title { font-size:1rem; font-weight:700; }
+    .header-sub   { font-size:0.72rem; color:var(--muted); }
+    .header-user  { font-size:0.8rem; color:var(--muted); display:flex; align-items:center; gap:12px; }
+    .btn-logout   { background:none; border:1px solid var(--border); color:var(--muted); padding:6px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.8rem; transition:background .2s; }
+    .btn-logout:hover { background:rgba(239,68,68,.1); color:var(--red); border-color:var(--red); }
+
+    main { flex:1; padding:32px; max-width:1100px; margin:0 auto; width:100%; }
+
+    /* ── STATS ── */
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:32px; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+    .stat-label { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+    .stat-value { font-size:2rem; font-weight:800; margin-top:4px; }
+    .stat-value.orange { color:var(--orange); }
+    .stat-value.green  { color:var(--green); }
+
+    /* ── TOOLBAR ── */
+    .toolbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:20px; }
+    .toolbar input[type="text"] {
+      flex:1; min-width:200px; padding:9px 13px; background:var(--surface);
+      border:1px solid var(--border); border-radius:8px; color:var(--text);
+      font-family:inherit; font-size:0.875rem; outline:none;
+    }
+    .toolbar input:focus { border-color:var(--orange); }
+    .btn-new {
+      padding:9px 20px; background:var(--orange); color:#fff; border:none;
+      border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit;
+      font-size:0.875rem; white-space:nowrap; transition:opacity .2s;
+    }
+    .btn-new:hover { opacity:.88; }
+
+    /* ── TABLE ── */
+    .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th { font-size:0.7rem; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); padding:12px 16px; text-align:left; background:var(--surface2); border-bottom:1px solid var(--border); }
+    td { padding:14px 16px; font-size:0.875rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,.02); }
+
+    .badge {
+      display:inline-block; padding:3px 10px; border-radius:100px; font-size:0.72rem; font-weight:700;
+    }
+    .badge-active    { background:rgba(34,197,94,.12);  color:var(--green); }
+    .badge-suspended { background:rgba(239,68,68,.12);  color:var(--red); }
+    .badge-free      { background:rgba(122,117,112,.12);color:var(--muted); }
+    .badge-pro       { background:rgba(224,123,57,.12); color:var(--orange); }
+
+    .td-name    { font-weight:600; }
+    .td-email   { font-size:0.8rem; color:var(--muted); margin-top:2px; }
+    .td-links   { display:flex; gap:6px; flex-wrap:wrap; }
+    .link-btn {
+      font-size:0.72rem; padding:5px 10px; border-radius:6px; border:1px solid var(--border);
+      background:none; color:var(--muted); cursor:pointer; font-family:inherit; text-decoration:none;
+      display:inline-flex; align-items:center; gap:4px; transition:background .15s, color .15s;
+    }
+    .link-btn:hover { background:var(--surface2); color:var(--text); }
+    .link-btn.danger:hover { background:rgba(239,68,68,.1); color:var(--red); border-color:var(--red); }
+    .link-btn.success:hover { background:rgba(34,197,94,.1); color:var(--green); border-color:var(--green); }
+
+    .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+    .empty-icon  { font-size:3rem; margin-bottom:12px; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:500;
+      display:none; align-items:center; justify-content:center; padding:16px;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:var(--surface); border-radius:16px; padding:28px;
+      width:100%; max-width:460px; box-shadow:0 12px 40px rgba(0,0,0,.5);
+      max-height:90vh; overflow-y:auto;
+    }
+    .modal h3 { font-size:1.1rem; font-weight:800; margin-bottom:20px; }
+    .modal .field { margin-bottom:14px; }
+    .modal-actions { display:flex; gap:10px; margin-top:20px; }
+    .btn-ghost {
+      flex:1; padding:11px; background:none; border:1px solid var(--border);
+      border-radius:8px; color:var(--muted); font-family:inherit; font-size:0.875rem;
+      cursor:pointer; transition:background .15s;
+    }
+    .btn-ghost:hover { background:var(--surface2); }
+    .modal .btn-primary { flex:2; }
+
+    /* ── TOAST ── */
+    #toast {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      padding:10px 20px; border-radius:10px; font-weight:600; z-index:999;
+      font-size:0.875rem; display:none; white-space:nowrap;
+      transition:opacity .3s;
+    }
+
+    /* ── DETAIL PANEL ── */
+    .detail-panel {
+      background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      padding:24px; margin-top:24px; display:none;
+    }
+    .detail-panel.open { display:block; }
+    .detail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .detail-title  { font-size:1rem; font-weight:700; }
+    .detail-grid   { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:600px) { .detail-grid { grid-template-columns:1fr; } }
+    .detail-item   { background:var(--surface2); border-radius:8px; padding:12px 14px; }
+    .detail-item-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin-bottom:4px; }
+    .detail-item-value { font-size:0.875rem; font-weight:600; word-break:break-all; }
+    .copy-btn {
+      background:none; border:none; color:var(--muted); cursor:pointer; padding:2px 6px;
+      border-radius:4px; font-size:0.8rem; transition:color .15s;
+    }
+    .copy-btn:hover { color:var(--orange); }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN MAESTRO ── -->
+<div id="master-login">
+  <div class="login-box">
+    <div class="login-logo">M</div>
+    <div class="login-title">Panel Maestro</div>
+    <div class="login-sub">Acceso exclusivo para el administrador del sistema</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="field">
+      <label>Contraseña maestra</label>
+      <input type="password" id="master-pass" placeholder="Contraseña de acceso" autocomplete="current-password" />
+    </div>
+    <button class="btn-primary" id="btn-master-login">Entrar al panel</button>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <header>
+    <div class="header-brand">
+      <div class="header-logo">M</div>
+      <div>
+        <div class="header-title">Panel Maestro</div>
+        <div class="header-sub">Gestión de clientes (tenants)</div>
+      </div>
+    </div>
+    <div class="header-user">
+      <span id="header-count">—</span>
+      <button class="btn-logout" id="btn-master-logout">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total clientes</div>
+        <div class="stat-value orange" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Activos</div>
+        <div class="stat-value green" id="stat-active">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Suspendidos</div>
+        <div class="stat-value" id="stat-suspended" style="color:var(--red)">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Plan Pro</div>
+        <div class="stat-value orange" id="stat-pro">0</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input type="text" id="search-tenant" placeholder="Buscar por nombre o email…" oninput="filterTenants()" />
+      <button class="btn-new" id="btn-add-tenant">➕ Nuevo cliente</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente / Admin</th>
+            <th>Plan</th>
+            <th>Estado</th>
+            <th>Creado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tenants-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-header">
+        <div class="detail-title" id="detail-name">—</div>
+        <button class="link-btn" onclick="cerrarDetalle()">✕ Cerrar</button>
+      </div>
+      <div class="detail-grid" id="detail-grid"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ── MODAL NUEVO CLIENTE ── -->
+<div class="modal-overlay" id="modal-nuevo">
+  <div class="modal">
+    <h3>➕ Nuevo cliente</h3>
+    <div class="field">
+      <label>Nombre de la tienda / empresa</label>
+      <input type="text" id="nc-name" placeholder="Ej: Panadería López" />
+    </div>
+    <div class="field">
+      <label>Nombre del administrador</label>
+      <input type="text" id="nc-admin-name" placeholder="Ej: Roberto López" />
+    </div>
+    <div class="field">
+      <label>Correo del administrador</label>
+      <input type="email" id="nc-admin-email" placeholder="roberto@panaderia.com" />
+    </div>
+    <div class="field">
+      <label>Contraseña inicial</label>
+      <input type="text" id="nc-admin-pass" placeholder="Mínimo 4 caracteres" value="1234" />
+    </div>
+    <div class="field">
+      <label>Plan</label>
+      <select id="nc-plan" style="width:100%;padding:10px 13px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;">
+        <option value="free">Free</option>
+        <option value="pro">Pro</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>URL del sitio web (opcional)</label>
+      <input type="url" id="nc-web" placeholder="https://mitienda.com" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" id="btn-crear-tenant">Crear cliente</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import {
+    getFirestore, collection, doc,
+    setDoc, getDoc, getDocs, deleteDoc,
+    onSnapshot, serverTimestamp, query, where
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  // ── Config ────────────────────────────────────────────────
+  const FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA',
+    authDomain:        'gestor-de-inventario-853d8.firebaseapp.com',
+    projectId:         'gestor-de-inventario-853d8',
+    storageBucket:     'gestor-de-inventario-853d8.firebasestorage.app',
+    messagingSenderId: '980977651129',
+    appId:             '1:980977651129:web:791dd31e9b2825c4d57a68'
+  };
+
+  // ⚠️ CAMBIA esta contraseña por una segura antes de publicar
+  const MASTER_PASSWORD = 'MASTER_2026_ADMIN';
+
+  const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+  const db    = getFirestore(fbApp);
+
+  // ── Estado ────────────────────────────────────────────────
+  let tenants      = [];
+  let filteredList = [];
+
+  // ── Login maestro ─────────────────────────────────────────
+  const loginEl  = document.getElementById('master-login');
+  const appEl    = document.getElementById('app');
+  const errorEl  = document.getElementById('login-error');
+  const passInput = document.getElementById('master-pass');
+
+  // Verificar sesión guardada
+  if (sessionStorage.getItem('master_auth') === '1') {
+    mostrarApp();
+  }
+
+  document.getElementById('btn-master-login').addEventListener('click', () => {
+    if (passInput.value === MASTER_PASSWORD) {
+      sessionStorage.setItem('master_auth', '1');
+      mostrarApp();
+    } else {
+      errorEl.textContent = 'Contraseña incorrecta.';
+      errorEl.style.display = 'block';
+      passInput.value = '';
+    }
+  });
+  passInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btn-master-login').click(); });
+
+  document.getElementById('btn-master-logout').addEventListener('click', () => {
+    sessionStorage.removeItem('master_auth');
+    location.reload();
+  });
+
+  function mostrarApp() {
+    loginEl.classList.add('hidden');
+    appEl.classList.add('visible');
+    cargarTenants();
+  }
+
+  // ── Cargar tenants en tiempo real ─────────────────────────
+  function cargarTenants() {
+    onSnapshot(collection(db, 'tenants'), snap => {
+      tenants = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                         .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      actualizarStats();
+      filterTenants();
+    }, err => showToast('Error: ' + err.message, 'error'));
+  }
+
+  function actualizarStats() {
+    const total     = tenants.length;
+    const activos   = tenants.filter(t => t.status !== 'suspended').length;
+    const susp      = tenants.filter(t => t.status === 'suspended').length;
+    const pro       = tenants.filter(t => t.plan === 'pro').length;
+    document.getElementById('stat-total').textContent     = total;
+    document.getElementById('stat-active').textContent    = activos;
+    document.getElementById('stat-suspended').textContent = susp;
+    document.getElementById('stat-pro').textContent       = pro;
+    document.getElementById('header-count').textContent   = total + ' cliente' + (total !== 1 ? 's' : '');
+  }
+
+  // ── Filtrar ───────────────────────────────────────────────
+  window.filterTenants = function() {
+    const q = document.getElementById('search-tenant').value.toLowerCase();
+    filteredList = q
+      ? tenants.filter(t =>
+          (t.name || '').toLowerCase().includes(q) ||
+          (t.adminEmail || '').toLowerCase().includes(q))
+      : tenants;
+    renderTable();
+  };
+
+  // ── Renderizar tabla ──────────────────────────────────────
+  function renderTable() {
+    const tbody = document.getElementById('tenants-body');
+    if (filteredList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🏪</div><p>Sin clientes aún. Crea el primero.</p></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filteredList.map(t => {
+      const statusBadge = t.status === 'suspended'
+        ? '<span class="badge badge-suspended">Suspendido</span>'
+        : '<span class="badge badge-active">Activo</span>';
+      const planBadge = t.plan === 'pro'
+        ? '<span class="badge badge-pro">Pro</span>'
+        : '<span class="badge badge-free">Free</span>';
+      const fecha = t.createdAt ? new Date(t.createdAt).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+      const baseUrl = window.location.origin + window.location.pathname.replace('admin-panel.html', '');
+
+      return `<tr>
+        <td>
+          <div class="td-name">${esc(t.name || '—')}</div>
+          <div class="td-email">${esc(t.adminEmail || '—')}</div>
+        </td>
+        <td>${planBadge}</td>
+        <td>${statusBadge}</td>
+        <td style="font-size:0.8rem;color:var(--muted)">${fecha}</td>
+        <td>
+          <div class="td-links">
+            <button class="link-btn" onclick="verDetalle('${t.id}')">🔍 Ver</button>
+            <a class="link-btn" href="${baseUrl}index.html?tenant=${t.id}" target="_blank">🖥 Gestor</a>
+            <a class="link-btn" href="${baseUrl}tienda.html?tenant=${t.id}" target="_blank">🛍 Tienda</a>
+            ${t.status === 'suspended'
+              ? `<button class="link-btn success" onclick="cambiarEstado('${t.id}','active')">✅ Activar</button>`
+              : `<button class="link-btn danger" onclick="cambiarEstado('${t.id}','suspended')">⏸ Suspender</button>`}
+            <button class="link-btn danger" onclick="eliminarTenant('${t.id}','${esc(t.name || '')}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Ver detalle ───────────────────────────────────────────
+  window.verDetalle = function(tenantId) {
+    const t = tenants.find(x => x.id === tenantId);
+    if (!t) return;
+    const panel = document.getElementById('detail-panel');
+    const grid  = document.getElementById('detail-grid');
+    document.getElementById('detail-name').textContent = t.name || 'Sin nombre';
+    const baseUrl = window.location.origin + window.location.pathname.replace('admin-panel.html', '');
+    const gestorUrl = `${baseUrl}index.html?tenant=${t.id}`;
+    const tiendaUrl = `${baseUrl}tienda.html?tenant=${t.id}`;
+    grid.innerHTML = [
+      { label: 'Tenant ID',     value: t.id,            copy: true },
+      { label: 'Administrador', value: t.adminEmail || '—' },
+      { label: 'Plan',          value: (t.plan || 'free').toUpperCase() },
+      { label: 'Estado',        value: t.status === 'suspended' ? '⏸ Suspendido' : '✅ Activo' },
+      { label: 'URL Gestor',    value: gestorUrl,        copy: true, link: gestorUrl },
+      { label: 'URL Tienda',    value: tiendaUrl,        copy: true, link: tiendaUrl },
+      { label: 'Creado',        value: t.createdAt ? new Date(t.createdAt).toLocaleString('es-MX') : '—' },
+      { label: 'Sitio web',     value: t.webUrl || '—', link: t.webUrl },
+    ].map(item => `
+      <div class="detail-item">
+        <div class="detail-item-label">${item.label}</div>
+        <div class="detail-item-value">
+          ${item.link && item.link !== '—'
+            ? `<a href="${item.link}" target="_blank" style="color:var(--orange);text-decoration:none">${esc(item.value)}</a>`
+            : esc(item.value)}
+          ${item.copy ? `<button class="copy-btn" onclick="copiar('${esc(item.value)}')">📋</button>` : ''}
+        </div>
+      </div>`).join('');
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior:'smooth', block:'start' });
+  };
+
+  window.cerrarDetalle = function() {
+    document.getElementById('detail-panel').classList.remove('open');
+  };
+
+  window.copiar = function(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('✓ Copiado', 'success')).catch(() => {});
+  };
+
+  // ── Cambiar estado ────────────────────────────────────────
+  window.cambiarEstado = async function(tenantId, newStatus) {
+    try {
+      await setDoc(doc(db, 'tenants', tenantId), { status: newStatus, updatedAt: serverTimestamp() }, { merge: true });
+      showToast(newStatus === 'suspended' ? '⏸ Tenant suspendido' : '✅ Tenant activado', 'success');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  };
+
+  // ── Eliminar tenant ───────────────────────────────────────
+  window.eliminarTenant = function(tenantId, name) {
+    if (!confirm(`¿Eliminar permanentemente a "${name}"?\n\nEsto eliminará el registro del tenant.\nLos datos internos en /tenants/${tenantId}/ se conservarán en Firestore hasta que los borres manualmente.`)) return;
+    deleteDoc(doc(db, 'tenants', tenantId))
+      .then(() => showToast('Tenant eliminado', 'normal'))
+      .catch(e => showToast('Error: ' + e.message, 'error'));
+  };
+
+  // ── Modal nuevo cliente ───────────────────────────────────
+  document.getElementById('btn-add-tenant').addEventListener('click', abrirModal);
+  window.cerrarModal = cerrarModal;
+
+  function abrirModal() {
+    document.getElementById('modal-nuevo').classList.add('open');
+    document.getElementById('nc-name').focus();
+  }
+  function cerrarModal() {
+    document.getElementById('modal-nuevo').classList.remove('open');
+    ['nc-name','nc-admin-name','nc-admin-email','nc-web'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('nc-admin-pass').value = '1234';
+    document.getElementById('nc-plan').value = 'free';
+  }
+
+  document.getElementById('btn-crear-tenant').addEventListener('click', async () => {
+    const name       = document.getElementById('nc-name').value.trim();
+    const adminName  = document.getElementById('nc-admin-name').value.trim();
+    const adminEmail = document.getElementById('nc-admin-email').value.trim().toLowerCase();
+    const adminPass  = document.getElementById('nc-admin-pass').value.trim();
+    const plan       = document.getElementById('nc-plan').value;
+    const webUrl     = document.getElementById('nc-web').value.trim();
+
+    if (!name || !adminName || !adminEmail || !adminPass) {
+      showToast('Completa todos los campos obligatorios', 'error'); return;
+    }
+    if (adminPass.length < 4) { showToast('Contraseña mínimo 4 caracteres', 'error'); return; }
+
+    const btn = document.getElementById('btn-crear-tenant');
+    btn.textContent = 'Creando…'; btn.disabled = true;
+
+    try {
+      const tenantId = genId();
+      const adminId  = genId();
+      const now      = new Date().toISOString();
+
+      // 1. Documento raíz del tenant
+      await setDoc(doc(db, 'tenants', tenantId), {
+        name, plan, webUrl, adminEmail,
+        createdAt: now, status: 'active',
+        updatedAt: serverTimestamp()
+      });
+
+      // 2. Usuario Admin inicial
+      await setDoc(doc(db, 'tenants', tenantId, 'users', adminId), {
+        name: adminName, email: adminEmail, password: adminPass,
+        role: 'Admin', date: now, avatar: '', updatedAt: serverTimestamp()
+      });
+
+      // 3. Settings globales vacíos
+      await setDoc(doc(db, 'tenants', tenantId, 'settings', 'global'), {
+        storeName: name, storeSubtitle: '', createdAt: now
+      });
+
+      // 4. Registro en tenant_registry (para lookup por email)
+      await setDoc(doc(db, 'tenant_registry', adminEmail.replace(/\./g, '_')), {
+        tenantId, adminEmail, tenantName: name, createdAt: now
+      });
+
+      cerrarModal();
+      showToast(`✅ Cliente "${name}" creado correctamente`, 'success');
+      // Mostrar detalle automáticamente
+      setTimeout(() => verDetalle(tenantId), 500);
+
+    } catch(e) {
+      showToast('Error al crear: ' + e.message, 'error');
+    } finally {
+      btn.textContent = 'Crear cliente'; btn.disabled = false;
+    }
+  });
+
+  // ── Toast ─────────────────────────────────────────────────
+  let _toastTimer;
+  function showToast(msg, type = 'normal') {
+    const t = document.getElementById('toast');
+    const colors = { normal:'#1e1e1e', success:'#14532d', error:'#450a0a' };
+    const texts  = { normal:'#f0ece6', success:'#4ade80', error:'#f87171' };
+    t.textContent = msg;
+    t.style.background = colors[type];
+    t.style.color      = texts[type];
+    t.style.display    = 'block';
+    t.style.opacity    = '1';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300); }, 3000);
+  }
+
+  // ── Utils ─────────────────────────────────────────────────
+  function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function esc(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+</script>
+</body>
+</html>

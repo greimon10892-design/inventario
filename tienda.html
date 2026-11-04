@@ -277,7 +277,7 @@
   </footer>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
@@ -289,8 +289,26 @@
       appId:             "1:980977651129:web:791dd31e9b2825c4d57a68"
     };
 
-    const app = initializeApp(FIREBASE_CONFIG);
-    const db  = getFirestore(app);
+    const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+    const db  = getFirestore(fbApp);
+
+    // ── Resolver tenantId ──────────────────────────────────────────────────
+    const _urlParams = new URLSearchParams(window.location.search);
+    const TENANT_ID  = _urlParams.get('tenant') || localStorage.getItem('talara_tenant_id') || null;
+    if (TENANT_ID) {
+      try { localStorage.setItem('talara_tenant_id', TENANT_ID); } catch(e) {}
+      // Propagar el tenantId a los enlaces de dulces y pulseras
+      document.querySelectorAll('a[href="dulces.html"], a[href="pulseras.html"]').forEach(a => {
+        const url = new URL(a.href, window.location.href);
+        url.searchParams.set('tenant', TENANT_ID);
+        a.href = url.toString();
+      });
+    }
+
+    function tDoc(colName, docId) {
+      if (!TENANT_ID) return null;
+      return doc(db, 'tenants', TENANT_ID, colName, docId);
+    }
 
     // Aplica logo, nombre y descripción a la card de la tienda en tiempo real
     function applyStoreSettings(settings, logoElementId, cardTitleEl, defaultEmoji) {
@@ -299,7 +317,6 @@
       if (settings && settings.logoData) {
         logoEl.innerHTML = `<img src="${settings.logoData}" alt="${settings.storeName || 'TALARA'}" style="width:80px;height:80px;object-fit:contain;border-radius:12px"/>`;
       } else {
-        // Restaurar emoji original
         logoEl.innerHTML = defaultEmoji;
       }
       if (cardTitleEl && settings && settings.storeName) {
@@ -307,31 +324,24 @@
       }
     }
 
-    // Listener en tiempo real — dulces
-    onSnapshot(doc(db, 'tienda_settings', 'dulces'), snap => {
-      const data = snap.exists() ? snap.data() : null;
-      try { if (data) localStorage.setItem('talara_dulces_settings', JSON.stringify(data)); } catch(e) {}
-      const src = data || (() => { try { const r = localStorage.getItem('talara_dulces_settings'); return r ? JSON.parse(r) : null; } catch(e) { return null; } })();
-      applyStoreSettings(src, 'logo-dulces', document.querySelector('.store-card.dulces .card-title'), '🍬');
-    }, () => {
-      try {
-        const raw = localStorage.getItem('talara_dulces_settings');
-        if (raw) applyStoreSettings(JSON.parse(raw), 'logo-dulces', document.querySelector('.store-card.dulces .card-title'), '🍬');
-      } catch(e) {}
-    });
+    function escucharTiendaSettings(subDoc, storageKey, logoId, titleSelector, defaultEmoji) {
+      const ref = tDoc('tienda_settings', subDoc);
+      if (!ref) return; // sin tenant, no escuchar
+      onSnapshot(ref, snap => {
+        const data = snap.exists() ? snap.data() : null;
+        try { if (data) localStorage.setItem(storageKey, JSON.stringify(data)); } catch(e) {}
+        const src = data || (() => { try { const r = localStorage.getItem(storageKey); return r ? JSON.parse(r) : null; } catch(e) { return null; } })();
+        applyStoreSettings(src, logoId, document.querySelector(titleSelector), defaultEmoji);
+      }, () => {
+        try {
+          const raw = localStorage.getItem(storageKey);
+          if (raw) applyStoreSettings(JSON.parse(raw), logoId, document.querySelector(titleSelector), defaultEmoji);
+        } catch(e) {}
+      });
+    }
 
-    // Listener en tiempo real — pulseras
-    onSnapshot(doc(db, 'tienda_settings', 'pulseras'), snap => {
-      const data = snap.exists() ? snap.data() : null;
-      try { if (data) localStorage.setItem('talara_pulseras_settings', JSON.stringify(data)); } catch(e) {}
-      const src = data || (() => { try { const r = localStorage.getItem('talara_pulseras_settings'); return r ? JSON.parse(r) : null; } catch(e) { return null; } })();
-      applyStoreSettings(src, 'logo-pulseras', document.querySelector('.store-card.pulseras .card-title'), '📿');
-    }, () => {
-      try {
-        const raw = localStorage.getItem('talara_pulseras_settings');
-        if (raw) applyStoreSettings(JSON.parse(raw), 'logo-pulseras', document.querySelector('.store-card.pulseras .card-title'), '📿');
-      } catch(e) {}
-    });
+    escucharTiendaSettings('dulces',   'talara_dulces_settings',   'logo-dulces',   '.store-card.dulces .card-title',   '🍬');
+    escucharTiendaSettings('pulseras', 'talara_pulseras_settings', 'logo-pulseras', '.store-card.pulseras .card-title', '📿');
   </script>
 
 </body>

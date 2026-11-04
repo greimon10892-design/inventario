@@ -1,0 +1,116 @@
+// ============================================================
+//  REGLAS DE SEGURIDAD FIRESTORE — Multi-Tenant
+//  Estructura: /tenants/{tenantId}/{colección}/{docId}
+//
+//  Cómo aplicarlas:
+//  1. Ve a https://console.firebase.google.com
+//  2. Selecciona tu proyecto "gestor-de-inventario-853d8"
+//  3. Firestore Database → pestaña "Rules"
+//  4. Reemplaza todo el contenido con este archivo
+//  5. Haz clic en "Publish"
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Tenant raíz ─────────────────────────────────────────
+    // Cualquier usuario autenticado puede leer los metadatos
+    // de su propio tenant (para saber si existe).
+    // Solo el SuperAdmin maestro puede crear/editar tenants.
+    match /tenants/{tenantId} {
+      allow read: if request.auth != null;
+      allow write: if isMasterAdmin();
+
+      // ── Usuarios del tenant ───────────────────────────────
+      // Un usuario solo puede leer/escribir dentro de su tenant.
+      // Para determinar el tenant del usuario se lee su doc.
+      match /users/{userId} {
+        // Cualquier usuario del tenant puede leer la lista de usuarios
+        allow read: if isTenantMember(tenantId);
+        // Solo Admin/SuperAdmin del tenant puede crear/editar usuarios
+        allow create: if isTenantAdmin(tenantId);
+        allow update: if isTenantAdmin(tenantId)
+                      || request.auth.uid == userId; // puede editar su propio perfil
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Productos ─────────────────────────────────────────
+      match /products/{productId} {
+        allow read:   if isTenantMember(tenantId);
+        allow write:  if isTenantWriter(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Movimientos ───────────────────────────────────────
+      match /movements/{movId} {
+        allow read:   if isTenantMember(tenantId);
+        allow create: if isTenantWriter(tenantId);
+        allow update: if isTenantAdmin(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Ventas ────────────────────────────────────────────
+      match /sales/{saleId} {
+        allow read:   if isTenantMember(tenantId);
+        allow create: if isTenantWriter(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Proyectos (sub-proyectos dentro del tenant) ───────
+      match /projects/{projectId} {
+        allow read:   if isTenantMember(tenantId);
+        allow write:  if isTenantAdmin(tenantId);
+      }
+
+      // ── Ajustes globales del tenant ───────────────────────
+      match /settings/{docId} {
+        allow read:   if isTenantMember(tenantId);
+        allow write:  if isTenantAdmin(tenantId);
+      }
+
+      // ── Ajustes de tienda pública ─────────────────────────
+      match /tienda_settings/{docId} {
+        allow read:   if true; // público — cualquiera puede ver la tienda
+        allow write:  if isTenantAdmin(tenantId);
+      }
+    }
+
+    // ── Registro de tenants (directorio global) ───────────────
+    // Solo el SuperAdmin maestro puede gestionar esto.
+    // Permite leer el propio registro para el login inicial.
+    match /tenant_registry/{email} {
+      allow read:  if request.auth != null && request.auth.token.email == email;
+      allow write: if isMasterAdmin();
+    }
+
+    // ── Helper Functions ─────────────────────────────────────
+
+    // ¿Es el SuperAdmin maestro del sistema? (tú, el dueño del producto)
+    // Cambia este email por el tuyo real
+    function isMasterAdmin() {
+      return request.auth != null
+          && request.auth.token.email == "admin@tusistema.com";
+    }
+
+    // ¿El usuario autenticado pertenece a este tenant?
+    function isTenantMember(tenantId) {
+      return request.auth != null
+          && exists(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid));
+    }
+
+    // ¿El usuario tiene rol Admin o SuperAdmin en este tenant?
+    function isTenantAdmin(tenantId) {
+      return request.auth != null
+          && get(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)).data.role
+             in ['Admin', 'SuperAdmin'];
+    }
+
+    // ¿El usuario puede escribir (Admin, SuperAdmin, Usuario)?
+    function isTenantWriter(tenantId) {
+      return request.auth != null
+          && get(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)).data.role
+             in ['Admin', 'SuperAdmin', 'Usuario'];
+    }
+  }
+}

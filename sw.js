@@ -1,5 +1,5 @@
-// sw.js - Service Worker v13
-const CACHE_NAME = 'inventario-v13';
+// sw.js - Service Worker v14
+const CACHE_NAME = 'inventario-v14';
 
 self.addEventListener('install', () => self.skipWaiting());
 

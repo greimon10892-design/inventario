@@ -401,7 +401,7 @@
   <div class="toast-container" id="toast-container"></div>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getFirestore, collection, onSnapshot, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
@@ -416,6 +416,13 @@
     const PAGE_CATEGORY = 'pulseras';
     const WA_NUMBER = '522281103615';
     const STORAGE_KEY = 'talara_pulseras_settings';
+
+    // ── Resolver tenantId ──────────────────────────────────────────────────
+    const _urlParams = new URLSearchParams(window.location.search);
+    const TENANT_ID  = _urlParams.get('tenant') || localStorage.getItem('talara_tenant_id') || null;
+    if (TENANT_ID) {
+      try { localStorage.setItem('talara_tenant_id', TENANT_ID); } catch(e) {}
+    }
 
     const THEMES = {
       light: { bg:'#f5f5f5', surface:'#ffffff', surface2:'#f0f0f0', border:'#e8e8e8', text:'#1a1a1a', textMuted:'#888' },
@@ -433,8 +440,17 @@
       logoData: null,
     };
 
-    const app = initializeApp(FIREBASE_CONFIG);
-    const db = getFirestore(app);
+    const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+    const db = getFirestore(fbApp);
+
+    function tCol(colName) {
+      if (!TENANT_ID) throw new Error('Sin tenantId');
+      return collection(db, 'tenants', TENANT_ID, colName);
+    }
+    function tDoc(colName, docId) {
+      if (!TENANT_ID) throw new Error('Sin tenantId');
+      return doc(db, 'tenants', TENANT_ID, colName, docId);
+    }
 
     let products = [];
     let cart = {};
@@ -449,15 +465,22 @@
       return s;
     }
 
-    onSnapshot(collection(db, 'products'), snap => {
-      products = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => (p.stock || 0) > 0 && catNorm(p.category) === PAGE_CATEGORY);
-      render();
-      renderCart();
-    }, err => {
-      document.getElementById('product-grid').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error al cargar</h3><p>${err.message}</p></div>`;
-    });
+    if (!TENANT_ID) {
+      document.getElementById('product-grid').innerHTML =
+        '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div>' +
+        '<h3>Tienda no configurada</h3><p>Accede desde el enlace que te proporcionó tu proveedor.</p></div>';
+    } else {
+      onSnapshot(tCol('products'), snap => {
+        products = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(p => (p.stock || 0) > 0 && catNorm(p.category) === PAGE_CATEGORY);
+        render();
+        renderCart();
+      }, err => {
+        document.getElementById('product-grid').innerHTML =
+          `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Error al cargar</h3><p>${err.message}</p></div>`;
+      });
+    }
 
     function fmt(n) {
       const num = parseFloat(n) || 0;
@@ -655,8 +678,9 @@
 
     // Guarda inmediatamente en Firestore → todos los dispositivos reciben via onSnapshot
     async function syncToFirestore() {
+      if (!TENANT_ID) return;
       try {
-        await setDoc(doc(db, 'tienda_settings', 'pulseras'), settings, { merge: true });
+        await setDoc(tDoc('tienda_settings', 'pulseras'), settings, { merge: true });
       } catch(e) { console.warn('[sync pulseras]', e); }
     }
 
@@ -757,8 +781,9 @@
     // Cualquier cambio desde otro dispositivo se aplica inmediatamente
     let _settingsUnsub = null;
     function startSettingsListener() {
+      if (!TENANT_ID) return;
       if (_settingsUnsub) _settingsUnsub();
-      _settingsUnsub = onSnapshot(doc(db, 'tienda_settings', 'pulseras'), snap => {
+      _settingsUnsub = onSnapshot(tDoc('tienda_settings', 'pulseras'), snap => {
         if (snap.exists()) {
           settings = { ...DEFAULT_SETTINGS, ...snap.data() };
           try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch(e) {}

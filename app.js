@@ -1,6 +1,21 @@
 // ========== FIREBASE ==========
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── Importamos el módulo multi-tenant ──────────────────────
+import {
+  setActiveTenant,
+  getActiveTenant,
+  tenantCol,
+  tenantDoc,
+  tenantSave,
+  tenantDelete,
+  tenantOnSnapshot,
+  tenantDocOnSnapshot,
+  createTenant,
+  getTenantByEmail,
+  getTenantUserByEmail
+} from './tenants.js';
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDLk5Gu-wY7kb9MdR5UIBtbgJTyFUGAtnA",
@@ -13,7 +28,7 @@ const FIREBASE_CONFIG = {
 
 let db = null;
 try {
-  const fbApp = initializeApp(FIREBASE_CONFIG);
+  const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
   db = getFirestore(fbApp);
   console.log('✅ Firebase conectado');
 } catch (e) {
@@ -158,18 +173,18 @@ function applyRoleRestrictions() {
   }
 }
 
-// ========== FIREBASE: GUARDAR / ELIMINAR ==========
+// ========== FIREBASE: GUARDAR / ELIMINAR (multi-tenant) ==========
+// Todas las operaciones van a /tenants/{tenantId}/{colName}/{id}
 async function saveToFirebase(colName, item) {
   if (!db) return;
   try {
-    const { id, ...data } = item;
-    await setDoc(doc(db, colName, id), { ...data, updatedAt: serverTimestamp() });
+    await tenantSave(colName, item);
   } catch (e) { console.warn('Error Firebase:', e.message); }
 }
 
 async function deleteFromFirebase(colName, id) {
   if (!db) return;
-  try { await deleteDoc(doc(db, colName, id)); }
+  try { await tenantDelete(colName, id); }
   catch (e) { console.warn('Error Firebase:', e.message); }
 }
 
@@ -183,10 +198,10 @@ function getActiveProjectId() {
   return activeUser.projectId || null;
 }
 
-// Sincronizar proyectos
+// Sincronizar proyectos (sub-proyectos dentro del tenant)
 function iniciarSyncProyectos() {
-  if (!db) return;
-  onSnapshot(collection(db, 'projects'), snap => {
+  if (!db || !getActiveTenant()) return;
+  onSnapshot(tenantCol('projects'), snap => {
     projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProjects();
   });
@@ -314,55 +329,47 @@ window.abrirModalCrearAdmin = function() {
   });
 };
 
-// ========== SYNC FIREBASE — TIEMPO REAL COMPLETO ==========
-// Cada listener cubre TODOS los cambios que un usuario puede hacer
-// y los aplica inmediatamente en cualquier dispositivo abierto.
+// ========== SYNC FIREBASE — TIEMPO REAL COMPLETO (multi-tenant) ==========
+// Todos los listeners apuntan a /tenants/{tenantId}/{colección}
 
 function iniciarSync() {
-  if (!db) { hideSplash(); return; }
+  if (!db || !getActiveTenant()) { hideSplash(); return; }
 
   iniciarSyncProyectos();
-  iniciarSyncAjustes(); // escucha settings/global
+  iniciarSyncAjustes(); // escucha tenants/{id}/settings/global
 
   // ── Productos ──────────────────────────────────────────────────────────
-  // Se actualiza: panel (stock bajo), tabla productos, ventas (lista), reportes
-  onSnapshot(collection(db, 'products'), snap => {
+  onSnapshot(tenantCol('products'), snap => {
     products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    updateSummary();      // panel: totales + bajo stock
-    renderInventory();    // pestaña productos
-    renderSaleProductList(); // pestaña ventas — lista de productos
-    renderMovements();    // movimientos (muestra nombres/precios actualizados)
+    updateSummary();
+    renderInventory();
+    renderSaleProductList();
+    renderMovements();
   }, err => console.warn('[sync products]', err.message));
 
   // ── Movimientos ────────────────────────────────────────────────────────
-  // Se actualiza: panel (total vendido), historial, reportes
-  onSnapshot(collection(db, 'movements'), snap => {
+  onSnapshot(tenantCol('movements'), snap => {
     movements = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
-    updateSummary();      // panel: total vendido
-    renderMovements();    // pestaña movimientos / historial
+    updateSummary();
+    renderMovements();
   }, err => console.warn('[sync movements]', err.message));
 
   // ── Usuarios ───────────────────────────────────────────────────────────
-  // Se actualiza: lista usuarios, panel usuario activo, privilegios, ajustes
-  // IMPORTANTE: también aplica tema/acento del usuario activo en tiempo real
-  onSnapshot(collection(db, 'users'), snap => {
+  onSnapshot(tenantCol('users'), snap => {
     users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderUsers();
-    // Re-sincronizar el usuario activo (puede haber cambiado su rol, nombre, avatar, tema, acento)
     const me = users.find(u => u.id === activeUser.id);
     if (me) {
-      const temaAnterior  = activeUser.theme;
+      const temaAnterior   = activeUser.theme;
       const acentoAnterior = activeUser.accent;
       activeUser = me;
       applyRoleRestrictions();
-      // Si cambió el tema o acento de este usuario (desde otro dispositivo), aplicarlo aquí
       if (me.theme !== temaAnterior || me.accent !== acentoAnterior || me.theme || me.accent) {
         aplicarTemaUsuario(me);
       }
     }
-    // Actualizar selector de usuario en ajustes
     const sel = document.getElementById('s-active-user');
     if (sel) {
       const cur = sel.value || activeUser.id;
@@ -1381,12 +1388,12 @@ document.getElementById('user-form')?.addEventListener('submit', async e => {
 let _settingsListener = null;
 
 function iniciarSyncAjustes() {
-  if (!db) return;
+  if (!db || !getActiveTenant()) return;
   if (_settingsListener) { _settingsListener(); _settingsListener = null; }
 
-  _settingsListener = onSnapshot(doc(db, 'settings', 'global'), snap => {
+  // Escuchar /tenants/{tenantId}/settings/global
+  _settingsListener = onSnapshot(tenantDoc('settings', 'global'), snap => {
     if (!snap.exists()) {
-      // Crear el documento con ajustes de tienda (sin tema/acento — esos son por usuario)
       const defaults = {
         storeName:     localStorage.getItem('store_name')     || 'Inventario',
         storeSubtitle: localStorage.getItem('store_subtitle') || 'Dulces & Pulseras',
@@ -1395,13 +1402,10 @@ function iniciarSyncAjustes() {
         bgImage:       localStorage.getItem('bg_image')       || null,
         createdAt:     new Date().toISOString()
       };
-      setDoc(doc(db, 'settings', 'global'), defaults, { merge: true }).catch(() => {});
+      setDoc(tenantDoc('settings', 'global'), defaults, { merge: true }).catch(() => {});
       return;
     }
-
     const data = snap.data();
-
-    // Caché local — solo ajustes de tienda
     try {
       if (data.storeName     != null) localStorage.setItem('store_name',     data.storeName);
       if (data.storeSubtitle != null) localStorage.setItem('store_subtitle', data.storeSubtitle);
@@ -1412,10 +1416,7 @@ function iniciarSyncAjustes() {
       if (data.bgImage       != null) localStorage.setItem('bg_image',       data.bgImage);
       else if ('bgImage'     in data)  localStorage.removeItem('bg_image');
     } catch(e) {}
-
-    // Aplicar ajustes de tienda en tiempo real
     aplicarAjustesTienda(data);
-
   }, err => console.warn('[sync ajustes]', err.message));
 }
 
@@ -1492,11 +1493,11 @@ function aplicarTemaUsuario(user) {
 // Guarda tema y acento en el documento del usuario en Firestore (users/{id})
 // El listener onSnapshot de users lo recibe en TODOS sus dispositivos al instante
 async function guardarTemaUsuario(theme, accent) {
-  if (!activeUser.id || !db) return;
+  if (!activeUser.id || !db || !getActiveTenant()) return;
   try {
     localStorage.setItem('theme',  theme);
     localStorage.setItem('accent', accent);
-    await setDoc(doc(db, 'users', activeUser.id), { theme, accent }, { merge: true });
+    await setDoc(tenantDoc('users', activeUser.id), { theme, accent }, { merge: true });
     activeUser.theme  = theme;
     activeUser.accent = accent;
   } catch(e) { console.warn('[guardar tema]', e.message); }
@@ -1513,7 +1514,7 @@ function aplicarSettingsVisual(data) {
 async function guardarAjustesEnFirebase(datos) {
   if (!db) return;
   try {
-    await setDoc(doc(db, 'settings', 'global'), datos, { merge: true });
+    await setDoc(tenantDoc('settings', 'global'), datos, { merge: true });
   } catch(e) { console.warn('[guardar ajustes]', e.message); }
 }
 
@@ -1900,7 +1901,6 @@ document.getElementById('btn-reset')?.addEventListener('click', () => {
 });
 document.getElementById('btn-logout')?.addEventListener('click', () => {
   if (!confirm('¿Cerrar sesión?')) return;
-  // Limpiar usuario activo
   localStorage.removeItem('active_user_id');
   activeUser = { id: '', name: '', role: '' };
   mostrarPantallaLogin();
@@ -2022,7 +2022,89 @@ document.querySelectorAll('.rtab').forEach(tab => {
 });
 
 
-// ========== PANTALLA DE INICIO DE SESIÓN ==========
+// ========== PANTALLA DE INICIO DE SESIÓN (multi-tenant) ==========
+// Flujo:
+//   1. Si hay tenantId guardado → cargar usuarios del tenant → mostrar selector
+//   2. Si no hay → pedir email para buscar el tenant en tenant_registry
+
+async function resolverTenantYMostrarLogin(errorMsg) {
+  const tid = getActiveTenant();
+  if (tid) {
+    // Ya sabemos el tenant — mostrar login normal con los usuarios ya cargados
+    mostrarPantallaLogin(errorMsg);
+  } else {
+    // Primer acceso — pedir email para buscar el tenant
+    mostrarPantallaBuscarTenant();
+  }
+}
+
+function mostrarPantallaBuscarTenant(errorMsg) {
+  let screen = document.getElementById('login-screen');
+  if (!screen) {
+    screen = document.createElement('div');
+    screen.id = 'login-screen';
+    screen.style.cssText = 'position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+    document.body.appendChild(screen);
+  }
+
+  const errorHTML = errorMsg
+    ? '<div style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);color:#f87171;border-radius:8px;padding:10px 14px;font-size:0.82rem;margin-bottom:14px">' + errorMsg + '</div>'
+    : '';
+
+  screen.innerHTML =
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,0.4)">' +
+      '<div style="text-align:center;margin-bottom:28px">' +
+        '<div style="width:56px;height:56px;border-radius:14px;background:var(--orange);color:#fff;font-size:1.6rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">I</div>' +
+        '<div style="font-size:1.3rem;font-weight:800;color:var(--text)">Gestor de Inventario</div>' +
+        '<div style="font-size:0.78rem;color:var(--muted);margin-top:3px">Ingresa tu correo para continuar</div>' +
+      '</div>' +
+      errorHTML +
+      '<div style="margin-bottom:20px">' +
+        '<label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Correo electrónico</label>' +
+        '<input type="email" id="tenant-email" placeholder="tucorreo@ejemplo.com" autocomplete="email" ' +
+          'style="width:100%;padding:11px 13px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:1rem" />' +
+      '</div>' +
+      '<button id="tenant-btn-buscar" style="width:100%;padding:13px;background:var(--orange);color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit">Continuar →</button>' +
+    '</div>';
+
+  screen.style.display = 'flex';
+  const emailInput = screen.querySelector('#tenant-email');
+  const btnBuscar  = screen.querySelector('#tenant-btn-buscar');
+  emailInput.focus();
+
+  async function buscarTenant() {
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) { mostrarPantallaBuscarTenant('Ingresa tu correo.'); return; }
+    btnBuscar.textContent = 'Buscando…'; btnBuscar.disabled = true;
+    try {
+      const registro = await getTenantByEmail(email);
+      if (!registro) {
+        btnBuscar.textContent = 'Continuar →'; btnBuscar.disabled = false;
+        mostrarPantallaBuscarTenant('No encontramos una cuenta con ese correo.');
+        return;
+      }
+      // Activar el tenant
+      setActiveTenant(registro.tenantId);
+      // Cargar usuarios del tenant antes de mostrar el login
+      const userDoc = await getTenantUserByEmail(registro.tenantId, email);
+      if (userDoc) {
+        // Pre-seleccionar el usuario que ingresó el email
+        localStorage.setItem('active_user_id', userDoc.id);
+      }
+      // Arrancar los listeners del tenant
+      iniciarSync();
+      // Pequeña espera para que lleguen los primeros datos
+      setTimeout(() => mostrarPantallaLogin(), 600);
+    } catch(e) {
+      btnBuscar.textContent = 'Continuar →'; btnBuscar.disabled = false;
+      mostrarPantallaBuscarTenant('Error al buscar. Intenta de nuevo.');
+    }
+  }
+
+  btnBuscar.addEventListener('click', buscarTenant);
+  emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') buscarTenant(); });
+}
+
 function mostrarPantallaLogin(errorMsg) {
   var screen = document.getElementById('login-screen');
   if (!screen) {
@@ -2039,7 +2121,6 @@ function mostrarPantallaLogin(errorMsg) {
   if (users.length > 0) {
     for (var i = 0; i < users.length; i++) {
       var u = users[i];
-      var initials = u.name.split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
       usersHTML += '<option value="' + u.id + '">' + u.name + ' (' + u.role + ')</option>';
     }
   }
@@ -2069,9 +2150,19 @@ function mostrarPantallaLogin(errorMsg) {
         '<div style="font-size:0.7rem;color:var(--muted);margin-top:6px">Primera vez: usa <strong style="color:var(--orange)">1234</strong> como contraseña</div>' +
       '</div>' +
       '<button id="login-btn-entrar" style="width:100%;padding:13px;background:var(--orange);color:#fff;border:none;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit">Entrar →</button>' +
+      '<p style="text-align:center;margin-top:14px;font-size:0.75rem;color:var(--muted)">' +
+        '<a href="#" id="login-cambiar-tenant" style="color:var(--orange);text-decoration:none">← Usar otra cuenta</a>' +
+      '</p>' +
     '</div>';
 
   screen.style.display = 'flex';
+
+  // Pre-seleccionar el usuario guardado
+  const savedId = localStorage.getItem('active_user_id');
+  if (savedId) {
+    const sel = screen.querySelector('#login-user-select');
+    if (sel) sel.value = savedId;
+  }
 
   var passInput = screen.querySelector('#login-password');
   var btnEntrar = screen.querySelector('#login-btn-entrar');
@@ -2086,7 +2177,6 @@ function mostrarPantallaLogin(errorMsg) {
     activeUser = u;
     localStorage.setItem('active_user_id', u.id);
     screen.style.display = 'none';
-    // Aplicar el tema y acento PERSONAL de este usuario al iniciar sesión
     aplicarTemaUsuario(u);
     applyRoleRestrictions();
     navigate('panel');
@@ -2095,6 +2185,13 @@ function mostrarPantallaLogin(errorMsg) {
 
   btnEntrar.addEventListener('click', intentarLogin);
   passInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') intentarLogin(); });
+  // Enlace para cambiar de tenant (limpia el tenant guardado)
+  screen.querySelector('#login-cambiar-tenant')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    localStorage.removeItem('active_tenant_id');
+    localStorage.removeItem('active_user_id');
+    mostrarPantallaBuscarTenant();
+  });
 }
 
 window.seleccionarUsuario = function(userId) {
@@ -2112,35 +2209,14 @@ window.seleccionarUsuario = function(userId) {
 };
 
 // ========== INICIALIZAR ==========
-document.addEventListener('DOMContentLoaded', () => {
-  // Limpiar localStorage datos grandes (todo va a Firebase)
+document.addEventListener('DOMContentLoaded', async () => {
+  // Limpiar datos grandes de sesiones anteriores
   try { localStorage.removeItem('products'); localStorage.removeItem('movements'); } catch(e) {}
-
-  // Cargar usuario activo
-  const savedUserId = localStorage.getItem('active_user_id');
-  if (savedUserId) activeUser.id = savedUserId;
-  // Si no hay usuario guardado, mostrar pantalla de login después de cargar Firebase
-
-  // Crear proyecto en blanco (Admin y SuperAdmin)
-  document.getElementById('btn-crear-proyecto-blanco')?.addEventListener('click', async () => {
-    if (!isAdmin()) { showToast('Sin permiso', 'error'); return; }
-    const nombre = prompt('Nombre del nuevo proyecto (tienda independiente):');
-    if (!nombre || !nombre.trim()) return;
-    const webUrl = prompt('URL del sitio web de este proyecto (opcional):') || '';
-    const newId = uid();
-    await saveToFirebase('projects', {
-      id: newId, name: nombre.trim(), webUrl: webUrl.trim(),
-      createdBy: activeUser.id, date: new Date().toISOString()
-    });
-    showToast('✅ Proyecto "' + nombre.trim() + '" creado — en blanco y listo para llenarse', 'success');
-  });
-
-  // Usuarios: se cargan desde Firebase via onSnapshot (ver iniciarSync)
 
   applyTheme();
   initReportSelectors();
 
-  // Aplicar nombre guardado
+  // Aplicar nombre/subtítulo guardados (carga rápida antes de que llegue Firestore)
   const savedName = localStorage.getItem('store_name');
   const savedSub  = localStorage.getItem('store_subtitle');
   if (savedName) {
@@ -2150,8 +2226,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (savedSub) {
     document.querySelectorAll('.brand-sub, .mobile-brand-sub').forEach(el => el.textContent = savedSub);
   }
-
-  // Logos
   const logoSidebar = localStorage.getItem('logo_sidebar');
   if (logoSidebar) applyLogoSidebar(logoSidebar);
   const logoMobile = localStorage.getItem('logo_mobile');
@@ -2180,7 +2254,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const preview = document.getElementById('bg-preview');
     if (preview) { preview.src = b64; preview.classList.remove('hidden'); }
     document.getElementById('remove-bg') && (document.getElementById('remove-bg').style.display = 'inline-block');
-    // Sincronizar fondo con Firestore
     await guardarAjustesEnFirebase({ bgImage: b64, updatedAt: new Date().toISOString() });
     showToast('✅ Fondo guardado y sincronizado', 'success');
   });
@@ -2191,7 +2264,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const preview = document.getElementById('bg-preview');
     if (preview) { preview.src = ''; preview.classList.add('hidden'); }
     document.getElementById('remove-bg').style.display = 'none';
-    // Sincronizar eliminación con Firestore
     await guardarAjustesEnFirebase({ bgImage: null, updatedAt: new Date().toISOString() });
   });
 
@@ -2277,11 +2349,52 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Color activo en swatches
-  const savedAccent = localStorage.getItem('accent');
   loadSettingsUI();
   navigate('panel');
   setTimeout(hideSplash, 600);
 
-  // Firebase — arranca todos los listeners en tiempo real
-  iniciarSync();
+  // ── Arranque multi-tenant ────────────────────────────────────────────────
+  // Si ya hay un tenant guardado → iniciar sync directamente
+  // Si no → mostrar pantalla de búsqueda por email
+  const savedTenantId = getActiveTenant();
+  if (savedTenantId && db) {
+    // Tenant conocido — cargar datos y luego mostrar login
+    iniciarSync(); // arranca los listeners del tenant
+    // Esperar a que lleguen los usuarios antes de mostrar login
+    const unsubWait = onSnapshot(tenantCol('users'), snap => {
+      users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      unsubWait(); // desuscribir — iniciarSync ya tiene su propio listener
+      const savedUserId = localStorage.getItem('active_user_id');
+      const me = users.find(u => u.id === savedUserId);
+      if (me) {
+        // Sesión activa guardada → entrar directo
+        activeUser = me;
+        aplicarTemaUsuario(me);
+        applyRoleRestrictions();
+        hideSplash();
+        navigate('panel');
+      } else {
+        hideSplash();
+        mostrarPantallaLogin();
+      }
+    });
+  } else {
+    // Primer acceso — pedir email para identificar el tenant
+    hideSplash();
+    mostrarPantallaBuscarTenant();
+  }
+
+  // Crear proyecto en blanco (Admin y SuperAdmin)
+  document.getElementById('btn-crear-proyecto-blanco')?.addEventListener('click', async () => {
+    if (!isAdmin()) { showToast('Sin permiso', 'error'); return; }
+    const nombre = prompt('Nombre del nuevo proyecto:');
+    if (!nombre || !nombre.trim()) return;
+    const webUrl = prompt('URL del sitio web de este proyecto (opcional):') || '';
+    const newId = uid();
+    await saveToFirebase('projects', {
+      id: newId, name: nombre.trim(), webUrl: webUrl.trim(),
+      createdBy: activeUser.id, date: new Date().toISOString()
+    });
+    showToast('✅ Proyecto "' + nombre.trim() + '" creado', 'success');
+  });
 });
