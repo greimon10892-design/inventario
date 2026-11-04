@@ -2024,16 +2024,15 @@ document.querySelectorAll('.rtab').forEach(tab => {
 
 // ========== PANTALLA DE INICIO DE SESIÓN (multi-tenant) ==========
 // Flujo:
-//   1. Si hay tenantId guardado → cargar usuarios del tenant → mostrar selector
-//   2. Si no hay → pedir email para buscar el tenant en tenant_registry
+//   1. Si viene ?tenant=xxx en la URL → usar ese tenant directamente
+//   2. Si hay tenantId en localStorage → cargar usuarios → mostrar selector
+//   3. Si no hay → pedir email para buscar el tenant en tenant_registry
 
 async function resolverTenantYMostrarLogin(errorMsg) {
   const tid = getActiveTenant();
   if (tid) {
-    // Ya sabemos el tenant — mostrar login normal con los usuarios ya cargados
     mostrarPantallaLogin(errorMsg);
   } else {
-    // Primer acceso — pedir email para buscar el tenant
     mostrarPantallaBuscarTenant();
   }
 }
@@ -2354,13 +2353,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   setTimeout(hideSplash, 600);
 
   // ── Arranque multi-tenant ────────────────────────────────────────────────
-  // Si ya hay un tenant guardado → iniciar sync directamente
-  // Si no → mostrar pantalla de búsqueda por email
+  // Prioridad: 1) ?tenant=xxx en la URL  2) localStorage  3) buscar por email
+
+  // Leer tenantId de la URL si viene
+  const _urlParams    = new URLSearchParams(window.location.search);
+  const _tenantFromUrl = _urlParams.get('tenant');
+  if (_tenantFromUrl) {
+    setActiveTenant(_tenantFromUrl);
+  }
+
   const savedTenantId = getActiveTenant();
   if (savedTenantId && db) {
-    // Tenant conocido — cargar datos y luego mostrar login
-    iniciarSync(); // arranca los listeners del tenant
-    // Esperar a que lleguen los usuarios antes de mostrar login
+    // Tenant conocido — iniciar sync y luego mostrar login
+    iniciarSync();
     const unsubWait = onSnapshot(tenantCol('users'), snap => {
       users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       unsubWait(); // desuscribir — iniciarSync ya tiene su propio listener
@@ -2377,9 +2382,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         hideSplash();
         mostrarPantallaLogin();
       }
+    }, err => {
+      hideSplash();
+      mostrarPantallaBuscarTenant('Error al cargar datos. Verifica tu enlace de acceso.');
     });
   } else {
-    // Primer acceso — pedir email para identificar el tenant
+    // Sin tenant — pedir email para identificar el tenant
     hideSplash();
     mostrarPantallaBuscarTenant();
   }
